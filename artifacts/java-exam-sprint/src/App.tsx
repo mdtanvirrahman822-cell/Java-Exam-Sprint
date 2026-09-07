@@ -76,7 +76,7 @@ const topics: Topic[] = [
   {
     id: 'casting',
     week: 'Week 10',
-    title: 'Casting with a safety net',
+    title: 'Object Typecasting and Dynamic Type Checking',
     eyebrow: 'Object relationships',
     blurb: 'Read the reference type, understand the object type, then cast only when the relationship is real.',
     accent: '#3e93a8',
@@ -212,10 +212,63 @@ const lecture09Sections: LectureSection[] = [
   },
 ];
 
+const lecture10Sections: LectureSection[] = [
+  {
+    id: 'lecture10-reference-object-types',
+    title: '1. Reference Type vs. Object Type Foundations',
+    points: [
+      'Overview of inheritance relationships (IS-A).',
+      'The reference type is checked at compile time.',
+      'The actual object type is determined at runtime.',
+      'How reference type and runtime object type work together.',
+    ],
+  },
+  {
+    id: 'lecture10-upcasting-members',
+    title: '2. Upcasting & Member Access Rules',
+    points: [
+      'Implicitly converting subclass references to superclass types.',
+      'The reference type restricts which methods and fields are available.',
+      'Overridden methods are selected using the runtime object type.',
+      'How upcasting demonstrates polymorphism.',
+    ],
+  },
+  {
+    id: 'lecture10-downcasting-risks',
+    title: '3. Downcasting & ClassCastException Risks',
+    points: [
+      'Explicitly converting superclass references to subclass types.',
+      'Accessing subclass-specific members after a valid downcast.',
+      'The difference between safe and unsafe downcasting.',
+      'How an invalid cast triggers ClassCastException at runtime.',
+    ],
+  },
+  {
+    id: 'lecture10-instanceof',
+    title: '4. Safe Type Inspection via instanceof',
+    points: [
+      'Use instanceof to test an object’s actual runtime type.',
+      'Check compatibility before performing a downcast.',
+      'Prevent application crashes caused by invalid casts.',
+      'Understand how instanceof behaves with inheritance relationships.',
+    ],
+  },
+  {
+    id: 'lecture10-pattern-scope',
+    title: '5. Pattern Matching & Scope Rules (Java 14+)',
+    points: [
+      'Use modern syntax such as if (animal instanceof Dog d).',
+      'Combine type checking and casting in one step.',
+      'Track pattern-variable scope with logical AND (&&).',
+      'Understand logical OR (||) and negated (!) condition scope rules.',
+    ],
+  },
+];
+
 type ScheduleTask = { id: string; day: string; time: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
 const schedule: ScheduleTask[] = [
   { id: 's1', day: 'Tonight · Sep 7', time: '23:00', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
-  { id: 's2', day: 'Tonight · Sep 7', time: '23:50', title: 'Casting drills', detail: 'Upcast, downcast, instanceof', topic: 'Week 10', lecture: 'Lecture 10' },
+  { id: 's2', day: 'Tonight · Sep 7', time: '23:50', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
   { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interfaces & class design', detail: 'Contracts, capabilities, abstract classes', topic: 'Week 11', lecture: 'Lecture 11' },
   { id: 's4', day: 'Mon · Sep 8', time: '11:00', title: 'Static, final, nested', detail: 'Predict what belongs where', topic: 'Week 12', lecture: 'Lecture 12' },
   { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Bounds, wildcards, PECS', topic: 'Week 13', lecture: 'Lecture 13' },
@@ -377,17 +430,24 @@ function ProgressRing({ value }: { value: number }) {
 function Dashboard() {
   const [completed, setCompleted] = usePersisted<string[]>('java-sprint-tasks', ['s1', 's2']);
   const [completedLecture09, setCompletedLecture09] = usePersisted<string[]>('java-sprint-lecture09-sections', []);
+  const [completedLecture10, setCompletedLecture10] = usePersisted<string[]>('java-sprint-lecture10-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
-  const isTaskComplete = (task: ScheduleTask) => task.id === 's1' ? completed.includes(task.id) && lecture09Ready : completed.includes(task.id);
+  const lecture10Ready = lecture10Sections.every((section) => completedLecture10.includes(section.id));
+  const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
+    ? completed.includes(task.id) && lecture09Ready
+    : task.id === 's2'
+      ? completed.includes(task.id) && lecture10Ready
+      : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
   const progress = Math.round((completedCount / schedule.length) * 100);
   const toggleTask = (id: string) => {
-    if (id === 's1' && !lecture09Ready) return;
+    if ((id === 's1' && !lecture09Ready) || (id === 's2' && !lecture10Ready)) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
   const toggleLecture09Section = (id: string) => setCompletedLecture09((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture10Section = (id: string) => setCompletedLecture10((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Tuesday, September 7 · 23:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
@@ -403,34 +463,40 @@ function Dashboard() {
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
+           const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready);
+           const sectionState = task.id === 's1'
+             ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
+             : task.id === 's2'
+               ? { completed: completedLecture10, ready: lecture10Ready, toggle: toggleLecture10Section }
+               : null;
           return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
-            <button onClick={() => toggleTask(task.id)} disabled={task.id === 's1' && !lecture09Ready} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${task.id === 's1' && !lecture09Ready ? 'cursor-not-allowed opacity-75' : ''}`}>
+             <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
               <span className={`grid size-7 shrink-0 place-items-center rounded-full border ${done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{done ? <Check size={14} strokeWidth={3} /> : <Circle size={13} />}</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2"><span className={`text-[13px] font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>{task.title}</span><span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-0.5 mono text-[9px] uppercase tracking-[0.08em] text-accent-foreground">{task.lecture}</span></span>
-                <span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}{task.id === 's1' && !lecture09Ready ? ` · ${lecture09Sections.length - completedLecture09.length} topics left` : ''}</span>
+                 <span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}{sectionState && !sectionState.ready ? ` · ${task.lectureSections!.length - sectionState.completed.length} topics left` : ''}</span>
               </span>
               <span className="hidden shrink-0 rounded-md bg-secondary px-2 py-1 mono text-[9px] text-secondary-foreground sm:inline">{task.time}</span>
               <ChevronRight className="text-muted-foreground transition-transform group-hover:translate-x-0.5" size={15} />
             </button>
-            {task.lectureSections && <div className="border-t border-border/70 px-3 pb-3">
-              <button type="button" onClick={() => setExpandedLecture(isExpanded ? null : task.id)} aria-expanded={isExpanded} data-testid={`button-expand-${task.id}`} className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground">
-                <span>{isExpanded ? 'Hide Lecture 09 study topics' : `Open 5 Lecture 09 study topics · ${completedLecture09.length}/5 complete`}</span>
+             {task.lectureSections && sectionState && <div className="border-t border-border/70 px-3 pb-3">
+               <button type="button" onClick={() => setExpandedLecture(isExpanded ? null : task.id)} aria-expanded={isExpanded} data-testid={`button-expand-${task.id}`} className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground">
+                 <span>{isExpanded ? `Hide ${task.lecture} study topics` : `Open ${task.lectureSections.length} ${task.lecture} study topics · ${sectionState.completed.length}/${task.lectureSections.length} complete`}</span>
                 <ChevronDown size={15} className={`transition-transform ${isExpanded ? 'rotate-180 text-accent-foreground' : ''}`} />
               </button>
               {isExpanded && <div className="space-y-2 border-t border-border/60 pt-3">
                 {task.lectureSections.map((section) => {
-                  const sectionDone = completedLecture09.includes(section.id);
-                  return <div key={section.id} className={`rounded-lg border p-3 ${sectionDone ? 'border-accent/45 bg-accent/10' : 'border-border/70 bg-background/35'}`}>
-                    <button type="button" onClick={() => toggleLecture09Section(section.id)} aria-pressed={sectionDone} data-testid={`button-lecture09-section-${section.id}`} className="flex w-full items-start gap-3 text-left">
+                   const sectionDone = sectionState.completed.includes(section.id);
+                   return <div key={section.id} className={`rounded-lg border p-3 ${sectionDone ? 'border-accent/45 bg-accent/10' : 'border-border/70 bg-background/35'}`}>
+                     <button type="button" onClick={() => sectionState.toggle(section.id)} aria-pressed={sectionDone} data-testid={`button-${task.lecture.toLowerCase().replaceAll(' ', '-')}-section-${section.id}`} className="flex w-full items-start gap-3 text-left">
                       <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${sectionDone ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{sectionDone ? <Check size={12} strokeWidth={3} /> : <Circle size={11} />}</span>
                       <span className={`text-[12px] font-semibold leading-5 ${sectionDone ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{section.title}</span>
                     </button>
                     <ul className="ml-8 mt-2 space-y-1.5">{section.points.map((point) => <li key={point} className="flex gap-2 text-[11px] leading-5 text-muted-foreground"><span className="mt-2 size-1 shrink-0 rounded-full bg-accent/70" /><span>{point}</span></li>)}</ul>
                   </div>;
                 })}
-                <div className={`rounded-lg px-3 py-2 text-[11px] font-medium ${lecture09Ready ? 'bg-accent/15 text-accent-foreground' : 'bg-secondary text-secondary-foreground'}`}>
-                  {lecture09Ready ? 'All five topics complete. Lecture 09 can now be marked complete.' : `Complete all five topics to unlock Lecture 09 completion. ${lecture09Sections.length - completedLecture09.length} remaining.`}
+                 <div className={`rounded-lg px-3 py-2 text-[11px] font-medium ${sectionState.ready ? 'bg-accent/15 text-accent-foreground' : 'bg-secondary text-secondary-foreground'}`}>
+                   {sectionState.ready ? `All ${task.lectureSections.length} topics complete. ${task.lecture} can now be marked complete.` : `Complete all ${task.lectureSections.length} topics to unlock ${task.lecture} completion. ${task.lectureSections.length - sectionState.completed.length} remaining.`}
                 </div>
               </div>}
             </div>}
