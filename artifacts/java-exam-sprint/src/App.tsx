@@ -160,18 +160,19 @@ void addScores(List<? super Integer> out) {
   {
     id: 'composition',
     week: 'Week 14',
-    title: 'Composition over tight coupling',
+    title: 'Object-Oriented Design Fundamentals: Coupling, Cohesion, and Software Architecture Principles',
     eyebrow: 'Design choices',
-    blurb: 'Build small objects that work together instead of making one class know everything.',
+    blurb: 'Evaluate dependencies, keep responsibilities focused, and choose architecture patterns that stay easy to change.',
     accent: '#d56e9a',
-    concepts: ['Composition', 'Coupling', 'Delegation', 'Dependency injection'],
-    summary: 'Composition means a class owns or receives collaborators and delegates work to them. Low coupling makes code easier to change, test, and reason about than a deep inheritance tree.',
-    example: `final class StudyPlan {
-  private final Clock clock;
-  StudyPlan(Clock clock) { this.clock = clock; }
-  boolean isDue() { return clock.now().isAfter(deadline); }
+    concepts: ['Coupling', 'Cohesion', 'Interfaces', 'Composition'],
+    summary: 'Good object-oriented design keeps dependencies loose and responsibilities focused. Encapsulation, abstraction, interfaces, inheritance, and composition each affect how easily a system can change without spreading edits across unrelated classes.',
+    example: `final class OrderService {
+  private final PaymentGateway gateway;
+  OrderService(PaymentGateway gateway) {
+    this.gateway = gateway;
+  }
 }`,
-    check: 'If a class creates and controls every collaborator internally, it is tightly coupled. Pass dependencies in through a constructor when you want easy substitution in tests.',
+    check: 'Prefer high cohesion within a class and low coupling between classes. Program to interfaces and compose focused collaborators so changes stay isolated.',
   },
 ];
 
@@ -439,6 +440,59 @@ const lecture13Sections: LectureSection[] = [
   },
 ];
 
+const lecture14Sections: LectureSection[] = [
+  {
+    id: 'lecture14-coupling',
+    title: '1. Principles of Coupling',
+    points: [
+      'Define coupling as the degree of dependency between classes or components.',
+      'Contrast tightly coupled designs with loosely coupled designs.',
+      'Evaluate when a dependency is necessary and when it becomes harmful.',
+      'Recognize how excessive coupling makes changes ripple through a system.',
+    ],
+  },
+  {
+    id: 'lecture14-cohesion',
+    title: '2. Principles of Cohesion',
+    points: [
+      'Define cohesion as how closely related a class’s responsibilities are.',
+      'Identify single-purpose classes with high cohesion.',
+      'Spot mixed-responsibility classes with low cohesion.',
+      'Refactor unrelated responsibilities into focused, maintainable components.',
+    ],
+  },
+  {
+    id: 'lecture14-oop-design-quality',
+    title: '3. Connecting OOP Concepts to Design Quality',
+    points: [
+      'Connect encapsulation to protected state and reduced dependency exposure.',
+      'Connect abstraction and interfaces to smaller, more stable contracts.',
+      'Evaluate how inheritance can reuse identity while increasing coupling.',
+      'Use composition to organize collaborators and improve design flexibility.',
+    ],
+  },
+  {
+    id: 'lecture14-interface-composition',
+    title: '4. Interface-Driven Decoupling and Composition',
+    points: [
+      'Use interface contracts to depend on capabilities rather than concrete classes.',
+      'Model has-a relationships with object composition.',
+      'Compare composition with is-a inheritance relationships.',
+      'Isolate software changes by injecting replaceable collaborators.',
+    ],
+  },
+  {
+    id: 'lecture14-architectural-refactoring',
+    title: '5. Architectural Refactoring & Case Analysis',
+    points: [
+      'Evaluate Restaurant, Student, and Order designs for mixed concerns.',
+      'Identify classes that combine unrelated data, rules, persistence, or presentation work.',
+      'Split responsibilities into maintainable, single-purpose components.',
+      'Use coupling and cohesion principles to justify each refactoring decision.',
+    ],
+  },
+];
+
 const lecture11Sections: LectureSection[] = [
   {
     id: 'lecture11-definition-contracts',
@@ -500,7 +554,7 @@ const schedule: ScheduleTask[] = [
   { id: 's4a', day: 'Mon · Sep 8', time: '11:00', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
   { id: 's4b', day: 'Mon · Sep 8', time: '12:00', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
   { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
-  { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Composition case study', detail: 'Coupling and collaborator design', topic: 'Week 14', lecture: 'Lecture 14' },
+  { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
   { id: 's7', day: 'Tue · Sep 9', time: '19:30', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
 ];
 
@@ -663,6 +717,7 @@ function Dashboard() {
   const [completedLecture12Part1, setCompletedLecture12Part1] = usePersisted<string[]>('java-sprint-lecture12-part1-sections', []);
   const [completedLecture12Part2, setCompletedLecture12Part2] = usePersisted<string[]>('java-sprint-lecture12-part2-sections', []);
   const [completedLecture13, setCompletedLecture13] = usePersisted<string[]>('java-sprint-lecture13-sections', []);
+  const [completedLecture14, setCompletedLecture14] = usePersisted<string[]>('java-sprint-lecture14-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
@@ -671,6 +726,7 @@ function Dashboard() {
   const lecture12Part1Ready = lecture12Part1Sections.every((section) => completedLecture12Part1.includes(section.id));
   const lecture12Part2Ready = lecture12Part2Sections.every((section) => completedLecture12Part2.includes(section.id));
   const lecture13Ready = lecture13Sections.every((section) => completedLecture13.includes(section.id));
+  const lecture14Ready = lecture14Sections.every((section) => completedLecture14.includes(section.id));
   const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
     ? completed.includes(task.id) && lecture09Ready
     : task.id === 's2'
@@ -683,6 +739,8 @@ function Dashboard() {
             ? completed.includes(task.id) && lecture12Part2Ready
             : task.id === 's5'
               ? completed.includes(task.id) && lecture13Ready
+              : task.id === 's6'
+                ? completed.includes(task.id) && lecture14Ready
       : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
   const progress = Math.round((completedCount / schedule.length) * 100);
@@ -693,7 +751,8 @@ function Dashboard() {
       (id === 's3' && !lecture11Ready) ||
       (id === 's4a' && !lecture12Part1Ready) ||
       (id === 's4b' && !lecture12Part2Ready) ||
-      (id === 's5' && !lecture13Ready)
+      (id === 's5' && !lecture13Ready) ||
+      (id === 's6' && !lecture14Ready)
     ) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
@@ -703,6 +762,7 @@ function Dashboard() {
   const toggleLecture12Part1Section = (id: string) => setCompletedLecture12Part1((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture12Part2Section = (id: string) => setCompletedLecture12Part2((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture13Section = (id: string) => setCompletedLecture13((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture14Section = (id: string) => setCompletedLecture14((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Tuesday, September 7 · 23:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
@@ -718,7 +778,7 @@ function Dashboard() {
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
-            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready) || (task.id === 's5' && !lecture13Ready);
+            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready) || (task.id === 's5' && !lecture13Ready) || (task.id === 's6' && !lecture14Ready);
            const sectionState = task.id === 's1'
              ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
              : task.id === 's2'
@@ -731,6 +791,8 @@ function Dashboard() {
                       ? { completed: completedLecture12Part2, ready: lecture12Part2Ready, toggle: toggleLecture12Part2Section }
                       : task.id === 's5'
                         ? { completed: completedLecture13, ready: lecture13Ready, toggle: toggleLecture13Section }
+                        : task.id === 's6'
+                          ? { completed: completedLecture14, ready: lecture14Ready, toggle: toggleLecture14Section }
                : null;
           return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
