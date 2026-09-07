@@ -142,7 +142,7 @@ enum Mode {
   {
     id: 'generics',
     week: 'Week 13',
-    title: 'Generics, made useful',
+    title: 'Java Generics: Type-Safe Generic Classes, Methods, Bounds, and Wildcards',
     eyebrow: 'Type safety',
     blurb: 'Keep collections honest at compile time and choose wildcards by the direction data moves.',
     accent: '#4f9c7a',
@@ -386,6 +386,59 @@ const lecture12Part2Sections: LectureSection[] = [
   },
 ];
 
+const lecture13Sections: LectureSection[] = [
+  {
+    id: 'lecture13-generic-classes-diamond',
+    title: '1. Generic Classes and the Diamond Operator',
+    points: [
+      'Replace duplicated type-specific classes with generic type parameters such as Printer<T>.',
+      'Instantiate generic classes with wrapper types when Java requires reference types.',
+      'Use the diamond operator (<>) to infer type arguments cleanly.',
+      'Trace how a type parameter keeps a class reusable without losing type information.',
+    ],
+  },
+  {
+    id: 'lecture13-compile-time-safety',
+    title: '2. Compile-Time Type Safety vs. Raw Object References',
+    points: [
+      'Use generic collections to catch incompatible types at compile time.',
+      'Avoid raw Object references that require manual casting.',
+      'Explain how generics prevent runtime ClassCastException bugs.',
+      'Compare the safety and readability of parameterized types with raw collections.',
+    ],
+  },
+  {
+    id: 'lecture13-bounded-generics',
+    title: '3. Bounded Generics and Class/Interface Constraints',
+    points: [
+      'Restrict a type parameter with a single class or interface bound.',
+      'Use multiple bounds to require a class relationship and interface capabilities.',
+      'Apply bounds so generic code can safely call required methods.',
+      'Read the syntax and ordering rules for bounded type parameters.',
+    ],
+  },
+  {
+    id: 'lecture13-generic-methods-erasure',
+    title: '4. Generic Methods, Interfaces, and Type Erasure',
+    points: [
+      'Define generic interfaces and standalone generic methods with <T>.',
+      'Manage static generic methods with their own method-level type parameters.',
+      'Understand how callers infer or provide generic method type arguments.',
+      'Explain how type information is erased at runtime through type erasure.',
+    ],
+  },
+  {
+    id: 'lecture13-wildcards',
+    title: '5. Wildcards and Bounded Wildcards (?, extends, super)',
+    points: [
+      'Use unbounded wildcards (<?>) when the exact type is unknown.',
+      'Use upper-bounded wildcards (<? extends T>) for flexible read-only producers.',
+      'Use lower-bounded wildcards (<? super T>) for flexible collection consumers.',
+      'Choose wildcard bounds by the direction data moves: read with extends, write with super.',
+    ],
+  },
+];
+
 const lecture11Sections: LectureSection[] = [
   {
     id: 'lecture11-definition-contracts',
@@ -446,7 +499,7 @@ const schedule: ScheduleTask[] = [
   { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
   { id: 's4a', day: 'Mon · Sep 8', time: '11:00', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
   { id: 's4b', day: 'Mon · Sep 8', time: '12:00', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
-  { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Bounds, wildcards, PECS', topic: 'Week 13', lecture: 'Lecture 13' },
+  { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
   { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Composition case study', detail: 'Coupling and collaborator design', topic: 'Week 14', lecture: 'Lecture 14' },
   { id: 's7', day: 'Tue · Sep 9', time: '19:30', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
 ];
@@ -609,6 +662,7 @@ function Dashboard() {
   const [completedLecture11, setCompletedLecture11] = usePersisted<string[]>('java-sprint-lecture11-sections', []);
   const [completedLecture12Part1, setCompletedLecture12Part1] = usePersisted<string[]>('java-sprint-lecture12-part1-sections', []);
   const [completedLecture12Part2, setCompletedLecture12Part2] = usePersisted<string[]>('java-sprint-lecture12-part2-sections', []);
+  const [completedLecture13, setCompletedLecture13] = usePersisted<string[]>('java-sprint-lecture13-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
@@ -616,6 +670,7 @@ function Dashboard() {
   const lecture11Ready = lecture11Sections.every((section) => completedLecture11.includes(section.id));
   const lecture12Part1Ready = lecture12Part1Sections.every((section) => completedLecture12Part1.includes(section.id));
   const lecture12Part2Ready = lecture12Part2Sections.every((section) => completedLecture12Part2.includes(section.id));
+  const lecture13Ready = lecture13Sections.every((section) => completedLecture13.includes(section.id));
   const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
     ? completed.includes(task.id) && lecture09Ready
     : task.id === 's2'
@@ -626,6 +681,8 @@ function Dashboard() {
           ? completed.includes(task.id) && lecture12Part1Ready
           : task.id === 's4b'
             ? completed.includes(task.id) && lecture12Part2Ready
+            : task.id === 's5'
+              ? completed.includes(task.id) && lecture13Ready
       : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
   const progress = Math.round((completedCount / schedule.length) * 100);
@@ -635,7 +692,8 @@ function Dashboard() {
       (id === 's2' && !lecture10Ready) ||
       (id === 's3' && !lecture11Ready) ||
       (id === 's4a' && !lecture12Part1Ready) ||
-      (id === 's4b' && !lecture12Part2Ready)
+      (id === 's4b' && !lecture12Part2Ready) ||
+      (id === 's5' && !lecture13Ready)
     ) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
@@ -644,6 +702,7 @@ function Dashboard() {
   const toggleLecture11Section = (id: string) => setCompletedLecture11((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture12Part1Section = (id: string) => setCompletedLecture12Part1((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture12Part2Section = (id: string) => setCompletedLecture12Part2((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture13Section = (id: string) => setCompletedLecture13((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Tuesday, September 7 · 23:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
@@ -659,7 +718,7 @@ function Dashboard() {
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
-            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready);
+            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready) || (task.id === 's5' && !lecture13Ready);
            const sectionState = task.id === 's1'
              ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
              : task.id === 's2'
@@ -670,6 +729,8 @@ function Dashboard() {
                     ? { completed: completedLecture12Part1, ready: lecture12Part1Ready, toggle: toggleLecture12Part1Section }
                     : task.id === 's4b'
                       ? { completed: completedLecture12Part2, ready: lecture12Part2Ready, toggle: toggleLecture12Part2Section }
+                      : task.id === 's5'
+                        ? { completed: completedLecture13, ready: lecture13Ready, toggle: toggleLecture13Section }
                : null;
           return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
