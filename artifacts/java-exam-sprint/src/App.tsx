@@ -159,15 +159,15 @@ void addScores(List<? super Integer> out) {
   },
 ];
 
-type ScheduleTask = { id: string; day: string; time: string; title: string; detail: string; topic: string };
+type ScheduleTask = { id: string; day: string; time: string; title: string; detail: string; topic: string; lecture: string };
 const schedule: ScheduleTask[] = [
-  { id: 's1', day: 'Tonight · Sep 7', time: '23:00', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9' },
-  { id: 's2', day: 'Tonight · Sep 7', time: '23:50', title: 'Casting drills', detail: 'Upcast, downcast, instanceof', topic: 'Week 10' },
-  { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interfaces & class design', detail: 'Contracts, capabilities, abstract classes', topic: 'Week 11' },
-  { id: 's4', day: 'Mon · Sep 8', time: '11:00', title: 'Static, final, nested', detail: 'Predict what belongs where', topic: 'Week 12' },
-  { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Bounds, wildcards, PECS', topic: 'Week 13' },
-  { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Composition case study', detail: 'Coupling and collaborator design', topic: 'Week 14' },
-  { id: 's7', day: 'Tue · Sep 9', time: '19:30', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks' },
+  { id: 's1', day: 'Tonight · Sep 7', time: '23:00', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09' },
+  { id: 's2', day: 'Tonight · Sep 7', time: '23:50', title: 'Casting drills', detail: 'Upcast, downcast, instanceof', topic: 'Week 10', lecture: 'Lecture 10' },
+  { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interfaces & class design', detail: 'Contracts, capabilities, abstract classes', topic: 'Week 11', lecture: 'Lecture 11' },
+  { id: 's4', day: 'Mon · Sep 8', time: '11:00', title: 'Static, final, nested', detail: 'Predict what belongs where', topic: 'Week 12', lecture: 'Lecture 12' },
+  { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Bounds, wildcards, PECS', topic: 'Week 13', lecture: 'Lecture 13' },
+  { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Composition case study', detail: 'Coupling and collaborator design', topic: 'Week 14', lecture: 'Lecture 14' },
+  { id: 's7', day: 'Tue · Sep 9', time: '19:30', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
 ];
 
 type Question = { id: string; topic: string; prompt: string; code?: string; options: string[]; answer: number; explanation: string };
@@ -338,7 +338,7 @@ function Dashboard() {
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">The three-day runway</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completed.length} checked</span></div>
-        <div className="mt-5 space-y-2">{schedule.map((task) => { const done = completed.includes(task.id); return <button key={task.id} onClick={() => toggleTask(task.id)} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}><span className={`grid size-7 shrink-0 place-items-center rounded-full border ${done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{done ? <Check size={14} strokeWidth={3} /> : <Circle size={13} />}</span><span className="min-w-0 flex-1"><span className={`block text-[13px] font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>{task.title}</span><span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}</span></span><span className="hidden shrink-0 rounded-md bg-secondary px-2 py-1 mono text-[9px] text-secondary-foreground sm:inline">{task.time}</span><ChevronRight className="text-muted-foreground transition-transform group-hover:translate-x-0.5" size={15} /></button>; })}</div>
+        <div className="mt-5 space-y-2">{schedule.map((task) => { const done = completed.includes(task.id); return <button key={task.id} onClick={() => toggleTask(task.id)} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}><span className={`grid size-7 shrink-0 place-items-center rounded-full border ${done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{done ? <Check size={14} strokeWidth={3} /> : <Circle size={13} />}</span><span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-2"><span className={`text-[13px] font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>{task.title}</span><span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-0.5 mono text-[9px] uppercase tracking-[0.08em] text-accent-foreground">{task.lecture}</span></span><span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}</span></span><span className="hidden shrink-0 rounded-md bg-secondary px-2 py-1 mono text-[9px] text-secondary-foreground sm:inline">{task.time}</span><ChevronRight className="text-muted-foreground transition-transform group-hover:translate-x-0.5" size={15} /></button>; })}</div>
       </section>
       <div className="space-y-5">
         <section className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
