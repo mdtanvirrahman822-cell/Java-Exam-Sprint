@@ -546,16 +546,16 @@ const lecture11Sections: LectureSection[] = [
   },
 ];
 
-type ScheduleTask = { id: string; day: string; time: string; duration: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
+type ScheduleTask = { id: string; day: string; time: string; duration: string; practice?: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
 const schedule: ScheduleTask[] = [
-  { id: 's1', day: 'Tue · Sep 8', time: '10:00', duration: '3 hours', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
-  { id: 's2', day: 'Tue · Sep 8', time: '13:00', duration: '3 hours', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
-  { id: 's3', day: 'Tue · Sep 8', time: '16:00', duration: '3 hours', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
-  { id: 's4a', day: 'Tue · Sep 8', time: '19:00', duration: '3 hours', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
-  { id: 's4b', day: 'Wed · Sep 9', time: '10:00', duration: '3 hours', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
-  { id: 's5', day: 'Wed · Sep 9', time: '13:00', duration: '3 hours', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
-  { id: 's6', day: 'Wed · Sep 9', time: '16:00', duration: '3 hours', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
-  { id: 's7', day: 'Wed · Sep 9', time: '19:30', duration: '2 hours', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
+  { id: 's1', day: 'Tue · Sep 8', time: '10:00', duration: '4h total', practice: '1h practice', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
+  { id: 's2', day: 'Tue · Sep 8', time: '14:00', duration: '4h total', practice: '1h practice', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
+  { id: 's3', day: 'Tue · Sep 8', time: '18:00', duration: '4h total', practice: '1h practice', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
+  { id: 's4a', day: 'Wed · Sep 9', time: '10:00', duration: '4h total', practice: '1h practice', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
+  { id: 's4b', day: 'Wed · Sep 9', time: '14:00', duration: '4h total', practice: '1h practice', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
+  { id: 's5', day: 'Wed · Sep 9', time: '18:00', duration: '4h total', practice: '1h practice', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
+  { id: 's6', day: 'Thu · Sep 10', time: '07:30', duration: '4h total', practice: '1h practice', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
+  { id: 's7', day: 'Thu · Sep 10', time: '11:45', duration: '2h rehearsal', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
 ];
 
 type Question = { id: string; topic: string; prompt: string; code?: string; options: string[]; answer: number; explanation: string };
@@ -870,7 +870,7 @@ function Dashboard() {
               <span className={`grid size-7 shrink-0 place-items-center rounded-full border ${done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{done ? <Check size={14} strokeWidth={3} /> : <Circle size={13} />}</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2"><span className={`text-[13px] font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>{task.title}</span><span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-0.5 mono text-[9px] uppercase tracking-[0.08em] text-accent-foreground">{task.lecture}</span></span>
-                 <span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}{sectionState && !sectionState.ready ? ` · ${task.lectureSections!.length - sectionState.completed.length} topics left` : ''}</span>
+                  <span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}{task.practice ? ` · ${task.practice}` : ''}{sectionState && !sectionState.ready ? ` · ${task.lectureSections!.length - sectionState.completed.length} topics left` : ''}</span>
               </span>
                <span className="hidden shrink-0 rounded-md bg-secondary px-2 py-1 mono text-[9px] text-secondary-foreground sm:inline">{task.time} · {task.duration}</span>
               <ChevronRight className="text-muted-foreground transition-transform group-hover:translate-x-0.5" size={15} />
