@@ -1,0 +1,301 @@
+OOC_Week_10_1788796780715.pdf
+Pages: 22
+
+--- PAGE 1 ---
+Object Oriented Concepts I
+Prepared By:
+Samia Nawsheen
+Junior Lecturer, CSE
+SWE 4101
+
+--- PAGE 2 ---
+01
+Reference Type vs 
+Object Type
+Objectives
+02
+Upcasting
+03
+Downcasting
+04
+Safe and Unsafe 
+Casting
+05
+Instanceof operator
+
+--- PAGE 3 ---
+A Refresher on Is-A Relationships
+Is every Dog an Animal? Yes
+Is every Animal a Dog?
+No
+
+--- PAGE 4 ---
+●
+Object type casting involves converting one object reference 
+type into another
+●
+It applies to objects in an inheritance hierarchy
+●
+Classes must have Is-A Relationship
+●
+Two types: 
+■
+Upcasting 
+■
+Downcasting
+Object Typecasting
+
+--- PAGE 5 ---
+Upcasting
+●
+Casting from a subclass to a superclass is called upcasting
+●
+Always safe
+●
+Done implicitly by the compiler
+●
+No need to write cast syntax
+
+--- PAGE 6 ---
+Upcasting
+●
+Implicit upcasting takes place
+●
+There is no need to explicitly cast up 
+the inheritance tree
+●
+Compiler knows that cat is an 
+Animal, no error
+public class Animal {
+    String type = “Animal”;
+    public void eat() {
+        // ... 
+    }
+}
+public class Cat extends Animal {
+    String type = “Cat”;
+    public void meow() {
+         // ... 
+    }
+}
+Cat c = new Cat();
+Animal a = c;
+// Equivalent:
+// Animal a = new Cat();
+
+--- PAGE 7 ---
+Attributes Access in Upcasting
+System.out.println(animal.type);
+// ‘Animal’ is printed
+●
+Java uses the reference type (Animal) to determine which ﬁeld is 
+accessed
+The object is still a Cat
+What stayed the same?
+The reference is Animal
+What changed?
+
+--- PAGE 8 ---
+Method Access in Upcasting
+a.eat(); 
+a.meow(); 
+// Compiles
+// Compilation error
+●
+Why can't we call meow()?
+●
+The compiler only looks at the reference type (Animal)
+●
+We can’t do anything that is speciﬁc to Cat
+●
+We’ve restricted the number of methods available to a
+The reference type determines what attributes and methods are 
+accessible 
+
+--- PAGE 9 ---
+Overridden Methods in Upcasting
+public class Animal {
+    void display() {
+        System.out.println("Animal");
+    }
+}
+public class Dog extends Animal {
+    @Override
+    void display() {
+        System.out.println("Dog");
+    }
+}
+Animal a = new Dog();
+a.display();
+// ‘Dog’ is printed
+●
+Overridden methods are 
+accessible
+●
+The object type (Dog) 
+determines which method runs
+●
+This is runtime polymorphism
+
+--- PAGE 10 ---
+Downcasting
+●
+We want to invoke Cat’s meow() method on a
+●
+But the compiler complains that meow() method doesn’t exist 
+for the type Animal
+●
+To call meow() we should convert the reference back to Cat
+●
+We can do this through Downcasting
+Animal a = new Cat();
+
+--- PAGE 11 ---
+Downcasting
+●
+Casting from a superclass to a subclass is downcasting
+●
+Requires explicit casting
+●
+Used to access subclass-speciﬁc members
+●
+May throw ClassCastException if the object is not actually an 
+instance of the subclass
+
+--- PAGE 12 ---
+Animal a = new Cat();   // Upcasting
+Cat c = (Cat) a;   // Downcasting
+c.meow();
+Safe Downcasting
+●
+Why doesn't Java do this implicitly?
+●
+Because Java cannot guarantee that the object is actually a 
+Cat
+●
+This is safe downcasting
+●
+Because the object really is a Cat
+
+--- PAGE 13 ---
+Animal a = new Cat();
+Dog d = (Dog) a;
+Unsafe Downcasting
+●
+Will this compile?
+○
+Yes
+●
+Will this run?
+○
+No
+●
+Java throws ClassCastException
+●
+At compile-time, Java assumes a is a Dog but at runtime, it sees 
+the actual object is a Cat
+
+--- PAGE 14 ---
+Unsafe Downcasting
+Dog dog = new Animal(); // Compilation Error
+●
+Trying to assign an Animal object directly to a Dog reference
+●
+The compiler knows that a general Animal is not guaranteed to 
+be a Dog, so it rejects the assignment immediately
+Animal animal = new Animal();
+Dog dog = (Dog) animal;
+●
+This compiles but at runtime, Java checks the object and ﬁnds 
+that it's actually an Animal, not a Dog
+●
+Throws a ClassCastException
+
+--- PAGE 15 ---
+instanceof Operator
+●
+Check whether an object is an instance of a speciﬁc class
+●
+Returns either true or false
+if(animal instanceof Dog)
+●
+Checks the actual runtime type
+
+--- PAGE 16 ---
+Safe Downcasting with instanceof
+●
+bark() is called only when 
+animal is actually a Dog
+●
+meow() is called when it is a 
+Cat
+●
+No chance of 
+ClassCastException
+if (animal instanceof Dog){
+    Dog d = (Dog) animal;
+    d.bark();
+} else if (animal instanceof Cat) {
+    Cat c = (Cat) animal;
+    c.meow();
+}
+
+--- PAGE 17 ---
+Safe Downcasting with instanceof
+●
+It’s tedious to write this type of code where we need to test the 
+type and make a cast for every conditional block
+●
+Readability is poor as the casting and variable extraction 
+dominate the code
+●
+Repeatedly declaring the type name means there’s more 
+likelihood of introducing an error
+
+--- PAGE 18 ---
+instanceof Pattern Matching
+●
+Java 14+ allows this: 
+if (animal instanceof Dog d) {
+    // The variable 'd' is automatically cast and ready to use
+    d.bark();
+}
+●
+d is called a pattern variable here and its scope is within this 
+block only
+
+--- PAGE 19 ---
+Rules of Pattern Matching
+1. Conditional AND (&&)
+You can use the pattern variable immediately on the right side of an 
+&& operator because the right side only runs if the type check passes
+if (animal instanceof Dog d && d.getAge() > 5) {
+    d.bark();
+}
+
+--- PAGE 20 ---
+Rules of Pattern Matching
+2. Conditional OR (||)
+You cannot use the pattern variable on the right side of an || operator. 
+If the left side fails, the variable is not initialized.
+if (animal instanceof Dog d || d.getAge() > 5) {
+    d.bark();
+}
+// Compilation Error
+
+--- PAGE 21 ---
+Rules of Pattern Matching
+3. Negated Condition (!)
+If you invert the condition using a negative check, the scope of the 
+variable shifts into the else block
+public void examineAnimal (Animal animal) {
+    if (!(animal instanceof Dog d)) {
+        return; // d is not in scope here
+    }
+    // d is in scope here
+    d.bark();
+}
+
+--- PAGE 22 ---
+Thank 
+You

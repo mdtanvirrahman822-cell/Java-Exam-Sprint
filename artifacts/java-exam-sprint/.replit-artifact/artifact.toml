@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Java Exam Sprint"
+description = "A focused Java OOP exam companion with a countdown schedule, interactive lessons, practice questions, coding scenarios, progress tracking, and a Pomodoro study timer."
+version = "1.0.0"
+id = "artifacts/java-exam-sprint"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18420
+
+[services.development]
+run = "pnpm --filter @workspace/java-exam-sprint run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/java-exam-sprint", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/java-exam-sprint/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18420"
+BASE_PATH = "/"
