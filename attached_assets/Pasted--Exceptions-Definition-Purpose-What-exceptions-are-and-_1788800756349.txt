@@ -1,0 +1,58 @@
+* **Exceptions Definition & Purpose**: What exceptions are and why program handling is necessary.
+
+
+* **Java Exception Hierarchy**: The inheritance tree spanning `Object`, `Throwable`, `Error`, and `Exception`.
+
+
+* **Errors vs. Exceptions**: Differences in recoverability, root cause, type, and handling rules.
+
+
+* **Checked vs. Unchecked Exceptions**: Compile-time vs. runtime detection, mandatory handling rules, and class parentage.
+
+
+* **`try-catch` Blocks**: Syntactical structure, runtime logic, and execution flow.
+
+
+* **Multiple Catch Blocks**: Handling different exception types from a single `try` block.
+
+
+* **Catch Ordering Rule**: Rules requiring subclass exceptions to be caught before superclass exceptions.
+
+
+* **Multiple Catch Shortcut**: Pipe-delimited multi-catch syntax for handling distinct exception types uniformly.
+
+
+* **No Inheritance Rule**: Restriction against listing parent-child exception classes within a multi-catch statement.
+
+
+* **`finally` Block**: Execution behavior and applications in resource cleanup.
+
+
+* **Common Built-in Exceptions**: Standard Java runtime and checked exceptions (`NullPointerException`, `ArithmeticException`, `IOException`, etc.).
+
+
+* **`throw` (Triggering an Exception Yourself)**: Using `throw` inside method bodies to manually create and raise exception instances.
+
+
+* **`throws` (Declaring a Risk)**: Declaring potential checked exceptions in method signatures.
+
+
+* **`throw` vs. `throws**`: Comparison of purpose, syntax location, parameters, quantity, and execution effect.
+
+
+* **Exception Propagation**: Flow of uncaught exceptions up the call stack to parent methods.
+
+
+* **`try-with-resources`**: Automatic resource management syntax replacing manual closing inside `finally` blocks.
+
+
+* **Custom Exceptions Overview**: Reasons to create domain-specific exceptions.
+
+
+* **Custom Checked Exceptions**: Implementation by extending `Exception`.
+
+
+* **Custom Unchecked Exceptions**: Implementation by extending `RuntimeException`.
+
+
+* **Pop Quiz & Code Exercises**: Practice problems covering exceptions, order of execution, and trace execution.
