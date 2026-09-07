@@ -1020,6 +1020,233 @@ Dog dogB = (Dog) animalB;`,
   },
 ];
 
+const lecture11Scenarios: Scenario[] = [
+  {
+    id: 'lecture11-c1',
+    title: 'Treat an interface as a contract',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Why does new Payable() fail, and what does the declaration promise?',
+    code: `interface Payable {
+  long amountOwedThisMonth();
+}
+
+Payable payable = new Payable();`,
+    options: [
+      'It fails because interfaces cannot be constructed; it only declares a contract.',
+      'It fails because interface methods cannot return long.',
+      'It succeeds and creates an object with a default amount of zero.',
+      'It fails because every interface must extend Object explicitly.',
+    ],
+    answer: 0,
+    explanation: 'An interface is a contract, not a concrete class. The method declaration promises that implementers provide amountOwedThisMonth(), but there is no implementation to construct.',
+  },
+  {
+    id: 'lecture11-c2',
+    title: 'Implement the promised behavior',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Which implementation correctly satisfies Payable for an employee?',
+    code: `interface Payable {
+  long amountOwedThisMonth();
+}
+
+class Employee implements Payable {
+  String name;
+  long monthlySalary;
+  // Choose the required method body
+}`,
+    options: [
+      'public long amountOwedThisMonth() { return monthlySalary; }',
+      'private void amountOwedThisMonth() { return monthlySalary; }',
+      'public int amountOwedThisMonth(String name) { return monthlySalary; }',
+      'public long amountOwedThisMonth() { name = monthlySalary; }',
+    ],
+    answer: 0,
+    explanation: 'Employee must implement the exact public method signature from Payable and return its monthlySalary. An interface method is public, so the implementation cannot reduce visibility.',
+  },
+  {
+    id: 'lecture11-c3',
+    title: 'Share a capability without a family tree',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Why can Employee, Contractor, and Vendor all be placed in a Payable[]?',
+    code: `class Employee implements Payable { /* salary */ }
+class Contractor implements Payable { /* rate × milestones */ }
+class Vendor implements Payable { /* invoice */ }
+
+Payable[] payees = {
+  new Employee(...),
+  new Contractor(...),
+  new Vendor(...)
+};`,
+    options: [
+      'They must all extend the same concrete superclass.',
+      'Payable creates a shared capability type even though the classes are otherwise unrelated.',
+      'Java arrays automatically convert every object to Payable.',
+      'Only Vendor can implement Payable because it represents money.',
+    ],
+    answer: 1,
+    explanation: 'Interfaces model a CAN-DO capability. The three classes can have unrelated state and logic, yet each is a Payable because it supplies amountOwedThisMonth().',
+  },
+  {
+    id: 'lecture11-c4',
+    title: 'Run payroll polymorphically',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'What total does this interface-based payroll loop calculate?',
+    code: `Payable[] toPay = {
+  new Employee(50000),
+  new Contractor(1000, 5),
+  new Vendor(20000)
+};
+
+long total = 0;
+for (Payable p : toPay) {
+  total += p.amountOwedThisMonth();
+}`,
+    options: [
+      '50,000, because only Employee is an Employee.',
+      '55,000, because Vendor is not part of the payroll family.',
+      '75,000, because each object supplies its own implementation.',
+      'A compile error, because arrays cannot hold interface references.',
+    ],
+    answer: 2,
+    explanation: 'The total is 50,000 + (1,000 × 5) + 20,000 = 75,000. The loop depends only on the Payable contract and dynamically dispatches each implementation.',
+  },
+  {
+    id: 'lecture11-c5',
+    title: 'Give one class several contracts',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'What must Contractor provide when it implements Payable, Taxable, and Auditable?',
+    code: `interface Payable { long amountOwedThisMonth(); }
+interface Taxable { long taxWithheld(); }
+interface Auditable { String auditTrail(); }
+
+class Contractor implements Payable, Taxable, Auditable {
+  // What is required?
+}`,
+    options: [
+      'Only amountOwedThisMonth(); the other interfaces are documentation.',
+      'Implement all three required methods with compatible public signatures.',
+      'Extend three abstract classes instead.',
+      'Implement only the methods that are called from main.',
+    ],
+    answer: 1,
+    explanation: 'A class can implement multiple interfaces, so Contractor must provide all three contracts: amountOwedThisMonth(), taxWithheld(), and auditTrail().',
+  },
+  {
+    id: 'lecture11-c6',
+    title: 'Choose the view of one object',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Which statement about these three references is true?',
+    code: `Contractor contractor = new Contractor(1000, 5);
+Payable payable = contractor;
+Taxable taxable = contractor;
+Auditable auditable = contractor;
+
+payable.amountOwedThisMonth();
+taxable.taxWithheld();
+auditable.auditTrail();`,
+    options: [
+      'Each reference exposes the methods promised by its own interface.',
+      'All three references expose every Contractor method automatically.',
+      'Only the first assignment is legal because one object has one type.',
+      'The object is copied three times, once for each interface.',
+    ],
+    answer: 0,
+    explanation: 'The object is still one Contractor, but the declared reference type controls what the compiler allows you to call. Each interface reference exposes only its own contract.',
+  },
+  {
+    id: 'lecture11-c7',
+    title: 'Program to the interface',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Why can one printReceipt method accept both Employee and Vendor without overloads?',
+    code: `static void printReceipt(Payable p) {
+  System.out.println("Amount owed: " + p.amountOwedThisMonth());
+}
+
+printReceipt(new Employee(50000));
+printReceipt(new Vendor(20000));`,
+    options: [
+      'Payable is a parameter type shared by every implementer.',
+      'Java chooses a different method because printReceipt is overloaded automatically.',
+      'Vendor is converted into Employee before the call.',
+      'The method can call any private field on either class.',
+    ],
+    answer: 0,
+    explanation: 'The parameter asks only for the Payable contract. Any object that implements Payable can be passed unchanged, keeping the receipt code independent of concrete classes.',
+  },
+  {
+    id: 'lecture11-c8',
+    title: 'Decide between extends and implements',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Which design correctly models a savable Circle and an unrelated UserProfile?',
+    code: `abstract class Shape {
+  abstract double area();
+}
+interface Savable {
+  void saveToFile(String filename);
+}
+
+class Circle extends Shape implements Savable { /* area + save */ }
+class UserProfile implements Savable { /* save */ }`,
+    options: [
+      'Both classes implement Savable because saving is a capability, not shared identity.',
+      'UserProfile must extend Shape because Circle does.',
+      'Circle must extend Savable because interfaces use extends for classes.',
+      'Savable should be a field inside both classes, not a type.',
+    ],
+    answer: 0,
+    explanation: 'Circle extends Shape for shared shape identity and implements Savable for a capability. UserProfile can independently implement the same capability without pretending to be a Shape.',
+  },
+  {
+    id: 'lecture11-c9',
+    title: 'Resolve conflicting defaults',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'What must Duck do when both interfaces provide a default move()?',
+    code: `interface Flyable {
+  default void move() { System.out.println("Flying"); }
+}
+interface Swimmable {
+  default void move() { System.out.println("Swimming"); }
+}
+
+class Duck implements Flyable, Swimmable {
+  // Choose the required fix
+}`,
+    options: [
+      'Nothing; Java silently chooses the first interface.',
+      'Override move() and resolve the conflict, optionally using Flyable.super.move().',
+      'Change Duck to extend both interfaces.',
+      'Delete one interface from the project.',
+    ],
+    answer: 1,
+    explanation: 'Java refuses to inherit two unrelated defaults with the same signature. Duck must override move() and explicitly choose or combine Flyable.super.move() and Swimmable.super.move().',
+  },
+  {
+    id: 'lecture11-c10',
+    title: 'Apply the interface boundary',
+    topic: 'Lecture 11 · Interfaces',
+    prompt: 'Why is Employee an abstract class while Payable is an interface, and why should Contractor not extend Employee just to reuse pay logic?',
+    code: `interface Payable {
+  long amountOwedThisMonth();
+}
+
+abstract class Employee {
+  String name;
+  Employee(String name) { this.name = name; }
+  abstract long calculatePay();
+}
+
+class Contractor /* should use which relationship? */`,
+    options: [
+      'Contractor should extend Employee because all paid objects are employees.',
+      'Employee models shared employee identity/state; Payable models a capability that Contractor can implement.',
+      'Both should be interfaces because classes cannot have constructors.',
+      'Payable should extend Employee so every payee inherits name.',
+    ],
+    answer: 1,
+    explanation: 'Employee is abstract because employees share identity, state, and possibly partial implementation. Payable is an interface because Employee, Contractor, and Vendor can share the ability to be paid without sharing an identity. Forcing Contractor to extend Employee would be an incorrect IS-A relationship.',
+  },
+];
+
 const navItems = [
   { href: '/', label: 'Cockpit', icon: LayoutDashboard },
   { href: '/learn', label: 'Learn', icon: Library },
@@ -1403,23 +1630,30 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'mixed'>('lecture09');
-  const activeScenarios = labTrack === 'lecture09' ? lecture09Scenarios : labTrack === 'lecture10' ? lecture10Scenarios : scenarios;
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'mixed'>('lecture09');
+  const activeScenarios = labTrack === 'lecture09'
+    ? lecture09Scenarios
+    : labTrack === 'lecture10'
+      ? lecture10Scenarios
+      : labTrack === 'lecture11'
+        ? lecture11Scenarios
+        : scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture10' | 'mixed') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'mixed') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture11'} onClick={() => selectTrack('lecture11')} data-testid="button-lab-lecture11" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture11' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 11 · Interfaces <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'mixed'} onClick={() => selectTrack('mixed')} data-testid="button-lab-mixed" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'mixed' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Mixed review <span className="ml-1 opacity-70">3</span></button>
     </div>
     <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>

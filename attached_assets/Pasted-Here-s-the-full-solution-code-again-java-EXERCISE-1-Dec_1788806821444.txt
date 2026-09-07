@@ -1,0 +1,302 @@
+Here's the full solution code again:
+
+```java
+// ===== EXERCISE 1: Declare Your First Interface =====
+public interface Payable1 {
+    long amountOwedThisMonth();
+    // No method body, ends in semicolon — just a promise
+}
+// new Payable1() would be a compile error:
+// an interface is a contract, not a concrete type — nothing to construct
+
+
+// ===== EXERCISE 2: Implement an Interface =====
+interface Payable2 {
+    long amountOwedThisMonth();
+}
+
+class Employee2 implements Payable2 {
+    String name;
+    long monthlySalary;
+
+    Employee2(String name, long monthlySalary) {
+        this.name = name;
+        this.monthlySalary = monthlySalary;
+    }
+
+    @Override
+    public long amountOwedThisMonth() {
+        return monthlySalary;
+    }
+}
+
+public class Exercise2 {
+    public static void main(String[] args) {
+        Employee2 e = new Employee2("Alice", 50000);
+        System.out.println(e.amountOwedThisMonth());
+    }
+}
+
+
+// ===== EXERCISE 3: Unrelated Classes, Same Contract =====
+interface Payable3 {
+    long amountOwedThisMonth();
+}
+
+class Employee3 implements Payable3 {
+    long monthlySalary;
+    Employee3(long monthlySalary) { this.monthlySalary = monthlySalary; }
+    public long amountOwedThisMonth() { return monthlySalary; }
+}
+
+class Contractor3 implements Payable3 {
+    long ratePerMilestone;
+    int milestonesSignedOff;
+    Contractor3(long rate, int milestones) {
+        this.ratePerMilestone = rate;
+        this.milestonesSignedOff = milestones;
+    }
+    public long amountOwedThisMonth() { return ratePerMilestone * milestonesSignedOff; }
+}
+
+class Vendor3 implements Payable3 {
+    long invoiceTotal;
+    Vendor3(long invoiceTotal) { this.invoiceTotal = invoiceTotal; }
+    public long amountOwedThisMonth() { return invoiceTotal; }
+}
+// Employee3, Contractor3, and Vendor3 share no superclass except Object —
+// they're only related by implementing Payable3
+
+
+// ===== EXERCISE 4: Polymorphic Payroll Run =====
+interface Payable4 {
+    long amountOwedThisMonth();
+}
+
+class Employee4 implements Payable4 {
+    long salary;
+    Employee4(long salary) { this.salary = salary; }
+    public long amountOwedThisMonth() { return salary; }
+}
+
+class Contractor4 implements Payable4 {
+    long rate; int milestones;
+    Contractor4(long rate, int milestones) { this.rate = rate; this.milestones = milestones; }
+    public long amountOwedThisMonth() { return rate * milestones; }
+}
+
+class Vendor4 implements Payable4 {
+    long invoice;
+    Vendor4(long invoice) { this.invoice = invoice; }
+    public long amountOwedThisMonth() { return invoice; }
+}
+
+public class Exercise4 {
+    public static void main(String[] args) {
+        Payable4[] toPay = {
+            new Employee4(50000),
+            new Contractor4(1000, 5),
+            new Vendor4(20000)
+        };
+
+        long total = 0;
+        for (Payable4 p : toPay) {
+            total += p.amountOwedThisMonth();
+        }
+        System.out.println("Total owed this month: " + total);
+    }
+}
+
+
+// ===== EXERCISE 5: Multiple Interfaces, One Class =====
+interface Payable5 { long amountOwedThisMonth(); }
+interface Taxable5 { long taxWithheld(); }
+interface Auditable5 { String auditTrail(); }
+
+class Contractor5 implements Payable5, Taxable5, Auditable5 {
+    long rate; int milestones;
+
+    Contractor5(long rate, int milestones) {
+        this.rate = rate;
+        this.milestones = milestones;
+    }
+
+    @Override
+    public long amountOwedThisMonth() { return rate * milestones; }
+
+    @Override
+    public long taxWithheld() { return (long)(amountOwedThisMonth() * 0.1); }
+
+    @Override
+    public String auditTrail() {
+        return "Contractor paid " + amountOwedThisMonth() + " for " + milestones + " milestones";
+    }
+}
+
+public class Exercise5 {
+    public static void main(String[] args) {
+        Contractor5 c = new Contractor5(1000, 5);
+        System.out.println(c.amountOwedThisMonth());
+        System.out.println(c.taxWithheld());
+        System.out.println(c.auditTrail());
+    }
+}
+
+
+// ===== EXERCISE 6: Many Views, One Object =====
+interface Payable6 { long amountOwedThisMonth(); }
+interface Taxable6 { long taxWithheld(); }
+interface Auditable6 { String auditTrail(); }
+
+class Contractor6 implements Payable6, Taxable6, Auditable6 {
+    long rate; int milestones;
+    Contractor6(long rate, int milestones) { this.rate = rate; this.milestones = milestones; }
+    public long amountOwedThisMonth() { return rate * milestones; }
+    public long taxWithheld() { return (long)(amountOwedThisMonth() * 0.1); }
+    public String auditTrail() { return "Audit info"; }
+}
+
+public class Exercise6 {
+    public static void main(String[] args) {
+        Contractor6 c = new Contractor6(1000, 5);
+
+        Payable6 asPayable = c;
+        Taxable6 asTaxable = c;
+        Auditable6 asAuditable = c;
+
+        System.out.println(asPayable.amountOwedThisMonth()); // OK
+        System.out.println(asTaxable.taxWithheld());          // OK
+        System.out.println(asAuditable.auditTrail());         // OK
+
+        // asPayable.taxWithheld();     // Compile error — Payable6 doesn't declare this
+        // asTaxable.auditTrail();      // Compile error — Taxable6 doesn't declare this
+        // Each reference type restricts which methods are visible, same rule as upcasting
+    }
+}
+
+
+// ===== EXERCISE 7: Interface as Parameter Type =====
+interface Payable7 { long amountOwedThisMonth(); }
+
+class Employee7 implements Payable7 {
+    long salary;
+    Employee7(long salary) { this.salary = salary; }
+    public long amountOwedThisMonth() { return salary; }
+}
+
+class Vendor7 implements Payable7 {
+    long invoice;
+    Vendor7(long invoice) { this.invoice = invoice; }
+    public long amountOwedThisMonth() { return invoice; }
+}
+
+public class Exercise7 {
+    static void printReceipt(Payable7 p) {
+        System.out.println("Amount owed: " + p.amountOwedThisMonth());
+    }
+
+    public static void main(String[] args) {
+        printReceipt(new Employee7(50000));
+        printReceipt(new Vendor7(20000));
+        // Same method works for any Payable7 implementer — no changes needed
+    }
+}
+
+
+// ===== EXERCISE 8: Extends vs Implements Decision =====
+abstract class Shape8 {
+    abstract double area();
+}
+
+interface Savable8 {
+    void saveToFile(String filename);
+}
+
+class Circle8 extends Shape8 implements Savable8 {
+    double radius;
+    Circle8(double radius) { this.radius = radius; }
+    double area() { return Math.PI * radius * radius; }
+
+    @Override
+    public void saveToFile(String filename) {
+        System.out.println("Saving circle (area=" + area() + ") to " + filename);
+    }
+}
+
+class Square8 extends Shape8 {
+    double side;
+    Square8(double side) { this.side = side; }
+    double area() { return side * side; }
+}
+
+class Triangle8 extends Shape8 {
+    double base, height;
+    Triangle8(double base, double height) { this.base = base; this.height = height; }
+    double area() { return 0.5 * base * height; }
+}
+
+// Unrelated class that can also honestly implement Savable8
+class UserProfile8 implements Savable8 {
+    String username;
+    UserProfile8(String username) { this.username = username; }
+
+    @Override
+    public void saveToFile(String filename) {
+        System.out.println("Saving user profile for " + username + " to " + filename);
+    }
+}
+// "Can be saved to disk" is an ability, not an identity — Circle and UserProfile
+// share no family tree, but both can honestly implement Savable8
+
+
+// ===== EXERCISE 9: The Diamond Problem, Avoided =====
+interface Flyable9 {
+    default void move() { System.out.println("Flying"); }
+}
+
+interface Swimmable9 {
+    default void move() { System.out.println("Swimming"); }
+}
+
+class Duck9 implements Flyable9, Swimmable9 {
+    // Without overriding move(), this class won't compile:
+    // "class Duck9 inherits unrelated defaults for move() from Flyable9 and Swimmable9"
+
+    @Override
+    public void move() {
+        // Manually resolve the conflict
+        Flyable9.super.move();
+        Swimmable9.super.move();
+        System.out.println("Duck can do both!");
+    }
+}
+
+public class Exercise9 {
+    public static void main(String[] args) {
+        Duck9 d = new Duck9();
+        d.move();
+    }
+}
+
+
+// ===== EXERCISE 10: Interface vs Abstract Class, Applied =====
+interface Payable10 {
+    long amountOwedThisMonth();
+}
+
+abstract class Employee10 {
+    String name;
+    Employee10(String name) { this.name = name; }
+    abstract long calculatePay();
+}
+// (a) Employee10 is abstract because all employees share identity (name field,
+//     constructor) AND partial shared code — an "is-a" relationship.
+// (b) Payable10 is an interface because Contractor/Vendor/Employee share only
+//     a capability ("can be paid"), not an identity or common state.
+// (c) Making Contractor extend Employee10 just to get calculatePay() would be
+//     an "is-a" lie — a Contractor is not an Employee, and it would incorrectly
+//     inherit Employee-specific state/behavior that doesn't apply to it, while
+//     also using up its one allowed superclass slot.
+```
+
+Same as before — split into separate `.java` files (or rename the numbered classes) before compiling.
