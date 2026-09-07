@@ -1,0 +1,255 @@
+Here's the full solution code for all 10:
+
+```java
+// ===== EXERCISE 1: Static Block Initialization =====
+class Config1 {
+    static int sumOfFirstTen;
+
+    static {
+        int sum = 0;
+        for (int i = 1; i <= 10; i++) {
+            sum += i;
+        }
+        sumOfFirstTen = sum;
+    }
+}
+
+public class Exercise1 {
+    public static void main(String[] args) {
+        System.out.println(Config1.sumOfFirstTen); // 55
+        // No method call needed — the static block ran automatically
+        // the first time Config1 was referenced
+    }
+}
+
+
+// ===== EXERCISE 2: Static Block Runs Once =====
+class Test2 {
+    static {
+        System.out.println("Static block");
+    }
+
+    Test2() {
+        System.out.println("Constructor");
+    }
+}
+
+public class Exercise2 {
+    public static void main(String[] args) {
+        new Test2();
+        new Test2();
+        // Output:
+        // Static block      <- runs once, only on first use of the class
+        // Constructor
+        // Constructor        <- runs every time a new object is created
+    }
+}
+
+
+// ===== EXERCISE 3: Static Nested Class =====
+class Car3 {
+    static class Engine {
+        int horsepower;
+    }
+}
+
+public class Exercise3 {
+    public static void main(String[] args) {
+        Car3.Engine e = new Car3.Engine(); // no Car3 object needed
+        e.horsepower = 450;
+        System.out.println(e.horsepower);
+    }
+}
+
+
+// ===== EXERCISE 4: Building an Immutable Class =====
+final class Point4 {
+    private final int x;
+    private final int y;
+
+    Point4(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    int getX() { return x; }
+    int getY() { return y; }
+}
+// final class -> cannot be extended
+// final fields -> set only once, in the constructor
+// only getters -> no way to modify state after construction
+
+public class Exercise4 {
+    public static void main(String[] args) {
+        Point4 p = new Point4(3, 4);
+        System.out.println(p.getX() + ", " + p.getY());
+        // class Point4Sub extends Point4 {} // would be a compile error
+    }
+}
+
+
+// ===== EXERCISE 5: The Mutable Field Trap =====
+import java.util.ArrayList;
+import java.util.List;
+
+final class Team5 {
+    private final List<String> players;
+
+    Team5(List<String> players) {
+        this.players = players;
+    }
+
+    List<String> getPlayers() {
+        return players; // hands out the real, live list!
+    }
+}
+
+public class Exercise5 {
+    public static void main(String[] args) {
+        List<String> original = new ArrayList<>();
+        original.add("Alice");
+
+        Team5 team = new Team5(original);
+        team.getPlayers().add("Mallory"); // sneaks in an unauthorized player!
+
+        System.out.println(team.getPlayers());
+        // ["Alice", "Mallory"] — the "immutable" class was never protected;
+        // the caller had a live reference to the internal list all along
+    }
+}
+
+
+// ===== EXERCISE 6: Fixing Immutability with Defensive Copying =====
+import java.util.ArrayList;
+import java.util.List;
+
+final class Team6 {
+    private final List<String> players;
+
+    Team6(List<String> players) {
+        this.players = List.copyOf(players); // defensive copy, and immutable itself
+    }
+
+    List<String> getPlayers() {
+        return players;
+    }
+}
+
+public class Exercise6 {
+    public static void main(String[] args) {
+        List<String> original = new ArrayList<>();
+        original.add("Alice");
+
+        Team6 team = new Team6(original);
+
+        try {
+            team.getPlayers().add("Mallory");
+        } catch (UnsupportedOperationException e) {
+            System.out.println("Blocked: " + e);
+        }
+
+        original.add("Eve"); // mutating the original after construction
+        System.out.println(team.getPlayers()); // still just ["Alice"] — unaffected
+    }
+}
+
+
+// ===== EXERCISE 7: Declaring and Using an Enum =====
+enum Day7 {
+    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+}
+
+public class Exercise7 {
+    static boolean isWeekday(Day7 d) {
+        return switch (d) {
+            case SATURDAY, SUNDAY -> false;
+            default -> true;
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println(isWeekday(Day7.MONDAY));   // true
+        System.out.println(isWeekday(Day7.SATURDAY)); // false
+        System.out.println(isWeekday(Day7.FRIDAY));   // true
+    }
+}
+
+
+// ===== EXERCISE 8: Enums Carrying Data =====
+enum Day8 {
+    MONDAY(false), TUESDAY(false), WEDNESDAY(false), THURSDAY(false),
+    FRIDAY(false), SATURDAY(true), SUNDAY(true);
+
+    private final boolean isWeekend;
+
+    Day8(boolean isWeekend) {
+        this.isWeekend = isWeekend;
+    }
+
+    boolean isWeekend() {
+        return isWeekend;
+    }
+}
+
+public class Exercise8 {
+    public static void main(String[] args) {
+        for (Day8 d : Day8.values()) {
+            System.out.println(d.ordinal() + ": " + d.name() + " -> weekend? " + d.isWeekend());
+        }
+    }
+}
+
+
+// ===== EXERCISE 9: Replacing a Class with a Record =====
+record Point9(int x, int y) { }
+
+public class Exercise9 {
+    public static void main(String[] args) {
+        Point9 p1 = new Point9(3, 4);
+        Point9 p2 = new Point9(3, 4);
+
+        System.out.println(p1.x()); // 3 — no explicit getX() needed
+        System.out.println(p1.y()); // 4
+        System.out.println(p1);     // Point9[x=3, y=4] — auto-generated toString()
+        System.out.println(p1.equals(p2)); // true — auto-generated equals()
+    }
+}
+
+
+// ===== EXERCISE 10: The Record Mutability Trap =====
+import java.util.ArrayList;
+import java.util.List;
+
+record Team10Unsafe(List<String> players) { }
+
+record Team10(List<String> players) {
+    // Compact constructor — defensively copies the list
+    Team10 {
+        players = List.copyOf(players);
+    }
+}
+
+public class Exercise10 {
+    public static void main(String[] args) {
+        // Unsafe version — mutable list leaks through
+        List<String> original = new ArrayList<>();
+        original.add("Alice");
+        Team10Unsafe unsafeTeam = new Team10Unsafe(original);
+        unsafeTeam.players().add("Mallory"); // succeeds! record fields are final,
+                                              // but the List object itself is still mutable
+        System.out.println(unsafeTeam.players()); // ["Alice", "Mallory"]
+
+        // Fixed version — compact constructor defends against this
+        List<String> original2 = new ArrayList<>();
+        original2.add("Bob");
+        Team10 safeTeam = new Team10(original2);
+        try {
+            safeTeam.players().add("Eve");
+        } catch (UnsupportedOperationException e) {
+            System.out.println("Blocked: " + e);
+        }
+    }
+}
+```
+
+Same as always — split into separate `.java` files (or rename the numbered classes) before compiling.

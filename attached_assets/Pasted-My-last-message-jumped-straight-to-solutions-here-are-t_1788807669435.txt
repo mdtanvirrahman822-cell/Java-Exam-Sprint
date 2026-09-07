@@ -1,0 +1,33 @@
+My last message jumped straight to solutions — here are the matching questions for Week 12 Part 2:
+
+## Exercises
+
+**1. Static Block Initialization**
+Create a class `Config` with a static variable `sumOfFirstTen`. Use a **static block** to calculate the sum of numbers 1 through 10 and assign it to `sumOfFirstTen`. Print the value from `main()` without ever calling a method to trigger the calculation.
+
+**2. Static Block Runs Once**
+Create a class `Test` with a static block that prints `"Static block"` and a constructor that prints `"Constructor"`. In `main()`, create two `Test` objects. Confirm (by running it) that `"Static block"` prints only once while `"Constructor"` prints twice, and explain why in a comment.
+
+**3. Static Nested Class**
+Create a class `Car` containing a **static nested class** `Engine` with a field `horsepower`. Instantiate an `Engine` directly as `Car.Engine e = new Car.Engine();` without ever creating a `Car` object. Set and print its horsepower.
+
+**4. Building an Immutable Class**
+Create a `final class Point` with `private final int x` and `private final int y`, set only through the constructor, with only getters (`getX()`, `getY()`) and no setters. Confirm the class cannot be extended and its fields cannot be reassigned after construction.
+
+**5. The Mutable Field Trap**
+Create a `final class Team` with a `private final List<String> players` field, a constructor, and a getter `getPlayers()` that returns the list directly. Write code in `main()` that calls `getPlayers()` on a `Team` object and then calls `.add()` on the returned list. Confirm this "immutable" class was not actually protected from external changes.
+
+**6. Fixing Immutability with Defensive Copying**
+Fix `Team` from Exercise 5 using `List.copyOf(players)` in the constructor to defensively copy the list. Try the same `.add()` attack from Exercise 5 and confirm it now throws an exception (or show that the original list is unaffected).
+
+**7. Declaring and Using an Enum**
+Create an `enum Day` with all seven days of the week. Write a method `isWeekday(Day d)` that uses a **switch expression** on the enum to return `true` for Monday–Friday and `false` for Saturday/Sunday. Test it with a few values.
+
+**8. Enums Carrying Data**
+Extend your `Day` enum so each constant carries a `boolean isWeekend` value set through a constructor (e.g., `MONDAY(false)`, `SATURDAY(true)`). Add a method `isWeekend()` that returns the stored value. Loop through `Day.values()` and print each day's name alongside whether it's a weekend, using `name()` and `ordinal()`.
+
+**9. Replacing a Class with a Record**
+Take your hand-written immutable `Point` class from Exercise 4 and rewrite it as a one-line `record Point(int x, int y) {}`. Create two `Point` records with the same coordinates and demonstrate that: (a) `p.x()` and `p.y()` work without explicit getters, (b) `toString()` is auto-generated and readable, and (c) two records with equal fields are `.equals()` to each other.
+
+**10. The Record Mutability Trap**
+Create a `record Team(List<String> players) {}`. Instantiate it with a mutable `ArrayList`, then call `.players().add(...)` on the record to prove that even though the record's *fields* are final, the *mutable object inside* can still be changed from outside. Fix it by adding a **compact constructor** to the record that defensively copies the list using `List.copyOf(players)`.

@@ -1483,6 +1483,244 @@ static void settle(Payable[] payees, LedgerSink sink) {
   },
 ];
 
+const lecture12Part2Scenarios: Scenario[] = [
+  {
+    id: 'lecture12p2-c1',
+    title: 'Initialize with a static block',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'What is printed when Config.sumOfFirstTen is read without calling a calculation method?',
+    code: `class Config {
+  static int sumOfFirstTen;
+
+  static {
+    int sum = 0;
+    for (int i = 1; i <= 10; i++) sum += i;
+    sumOfFirstTen = sum;
+  }
+}
+
+System.out.println(Config.sumOfFirstTen);`,
+    options: [
+      '55, because the static block runs when Config is first initialized.',
+      '0, because static blocks cannot assign static fields.',
+      '10, because only the loop endpoint is stored.',
+      'A compile error, because main must call the static block.',
+    ],
+    answer: 0,
+    explanation: 'The static block executes once when the class is initialized, before the static field is read. The sum from 1 through 10 is 55, so no trigger method is needed.',
+  },
+  {
+    id: 'lecture12p2-c2',
+    title: 'Understand one-time class initialization',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'What is the output order when two Test objects are constructed?',
+    code: `class Test {
+  static { System.out.println("Static block"); }
+  Test() { System.out.println("Constructor"); }
+}
+
+new Test();
+new Test();`,
+    options: [
+      'Static block, Constructor, Constructor',
+      'Static block, Static block, Constructor, Constructor',
+      'Constructor, Static block, Constructor',
+      'Constructor, Constructor, Static block',
+    ],
+    answer: 0,
+    explanation: 'Class initialization happens once before the first object construction, so the static block prints once. The constructor runs for every new Test object and prints twice.',
+  },
+  {
+    id: 'lecture12p2-c3',
+    title: 'Use a static nested class',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'Why is this construction valid without creating a Car object?',
+    code: `class Car {
+  static class Engine {
+    int horsepower;
+  }
+}
+
+Car.Engine e = new Car.Engine();
+e.horsepower = 450;`,
+    options: [
+      'A static nested class belongs to Car itself, so no enclosing Car instance is required.',
+      'Every nested class automatically creates its outer object.',
+      'Engine is actually an interface and can be constructed through Car.',
+      'The code is invalid because nested classes must be non-static.',
+    ],
+    answer: 0,
+    explanation: 'A static nested class is associated with the enclosing class, not with an enclosing instance. Car.Engine can therefore be instantiated directly as new Car.Engine().',
+  },
+  {
+    id: 'lecture12p2-c4',
+    title: 'Build an immutable value class',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'Which combination best protects Point after construction?',
+    code: `final class Point {
+  private final int x;
+  private final int y;
+
+  Point(int x, int y) {
+    this.x = x;
+    this.y = y;
+  }
+  int getX() { return x; }
+  int getY() { return y; }
+}`,
+    options: [
+      'final class, private final fields, constructor assignment, and getters only',
+      'public fields and setters so callers can inspect the state',
+      'A non-final class with mutable fields and one getter',
+      'Static fields shared by every Point instance',
+    ],
+    answer: 0,
+    explanation: 'final prevents subclassing, private final fields prevent reassignment after construction, and getters expose values without mutation methods. The constructor is the only state-setting point.',
+  },
+  {
+    id: 'lecture12p2-c5',
+    title: 'Find the mutable field trap',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'Why can this supposedly immutable Team change after construction?',
+    code: `final class Team {
+  private final List<String> players;
+  Team(List<String> players) { this.players = players; }
+  List<String> getPlayers() { return players; }
+}
+
+team.getPlayers().add("Mallory");`,
+    options: [
+      'The final reference still points to a mutable List that callers can modify.',
+      'final fields are always copied automatically by Java.',
+      'The getter returns a new immutable list every time.',
+      'The add call changes only a local variable, never Team.',
+    ],
+    answer: 0,
+    explanation: 'final prevents the players reference from pointing to a different list, but it does not make the List object immutable. The constructor and getter both expose the live mutable list.',
+  },
+  {
+    id: 'lecture12p2-c6',
+    title: 'Defend an immutable collection',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'What does List.copyOf(players) protect in Team6?',
+    code: `final class Team6 {
+  private final List<String> players;
+  Team6(List<String> players) {
+    this.players = List.copyOf(players);
+  }
+  List<String> getPlayers() { return players; }
+}
+
+List<String> original = new ArrayList<>();
+Team6 team = new Team6(original);
+original.add("Eve");`,
+    options: [
+      'Team6 keeps an immutable snapshot; later changes to original do not change the team.',
+      'Team6 keeps the same mutable list, so both references change together.',
+      'List.copyOf only copies the first element.',
+      'The constructor throws whenever original is later modified.',
+    ],
+    answer: 0,
+    explanation: 'List.copyOf creates an unmodifiable snapshot. It protects against both mutations through the original list and direct add calls through getPlayers(), which throw UnsupportedOperationException.',
+  },
+  {
+    id: 'lecture12p2-c7',
+    title: 'Switch over an enum',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'What does isWeekday return for MONDAY, SATURDAY, and FRIDAY?',
+    code: `enum Day {
+  MONDAY, TUESDAY, WEDNESDAY, THURSDAY,
+  FRIDAY, SATURDAY, SUNDAY
+}
+
+static boolean isWeekday(Day d) {
+  return switch (d) {
+    case SATURDAY, SUNDAY -> false;
+    default -> true;
+  };
+}`,
+    options: [
+      'true, false, true',
+      'false, true, false',
+      'true, true, false',
+      'The switch expression cannot return boolean.',
+    ],
+    answer: 0,
+    explanation: 'The switch expression returns false only for SATURDAY and SUNDAY. Monday and Friday use the default branch and return true.',
+  },
+  {
+    id: 'lecture12p2-c8',
+    title: 'Give enum constants data',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'How does Day know whether each constant is a weekend?',
+    code: `enum Day {
+  MONDAY(false), SATURDAY(true), SUNDAY(true);
+
+  private final boolean weekend;
+  Day(boolean weekend) { this.weekend = weekend; }
+  boolean isWeekend() { return weekend; }
+}
+
+for (Day d : Day.values()) {
+  System.out.println(d.ordinal() + ": " + d.name() + " -> " + d.isWeekend());
+}`,
+    options: [
+      'Each constant passes data to the enum constructor and stores it in a final field.',
+      'ordinal() calculates the weekend value automatically.',
+      'name() changes the stored boolean at runtime.',
+      'Enum constants cannot have constructors or fields.',
+    ],
+    answer: 0,
+    explanation: 'Enum constants can pass arguments to a constructor. Day stores the boolean in a private final field, while values(), name(), and ordinal() provide iteration and metadata.',
+  },
+  {
+    id: 'lecture12p2-c9',
+    title: 'Replace a value class with a record',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'What does a record provide automatically for two Points with equal coordinates?',
+    code: `record Point(int x, int y) {}
+
+Point p1 = new Point(3, 4);
+Point p2 = new Point(3, 4);
+
+p1.x();
+p1.y();
+p1.toString();
+p1.equals(p2);`,
+    options: [
+      'Accessors, readable toString(), and value-based equals() that returns true.',
+      'Only public mutable fields; equals() compares object identity.',
+      'getX()/getY() methods but no toString() or equals().',
+      'A record must be manually extended before these methods work.',
+    ],
+    answer: 0,
+    explanation: 'Records generate accessors named x() and y(), a readable toString(), and equals/hashCode based on component values. Therefore p1.equals(p2) is true.',
+  },
+  {
+    id: 'lecture12p2-c10',
+    title: 'Protect a record from mutable contents',
+    topic: 'Lecture 12 · Part 2',
+    prompt: 'How does the compact constructor fix the mutable List inside a record?',
+    code: `record Team(List<String> players) {
+  Team {
+    players = List.copyOf(players);
+  }
+}
+
+List<String> original = new ArrayList<>();
+Team team = new Team(original);
+team.players().add("Eve");`,
+    options: [
+      'It replaces the incoming list with an unmodifiable defensive copy, so add throws.',
+      'Records make every object reachable from a component immutable automatically.',
+      'The compact constructor changes players from a List into an array.',
+      'It allows add but silently discards the new player.',
+    ],
+    answer: 0,
+    explanation: 'Record components are final references, not automatically immutable objects. Reassigning players to List.copyOf(players) inside the compact constructor prevents outside list mutations and rejects add operations.',
+  },
+];
+
 const navItems = [
   { href: '/', label: 'Cockpit', icon: LayoutDashboard },
   { href: '/learn', label: 'Learn', icon: Library },
@@ -1866,7 +2104,7 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'mixed'>('lecture09');
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'mixed'>('lecture09');
   const activeScenarios = labTrack === 'lecture09'
     ? lecture09Scenarios
     : labTrack === 'lecture10'
@@ -1875,24 +2113,27 @@ function CodingLab() {
         ? lecture11Scenarios
         : labTrack === 'lecture12p1'
           ? lecture12Part1Scenarios
-          : scenarios;
+          : labTrack === 'lecture12p2'
+            ? lecture12Part2Scenarios
+            : scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'mixed') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'mixed') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : labTrack === 'lecture12p2' ? 'Lecture 12 Part 2 classes & records' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture11'} onClick={() => selectTrack('lecture11')} data-testid="button-lab-lecture11" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture11' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 11 · Interfaces <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p1'} onClick={() => selectTrack('lecture12p1')} data-testid="button-lab-lecture12p1" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p1' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 1 <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture12p2'} onClick={() => selectTrack('lecture12p2')} data-testid="button-lab-lecture12p2" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p2' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 2 <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'mixed'} onClick={() => selectTrack('mixed')} data-testid="button-lab-mixed" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'mixed' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Mixed review <span className="ml-1 opacity-70">3</span></button>
     </div>
     <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
