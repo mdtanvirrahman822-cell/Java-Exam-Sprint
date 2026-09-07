@@ -91,7 +91,7 @@ if (animal instanceof Dog dog) {
   {
     id: 'interfaces',
     week: 'Week 11',
-    title: 'Interfaces as promises',
+    title: 'Java Interfaces, Subtyping, and Contract-Based Design',
     eyebrow: 'Abstraction',
     blurb: 'Separate what an object can do from how it does it, then compose multiple capabilities cleanly.',
     accent: '#8472c8',
@@ -265,11 +265,64 @@ const lecture10Sections: LectureSection[] = [
   },
 ];
 
+const lecture11Sections: LectureSection[] = [
+  {
+    id: 'lecture11-definition-contracts',
+    title: '1. Interface Definition and Contract Principles',
+    points: [
+      'An interface is a formal contract made up of method signatures.',
+      'Traditional interfaces do not contain instance fields or constructors.',
+      'An interface cannot be directly instantiated with the new keyword.',
+      'Understand how a contract separates what a type promises from its implementation.',
+    ],
+  },
+  {
+    id: 'lecture11-implementation-subtyping',
+    title: '2. Interface Implementation and Cross-Hierarchy Subtyping',
+    points: [
+      'Unrelated classes implement interfaces with the implements keyword.',
+      'Implementing classes fulfill the interface’s promised method signatures.',
+      'Interface implementation creates subtypes across otherwise separate class hierarchies.',
+      'Use polymorphism based on what an object can do rather than only what it inherits.',
+    ],
+  },
+  {
+    id: 'lecture11-multiple-interfaces',
+    title: '3. Multiple Interface Implementation and Conflict Safety',
+    points: [
+      'A Java class may extend only one superclass.',
+      'A single class can implement multiple interfaces.',
+      'Multiple contracts support several capabilities on one object.',
+      'Traditional interfaces avoid the diamond problem because they carry no shared instance state or implementation collisions.',
+    ],
+  },
+  {
+    id: 'lecture11-role-polymorphism',
+    title: '4. Role-Based Views and Polymorphic Execution',
+    points: [
+      'An interface reference exposes only the methods promised by that role.',
+      'Compile-time checks use the declared interface type.',
+      'Runtime dynamic dispatch executes the concrete class implementation.',
+      'The same object can be viewed through different interface roles.',
+    ],
+  },
+  {
+    id: 'lecture11-interface-abstract-comparison',
+    title: '5. Interface vs. Abstract Class Architectural Comparison',
+    points: [
+      'Abstract classes model shared identity and internal state through single inheritance.',
+      'Interfaces model shared capabilities through multiple implementations.',
+      'Compare IS-A identity relationships with CAN-DO / ACTS-AS capability relationships.',
+      'Choose an abstract class for shared implementation and an interface for a flexible contract.',
+    ],
+  },
+];
+
 type ScheduleTask = { id: string; day: string; time: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
 const schedule: ScheduleTask[] = [
   { id: 's1', day: 'Tonight · Sep 7', time: '23:00', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
   { id: 's2', day: 'Tonight · Sep 7', time: '23:50', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
-  { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interfaces & class design', detail: 'Contracts, capabilities, abstract classes', topic: 'Week 11', lecture: 'Lecture 11' },
+  { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
   { id: 's4', day: 'Mon · Sep 8', time: '11:00', title: 'Static, final, nested', detail: 'Predict what belongs where', topic: 'Week 12', lecture: 'Lecture 12' },
   { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Bounds, wildcards, PECS', topic: 'Week 13', lecture: 'Lecture 13' },
   { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Composition case study', detail: 'Coupling and collaborator design', topic: 'Week 14', lecture: 'Lecture 14' },
@@ -431,23 +484,28 @@ function Dashboard() {
   const [completed, setCompleted] = usePersisted<string[]>('java-sprint-tasks', ['s1', 's2']);
   const [completedLecture09, setCompletedLecture09] = usePersisted<string[]>('java-sprint-lecture09-sections', []);
   const [completedLecture10, setCompletedLecture10] = usePersisted<string[]>('java-sprint-lecture10-sections', []);
+  const [completedLecture11, setCompletedLecture11] = usePersisted<string[]>('java-sprint-lecture11-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
   const lecture10Ready = lecture10Sections.every((section) => completedLecture10.includes(section.id));
+  const lecture11Ready = lecture11Sections.every((section) => completedLecture11.includes(section.id));
   const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
     ? completed.includes(task.id) && lecture09Ready
     : task.id === 's2'
       ? completed.includes(task.id) && lecture10Ready
+      : task.id === 's3'
+        ? completed.includes(task.id) && lecture11Ready
       : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
   const progress = Math.round((completedCount / schedule.length) * 100);
   const toggleTask = (id: string) => {
-    if ((id === 's1' && !lecture09Ready) || (id === 's2' && !lecture10Ready)) return;
+    if ((id === 's1' && !lecture09Ready) || (id === 's2' && !lecture10Ready) || (id === 's3' && !lecture11Ready)) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
   const toggleLecture09Section = (id: string) => setCompletedLecture09((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture10Section = (id: string) => setCompletedLecture10((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture11Section = (id: string) => setCompletedLecture11((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Tuesday, September 7 · 23:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
@@ -463,11 +521,13 @@ function Dashboard() {
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
-           const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready);
+           const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready);
            const sectionState = task.id === 's1'
              ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
              : task.id === 's2'
                ? { completed: completedLecture10, ready: lecture10Ready, toggle: toggleLecture10Section }
+               : task.id === 's3'
+                 ? { completed: completedLecture11, ready: lecture11Ready, toggle: toggleLecture11Section }
                : null;
           return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
