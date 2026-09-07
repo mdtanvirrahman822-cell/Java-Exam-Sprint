@@ -1,0 +1,35 @@
+**Week 12 Part 1: Advanced Interface Features and Interface Evolution**
+
+* **1. Interface Evolution and Default Methods**: Adding new functionality to existing interfaces without breaking concrete implementing classes by supplying default method bodies.
+
+
+* **2. Conflict Resolution in Multiple Interfaces**: Resolving diamond-problem collisions when implementing two interfaces that contain identical default method signatures by using `InterfaceName.super.method()`.
+
+
+* **3. Static, Private, and Constant Interface Features**: Utilizing `static` utility methods, `private` helper methods for internal code sharing, and implicit `public static final` constants inside interfaces.
+
+
+* **4. Functional Interfaces and Lambdas**: Defining contracts containing exactly one abstract method using the `@FunctionalInterface` annotation to enable lambda expressions.
+
+
+* **5. Programming to an Interface and Abstraction**: Decoupling application engine logic from specific implementation details to allow swappable, maintainable components.
+
+
+
+---
+
+**Week 12 Part 2: Object Immutability, Advanced Static Features, Enums, and Records**
+
+* **1. Static Initialization Blocks and Static Nested Classes**: Executing static setup logic automatically when a class is first loaded into memory and organizing inner helper classes statically.
+
+
+* **2. The Immutability Pattern and Defensive Copying**: Creating safe, unmodifiable objects using `final` classes, `private final` fields, no setters, and defensive copying of mutable objects.
+
+
+* **3. Enumerations (`enum`)**: Defining type-safe, fixed sets of named constant objects that can hold custom state, methods, and work inside `switch` statements.
+
+
+* **4. Java Records (Java 14+)**: Using a concise, boilerplate-free syntax for immutable data-carrier classes that auto-generates constructors, field accessors, `equals()`, `hashCode()`, and `toString()`.
+
+
+* **5. Reference Immutability vs. Object State**: Understanding that locking object references with `final` or records guarantees only reference assignment protection, requiring careful handling for internal mutable fields like arrays or lists.

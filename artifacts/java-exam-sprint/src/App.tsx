@@ -107,22 +107,37 @@ final class Draft implements Savable, Syncable {
     check: 'Choose an interface when unrelated classes share a capability. Choose an abstract class when you need shared state, constructors, protected helpers, or a partial implementation.',
   },
   {
+    id: 'interface-evolution',
+    week: 'Week 12 · Part 1',
+    title: 'Advanced Interface Features and Interface Evolution',
+    eyebrow: 'Interface evolution',
+    blurb: 'Extend contracts safely with defaults, resolve conflicts intentionally, and keep implementations swappable.',
+    accent: '#d19a39',
+    concepts: ['Default methods', 'Conflict resolution', 'Functional interfaces', 'Programming to an interface'],
+    summary: 'Modern interfaces can evolve with default methods, static utilities, private helpers, and constants. Functional interfaces power lambdas, while programming to an interface keeps application logic independent from concrete implementations.',
+    example: `@FunctionalInterface
+interface Transformer {
+  String apply(String value);
+}
+
+Transformer trim = String::trim;`,
+    check: 'Use InterfaceName.super.method() to resolve identical default methods. A functional interface has exactly one abstract method, making it compatible with a lambda expression.',
+  },
+  {
     id: 'members',
     week: 'Week 12 · Part 2',
-    title: 'Static, final & nested',
+    title: 'Object Immutability, Advanced Static Features, Enums, and Records',
     eyebrow: 'Class architecture',
-    blurb: 'Know which things belong to the class, which cannot change, and which belong inside another type.',
+    blurb: 'Build safe immutable values, understand class-loading setup, and use enums and records for expressive data models.',
     accent: '#d19a39',
-    concepts: ['static', 'final', 'Static nested class', 'Inner class'],
-    summary: 'static members belong to the class, not an instance. final variables are assigned once; final methods cannot be overridden; final classes cannot be extended. A static nested class needs no outer instance, while an inner class can access one.',
-    example: `class Receipt {
-  static int issued;
-  final String id;
-  class Stamp { // inner: tied to a Receipt
-    String text() { return id; }
-  }
+    concepts: ['Static initialization', 'Immutability', 'Enums', 'Records'],
+    summary: 'Static initialization blocks run when a class is first loaded. Immutable objects protect their state with final fields and defensive copies, while enums and records provide concise, type-safe models for fixed choices and data carriers.',
+    example: `public record ExamSlot(String topic, int minutes) {}
+
+enum Mode {
+  FOCUS, BREAK
 }`,
-    check: 'Do not use an instance field from a static context. Nested types are a tool for keeping a helper close to the type it serves and controlling visibility.',
+    check: 'final prevents reference reassignment, not mutation of the referenced object. Records make data-carrier code concise, but mutable components still need defensive copying.',
   },
   {
     id: 'generics',
@@ -265,6 +280,112 @@ const lecture10Sections: LectureSection[] = [
   },
 ];
 
+const lecture12Part1Sections: LectureSection[] = [
+  {
+    id: 'lecture12-part1-evolution-defaults',
+    title: '1. Interface Evolution and Default Methods',
+    points: [
+      'Add new functionality to existing interfaces without breaking concrete implementers.',
+      'Use default method bodies to provide compatible behavior.',
+      'Understand when an implementing class may inherit or override a default.',
+      'Separate contract evolution from implementation-specific behavior.',
+    ],
+  },
+  {
+    id: 'lecture12-part1-conflicts',
+    title: '2. Conflict Resolution in Multiple Interfaces',
+    points: [
+      'Identify diamond-problem collisions between identical default method signatures.',
+      'Resolve conflicts explicitly with InterfaceName.super.method().',
+      'Understand why the implementing class must choose when defaults disagree.',
+      'Keep multiple interface capabilities predictable and intentional.',
+    ],
+  },
+  {
+    id: 'lecture12-part1-static-private-constants',
+    title: '3. Static, Private, and Constant Interface Features',
+    points: [
+      'Use static interface methods for related utility operations.',
+      'Use private interface methods to share implementation logic internally.',
+      'Recognize implicit public static final constants declared in interfaces.',
+      'Distinguish interface utilities and constants from instance members.',
+    ],
+  },
+  {
+    id: 'lecture12-part1-functional-lambdas',
+    title: '4. Functional Interfaces and Lambdas',
+    points: [
+      'Define a functional interface with exactly one abstract method.',
+      'Use the @FunctionalInterface annotation to document and validate the contract.',
+      'Connect functional interfaces to lambda expressions.',
+      'Read a lambda as an implementation supplied for the single abstract method.',
+    ],
+  },
+  {
+    id: 'lecture12-part1-programming-interface',
+    title: '5. Programming to an Interface and Abstraction',
+    points: [
+      'Decouple application engine logic from specific implementation details.',
+      'Depend on a contract so components can be swapped safely.',
+      'Use abstraction to improve maintainability and testing.',
+      'Prefer the narrow interface a client actually needs.',
+    ],
+  },
+];
+
+const lecture12Part2Sections: LectureSection[] = [
+  {
+    id: 'lecture12-part2-static-init-nested',
+    title: '1. Static Initialization Blocks and Static Nested Classes',
+    points: [
+      'Run static setup logic automatically when a class is first loaded.',
+      'Understand the timing and one-time behavior of static initialization blocks.',
+      'Organize helper types with static nested classes.',
+      'Distinguish static nested classes from inner classes tied to an outer instance.',
+    ],
+  },
+  {
+    id: 'lecture12-part2-immutability',
+    title: '2. The Immutability Pattern and Defensive Copying',
+    points: [
+      'Use final classes, private final fields, and no setters to protect object state.',
+      'Create safe unmodifiable values with controlled construction.',
+      'Use defensive copies when accepting or returning mutable objects.',
+      'Explain why immutability improves reasoning and safe sharing.',
+    ],
+  },
+  {
+    id: 'lecture12-part2-enums',
+    title: '3. Enumerations (enum)',
+    points: [
+      'Define type-safe, fixed sets of named constant objects.',
+      'Add custom state and methods to enum types.',
+      'Use enum values inside switch statements.',
+      'Prefer enums over loosely related integer or string constants.',
+    ],
+  },
+  {
+    id: 'lecture12-part2-records',
+    title: '4. Java Records (Java 14+)',
+    points: [
+      'Use concise record syntax for immutable data-carrier classes.',
+      'Recognize generated constructors, field accessors, equals(), hashCode(), and toString().',
+      'Understand record components and their accessor naming.',
+      'Choose records when the main purpose is transparent data representation.',
+    ],
+  },
+  {
+    id: 'lecture12-part2-reference-immutability',
+    title: '5. Reference Immutability vs. Object State',
+    points: [
+      'Understand that final protects reference assignment, not the referenced object’s contents.',
+      'Recognize mutable arrays and lists inside otherwise final fields.',
+      'Use defensive copying to protect internal mutable state.',
+      'Apply the same caution when using records with mutable components.',
+    ],
+  },
+];
+
 const lecture11Sections: LectureSection[] = [
   {
     id: 'lecture11-definition-contracts',
@@ -323,7 +444,8 @@ const schedule: ScheduleTask[] = [
   { id: 's1', day: 'Tonight · Sep 7', time: '23:00', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
   { id: 's2', day: 'Tonight · Sep 7', time: '23:50', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
   { id: 's3', day: 'Mon · Sep 8', time: '09:00', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
-  { id: 's4', day: 'Mon · Sep 8', time: '11:00', title: 'Static, final, nested', detail: 'Predict what belongs where', topic: 'Week 12', lecture: 'Lecture 12' },
+  { id: 's4a', day: 'Mon · Sep 8', time: '11:00', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
+  { id: 's4b', day: 'Mon · Sep 8', time: '12:00', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
   { id: 's5', day: 'Tue · Sep 9', time: '09:30', title: 'Generics deep pass', detail: 'Bounds, wildcards, PECS', topic: 'Week 13', lecture: 'Lecture 13' },
   { id: 's6', day: 'Tue · Sep 9', time: '13:00', title: 'Composition case study', detail: 'Coupling and collaborator design', topic: 'Week 14', lecture: 'Lecture 14' },
   { id: 's7', day: 'Tue · Sep 9', time: '19:30', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
@@ -485,27 +607,43 @@ function Dashboard() {
   const [completedLecture09, setCompletedLecture09] = usePersisted<string[]>('java-sprint-lecture09-sections', []);
   const [completedLecture10, setCompletedLecture10] = usePersisted<string[]>('java-sprint-lecture10-sections', []);
   const [completedLecture11, setCompletedLecture11] = usePersisted<string[]>('java-sprint-lecture11-sections', []);
+  const [completedLecture12Part1, setCompletedLecture12Part1] = usePersisted<string[]>('java-sprint-lecture12-part1-sections', []);
+  const [completedLecture12Part2, setCompletedLecture12Part2] = usePersisted<string[]>('java-sprint-lecture12-part2-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
   const lecture10Ready = lecture10Sections.every((section) => completedLecture10.includes(section.id));
   const lecture11Ready = lecture11Sections.every((section) => completedLecture11.includes(section.id));
+  const lecture12Part1Ready = lecture12Part1Sections.every((section) => completedLecture12Part1.includes(section.id));
+  const lecture12Part2Ready = lecture12Part2Sections.every((section) => completedLecture12Part2.includes(section.id));
   const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
     ? completed.includes(task.id) && lecture09Ready
     : task.id === 's2'
       ? completed.includes(task.id) && lecture10Ready
       : task.id === 's3'
         ? completed.includes(task.id) && lecture11Ready
+        : task.id === 's4a'
+          ? completed.includes(task.id) && lecture12Part1Ready
+          : task.id === 's4b'
+            ? completed.includes(task.id) && lecture12Part2Ready
       : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
   const progress = Math.round((completedCount / schedule.length) * 100);
   const toggleTask = (id: string) => {
-    if ((id === 's1' && !lecture09Ready) || (id === 's2' && !lecture10Ready) || (id === 's3' && !lecture11Ready)) return;
+    if (
+      (id === 's1' && !lecture09Ready) ||
+      (id === 's2' && !lecture10Ready) ||
+      (id === 's3' && !lecture11Ready) ||
+      (id === 's4a' && !lecture12Part1Ready) ||
+      (id === 's4b' && !lecture12Part2Ready)
+    ) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
   const toggleLecture09Section = (id: string) => setCompletedLecture09((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture10Section = (id: string) => setCompletedLecture10((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture11Section = (id: string) => setCompletedLecture11((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture12Part1Section = (id: string) => setCompletedLecture12Part1((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture12Part2Section = (id: string) => setCompletedLecture12Part2((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Tuesday, September 7 · 23:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
@@ -521,13 +659,17 @@ function Dashboard() {
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
-           const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready);
+            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready);
            const sectionState = task.id === 's1'
              ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
              : task.id === 's2'
                ? { completed: completedLecture10, ready: lecture10Ready, toggle: toggleLecture10Section }
                : task.id === 's3'
                  ? { completed: completedLecture11, ready: lecture11Ready, toggle: toggleLecture11Section }
+                  : task.id === 's4a'
+                    ? { completed: completedLecture12Part1, ready: lecture12Part1Ready, toggle: toggleLecture12Part1Section }
+                    : task.id === 's4b'
+                      ? { completed: completedLecture12Part2, ready: lecture12Part2Ready, toggle: toggleLecture12Part2Section }
                : null;
           return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
