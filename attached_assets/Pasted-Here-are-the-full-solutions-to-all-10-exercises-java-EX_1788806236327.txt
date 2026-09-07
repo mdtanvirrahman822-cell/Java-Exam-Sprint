@@ -1,0 +1,231 @@
+Here are the full solutions to all 10 exercises:
+
+```java
+// ===== EXERCISE 1: Basic Upcasting =====
+class Animal1 {
+    String type = "Animal";
+    public void eat() { System.out.println(type + " is eating"); }
+}
+
+class Cat1 extends Animal1 {
+    String type = "Cat";
+    public void meow() { System.out.println("Meow!"); }
+}
+
+public class Exercise1 {
+    public static void main(String[] args) {
+        Cat1 c = new Cat1();
+        Animal1 a = c; // Implicit upcasting
+        System.out.println(a.type);
+        // Prints "Animal" — field access is resolved by REFERENCE TYPE, not object type
+    }
+}
+
+
+// ===== EXERCISE 2: Method Access Restriction =====
+class Animal2 {
+    public void eat() { System.out.println("Eating"); }
+}
+
+class Cat2 extends Animal2 {
+    public void meow() { System.out.println("Meow!"); }
+}
+
+public class Exercise2 {
+    public static void main(String[] args) {
+        Cat2 c = new Cat2();
+        Animal2 a = c; // Upcast
+
+        // a.meow(); // Compilation error — Animal2 has no meow()
+
+        // Fix: downcast back to Cat2
+        Cat2 c2 = (Cat2) a;
+        c2.meow(); // Works fine
+    }
+}
+
+
+// ===== EXERCISE 3: Runtime Polymorphism =====
+class Animal3 {
+    void display() { System.out.println("Animal"); }
+}
+
+class Dog3 extends Animal3 {
+    @Override void display() { System.out.println("Dog"); }
+}
+
+class Cat3 extends Animal3 {
+    @Override void display() { System.out.println("Cat"); }
+}
+
+public class Exercise3 {
+    public static void main(String[] args) {
+        Animal3 a = new Dog3();
+        a.display(); // Prints "Dog"
+
+        Animal3[] animals = { new Dog3(), new Cat3(), new Animal3() };
+        for (Animal3 animal : animals) {
+            animal.display(); // Dog, Cat, Animal — runtime polymorphism in action
+        }
+    }
+}
+
+
+// ===== EXERCISE 4: Safe Downcasting =====
+class Animal4 {}
+class Cat4 extends Animal4 {
+    void meow() { System.out.println("Meow!"); }
+}
+
+public class Exercise4 {
+    public static void main(String[] args) {
+        Animal4 a = new Cat4();     // Upcasting
+        Cat4 c = (Cat4) a;          // Downcasting — SAFE
+        c.meow();
+        // Safe because the actual object really is a Cat4, just referenced as Animal4
+    }
+}
+
+
+// ===== EXERCISE 5: Triggering ClassCastException =====
+class Animal5 {}
+class Dog5 extends Animal5 {}
+class Cat5 extends Animal5 {}
+
+public class Exercise5 {
+    public static void main(String[] args) {
+        Animal5 a = new Cat5();
+        try {
+            Dog5 d = (Dog5) a; // Compiles, but fails at runtime
+            System.out.println("Cast succeeded");
+        } catch (ClassCastException e) {
+            System.out.println("Cannot cast Cat to Dog: " + e.getMessage());
+        }
+    }
+}
+
+
+// ===== EXERCISE 6: Compile-Time vs Runtime Errors =====
+class Animal6 {}
+class Dog6 extends Animal6 {}
+
+public class Exercise6 {
+    public static void main(String[] args) {
+        // --- Snippet A: Compile-time error ---
+        // Dog6 dog = new Animal6();
+        // Error occurs at COMPILE TIME — compiler knows Animal6 isn't guaranteed to be Dog6
+
+        // --- Snippet B: Compiles, fails at runtime ---
+        Animal6 animal = new Animal6();
+        Dog6 dog = (Dog6) animal; // Compiles fine (explicit cast)
+        // Throws ClassCastException at RUNTIME — object is genuinely an Animal6, not Dog6
+    }
+}
+
+
+// ===== EXERCISE 7: Safe Downcasting with instanceof =====
+class Animal7 {}
+class Dog7 extends Animal7 {
+    void bark() { System.out.println("Woof!"); }
+}
+class Cat7 extends Animal7 {
+    void meow() { System.out.println("Meow!"); }
+}
+
+public class Exercise7 {
+    static void describe(Animal7 animal) {
+        if (animal instanceof Dog7) {
+            Dog7 d = (Dog7) animal;
+            d.bark();
+        } else if (animal instanceof Cat7) {
+            Cat7 c = (Cat7) animal;
+            c.meow();
+        } else {
+            System.out.println("Unknown animal");
+        }
+    }
+
+    public static void main(String[] args) {
+        Animal7[] animals = { new Dog7(), new Cat7(), new Animal7() };
+        for (Animal7 a : animals) describe(a);
+    }
+}
+
+
+// ===== EXERCISE 8: Refactor to Pattern Matching =====
+class Animal8 {}
+class Dog8 extends Animal8 {
+    void bark() { System.out.println("Woof!"); }
+}
+class Cat8 extends Animal8 {
+    void meow() { System.out.println("Meow!"); }
+}
+
+public class Exercise8 {
+    static void describe(Animal8 animal) {
+        if (animal instanceof Dog8 d) {
+            d.bark();
+        } else if (animal instanceof Cat8 c) {
+            c.meow();
+        } else {
+            System.out.println("Unknown animal");
+        }
+        // Shorter, no separate cast line, less repetition of type names
+    }
+
+    public static void main(String[] args) {
+        Animal8[] animals = { new Dog8(), new Cat8(), new Animal8() };
+        for (Animal8 a : animals) describe(a);
+    }
+}
+
+
+// ===== EXERCISE 9: Pattern Variable Scope with && =====
+class Animal9 {}
+class Dog9 extends Animal9 {
+    private int age;
+    Dog9(int age) { this.age = age; }
+    int getAge() { return age; }
+}
+
+public class Exercise9 {
+    static void checkSenior(Animal9 animal) {
+        if (animal instanceof Dog9 d && d.getAge() > 5) {
+            System.out.println("Senior dog");
+        } else {
+            System.out.println("Not a senior dog");
+        }
+    }
+
+    public static void main(String[] args) {
+        checkSenior(new Dog9(7));  // Senior dog
+        checkSenior(new Dog9(2));  // Not a senior dog
+        checkSenior(new Animal9()); // Not a senior dog (short-circuits safely)
+    }
+}
+
+
+// ===== EXERCISE 10: Negated Pattern Matching =====
+class Animal10 {}
+class Dog10 extends Animal10 {
+    void bark() { System.out.println("Woof!"); }
+}
+
+public class Exercise10 {
+    static void examineAnimal(Animal10 animal) {
+        if (!(animal instanceof Dog10 d)) {
+            return; // d is NOT in scope here
+        }
+        // d IS in scope here — because if we reach this line,
+        // the if-condition must have been false, meaning the instanceof check passed
+        d.bark();
+    }
+
+    public static void main(String[] args) {
+        examineAnimal(new Dog10());   // Woof!
+        examineAnimal(new Animal10()); // does nothing, returns early
+    }
+}
+```
+
+Each class is numbered per exercise to avoid name clashes if you paste them all into one file — split them into separate files (or separate `.java` files per exercise) when you actually compile and run them.

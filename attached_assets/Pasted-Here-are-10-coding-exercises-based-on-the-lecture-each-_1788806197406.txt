@@ -1,0 +1,37 @@
+Here are 10 coding exercises based on the lecture — each is a problem statement you write Java code to solve. Copy these into your notes:
+
+---
+
+**1. Basic Upcasting**
+Create a class `Animal` with a field `String type = "Animal"` and method `eat()`. Create a subclass `Cat extends Animal` with `String type = "Cat"` and method `meow()`. In `main`, create a `Cat` object, upcast it to an `Animal` reference, and print `a.type`. Explain in a comment why it prints what it prints.
+
+**2. Method Access Restriction**
+Using the same `Animal`/`Cat` classes, add a unique method `meow()` to `Cat`. Write code that upcasts a `Cat` to `Animal` and then tries to call `meow()` on the `Animal` reference. Fix the compilation error using a proper downcast.
+
+**3. Runtime Polymorphism**
+Create `Animal` with a method `display()` printing `"Animal"`. Create `Dog extends Animal` that overrides `display()` to print `"Dog"`. Write code that assigns `new Dog()` to an `Animal` reference and calls `display()`. Add a second subclass `Cat` with its own override, and write a loop that calls `display()` on an array of mixed `Animal` references (some `Dog`, some `Cat`) to demonstrate runtime polymorphism.
+
+**4. Safe Downcasting**
+Write a program where you create an `Animal` reference pointing to a `Cat` object, safely downcast it back to `Cat`, and call `meow()`. Add a comment explaining why this cast is guaranteed to succeed.
+
+**5. Triggering ClassCastException**
+Write code that intentionally creates an `Animal` reference pointing to a `Cat` object, then attempts to downcast it to `Dog`. Wrap it in a try-catch block that catches `ClassCastException` and prints a friendly error message instead of crashing.
+
+**6. Compile-Time vs Runtime Errors**
+Write two separate code snippets: one that produces a **compile-time error** by directly assigning `new Animal()` to a `Dog` reference, and one that **compiles but fails at runtime** by casting an `Animal` reference (holding an actual `Animal` object) to `Dog`. Add comments labeling which error is which and when it occurs.
+
+**7. Safe Downcasting with instanceof**
+Build a method `describe(Animal animal)` that uses `instanceof` checks (old style, pre-Java 14) to determine if the object is a `Dog` or `Cat`, safely casts it, and calls `bark()` or `meow()` accordingly. Test it by passing in different animal types through an array.
+
+**8. Refactor to Pattern Matching**
+Take your solution from exercise 7 and refactor it to use Java 14+ `instanceof` pattern matching (`instanceof Dog d`) instead of separate cast statements. Compare the line count and readability.
+
+**9. Pattern Variable Scope with &&**
+Write a method that checks `if (animal instanceof Dog d && d.getAge() > 5)` and prints `"Senior dog"` if true. You'll need to add a `getAge()` method to `Dog`. Test with dogs of different ages to confirm the pattern variable works correctly inside the `&&` condition.
+
+**10. Negated Pattern Matching**
+Write a method `examineAnimal(Animal animal)` that uses `if (!(animal instanceof Dog d)) { return; }` followed by code that uses `d` outside the if-block (in the "else" flow). Confirm it compiles, and add a comment explaining why `d`'s scope extends past the if-block in this negated form.
+
+---
+
+Want me to also write out full **solution code** for each of these so you have both the problems and answers stored together?
