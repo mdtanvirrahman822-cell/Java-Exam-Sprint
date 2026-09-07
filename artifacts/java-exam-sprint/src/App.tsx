@@ -706,7 +706,36 @@ function CountdownCard() {
 }
 
 function ProgressRing({ value }: { value: number }) {
-  return <div className="relative grid size-[122px] place-items-center rounded-full" style={{ background: `conic-gradient(hsl(var(--accent)) ${value * 3.6}deg, hsl(var(--muted)) 0deg)` }}><div className="grid size-[94px] place-items-center rounded-full bg-card"><div className="text-center"><div className="display text-[27px] font-bold">{value}%</div><div className="mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">ready</div></div></div></div>;
+  const [animatedValue, setAnimatedValue] = useState(value);
+  const progress = Math.min(100, Math.max(0, value));
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
+
+  useEffect(() => {
+    const startValue = animatedValue;
+    const difference = progress - startValue;
+    const duration = 700;
+    const startTime = performance.now();
+    let frame = 0;
+
+    const animate = (timestamp: number) => {
+      const elapsed = Math.min(1, (timestamp - startTime) / duration);
+      const eased = 1 - Math.pow(1 - elapsed, 3);
+      setAnimatedValue(Math.round(startValue + difference * eased));
+      if (elapsed < 1) frame = requestAnimationFrame(animate);
+    };
+
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [progress]);
+
+  return <div role="progressbar" aria-label={`Study progress: ${progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="relative grid size-[122px] place-items-center rounded-full">
+    <svg aria-hidden="true" className="absolute inset-0 size-full -rotate-90">
+      <circle cx="61" cy="61" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="12" />
+      <circle cx="61" cy="61" r={radius} fill="none" stroke="hsl(var(--accent))" strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference - (animatedValue / 100) * circumference} style={{ transition: 'stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1)' }} />
+    </svg>
+    <div className="relative grid size-[94px] place-items-center rounded-full bg-card"><div className="text-center"><div className="display text-[27px] font-bold">{animatedValue}%</div><div className="mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">ready</div></div></div>
+  </div>;
 }
 
 function Dashboard() {
@@ -743,7 +772,20 @@ function Dashboard() {
                 ? completed.includes(task.id) && lecture14Ready
       : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
-  const progress = Math.round((completedCount / schedule.length) * 100);
+  const sectionProgressPairs = [
+    [lecture09Sections, completedLecture09],
+    [lecture10Sections, completedLecture10],
+    [lecture11Sections, completedLecture11],
+    [lecture12Part1Sections, completedLecture12Part1],
+    [lecture12Part2Sections, completedLecture12Part2],
+    [lecture13Sections, completedLecture13],
+    [lecture14Sections, completedLecture14],
+  ] as const;
+  const completedSectionCount = sectionProgressPairs.reduce((total, [sections, completedSections]) => total + sections.filter((section) => completedSections.includes(section.id)).length, 0);
+  const totalSectionCount = sectionProgressPairs.reduce((total, [sections]) => total + sections.length, 0);
+  const standaloneBlockCount = schedule.filter((task) => !task.lectureSections).length;
+  const completedStandaloneBlockCount = schedule.filter((task) => !task.lectureSections && completed.includes(task.id)).length;
+  const progress = Math.round(((completedSectionCount + completedStandaloneBlockCount) / (totalSectionCount + standaloneBlockCount)) * 100);
   const toggleTask = (id: string) => {
     if (
       (id === 's1' && !lecture09Ready) ||
@@ -769,7 +811,7 @@ function Dashboard() {
       <CountdownCard />
       <section className="flex flex-col justify-between rounded-[24px] border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center xl:flex-col xl:items-start">
         <div><div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Sprint progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-muted-foreground">Complete the plan, then use practice to find the fuzzy edges.</p></div>
-        <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-muted-foreground">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">blocks done</div></div></div>
+         <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-muted-foreground">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
       </section>
     </div>
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
