@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -693,14 +693,41 @@ function SectionIntro({ kicker, title, detail, action }: { kicker: string; title
 
 function CountdownCard() {
   const countdown = useCountdown();
-  return <section className="relative overflow-hidden rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-8">
-    <div className="absolute -right-16 -top-20 size-64 rounded-full border-[22px] border-accent/20" /><div className="absolute -bottom-24 right-24 size-48 rounded-full border-[14px] border-primary-foreground/5" />
-    <div className="relative">
-      <div className="flex items-center gap-2 text-primary-foreground/65"><Clock3 size={15} /><span className="mono text-[10px] uppercase tracking-[0.18em]">Time until the exam</span></div>
-      <div className="mt-6 flex items-end gap-3 sm:gap-5">
-        {[[countdown.days, 'days'], [countdown.hours, 'hours'], [countdown.minutes, 'mins'], [countdown.seconds, 'secs']].map(([value, label], index) => <div className="flex items-end gap-3 sm:gap-5" key={label}><div><div className="display text-[42px] font-bold leading-none sm:text-[62px]">{String(value).padStart(2, '0')}</div><div className="mono mt-2 text-[9px] uppercase tracking-[0.16em] text-primary-foreground/55">{label}</div></div>{index < 3 && <span className="mb-6 text-2xl text-accent/70">:</span>}</div>)}
+  const [activeUnit, setActiveUnit] = useState('secs');
+  const countdownParts = [
+    { value: countdown.days, label: 'days', hint: 'Keep the runway visible.' },
+    { value: countdown.hours, label: 'hours', hint: 'Choose the next focused block.' },
+    { value: countdown.minutes, label: 'mins', hint: 'Small sessions add up quickly.' },
+    { value: countdown.seconds, label: 'secs', hint: 'The clock is moving with you.' },
+  ];
+  const activePart = countdownParts.find((part) => part.label === activeUnit) ?? countdownParts[3];
+
+  return <section className="group relative overflow-hidden rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-8">
+    <div className="absolute -right-16 -top-20 size-64 rounded-full border-[22px] border-accent/20 transition-transform duration-700 group-hover:rotate-12 group-hover:scale-105" /><div className="absolute -bottom-24 right-24 size-48 rounded-full border-[14px] border-primary-foreground/5 transition-transform duration-700 group-hover:-translate-y-3" />
+    <div className="relative flex min-h-[276px] flex-col items-center text-center">
+      <div className="flex items-center justify-center gap-2 text-primary-foreground/65"><Clock3 size={15} /><span className="mono text-[10px] uppercase tracking-[0.18em]">Time until the exam</span></div>
+      <div className="mt-6 grid w-full max-w-[720px] grid-cols-2 items-start justify-items-center gap-y-4 sm:flex sm:justify-center sm:gap-5">
+        {countdownParts.map(({ value, label, hint }, index) => <Fragment key={label}>
+          <button
+            type="button"
+            onClick={() => setActiveUnit(label)}
+            onFocus={() => setActiveUnit(label)}
+            aria-label={`${String(value).padStart(2, '0')} ${label}. ${hint}`}
+            aria-pressed={activeUnit === label}
+            className={`countdown-unit min-w-[106px] rounded-2xl px-3 py-2 transition-all duration-200 ${activeUnit === label ? 'bg-primary-foreground/10 text-primary-foreground shadow-inner' : 'text-primary-foreground/75 hover:bg-primary-foreground/5 hover:text-primary-foreground'}`}
+          >
+            <span key={`${label}-${value}`} className="countdown-digits display block text-[42px] font-bold leading-none sm:text-[62px]">{String(value).padStart(2, '0')}</span>
+            <span className="mono mt-2 block text-[9px] uppercase tracking-[0.16em] text-primary-foreground/55">{label}</span>
+          </button>
+          {index < countdownParts.length - 1 && <span aria-hidden="true" className="hidden self-center text-2xl text-accent/70 sm:block">:</span>}
+        </Fragment>)}
       </div>
-      <div className="mt-7 flex flex-wrap items-center gap-3"><span className="rounded-full bg-accent px-3 py-1.5 mono text-[10px] font-medium uppercase tracking-[0.12em] text-accent-foreground">Sep 10 · 14:30</span><span className="text-[12px] text-primary-foreground/60">One focused block at a time.</span></div>
+      <p aria-live="polite" className="mt-4 min-h-5 text-[12px] text-primary-foreground/60 transition-opacity duration-200">{activePart.hint}</p>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <span className="rounded-full bg-accent px-3 py-1.5 mono text-[10px] font-medium uppercase tracking-[0.12em] text-accent-foreground">Sep 10 · 14:30</span>
+        <span className="text-[12px] text-primary-foreground/60">One focused block at a time.</span>
+        <Link href="/focus" data-testid="link-countdown-focus" className="inline-flex items-center gap-1 rounded-full border border-primary-foreground/20 px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition-colors hover:border-accent hover:bg-accent hover:text-accent-foreground">Open focus timer <ArrowRight size={13} /></Link>
+      </div>
     </div>
   </section>;
 }

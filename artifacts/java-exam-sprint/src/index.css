@@ -180,6 +180,8 @@
   .rise-3 { animation-delay: 210ms; }
   .rise-4 { animation-delay: 280ms; }
   .press:active { transform: translateY(1px) scale(.99); }
+  .countdown-unit:focus-visible { outline: 3px solid hsl(var(--accent)); outline-offset: 3px; }
+  .countdown-digits { animation: countdown-pop .35s cubic-bezier(.22, 1, .36, 1); }
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-none { scrollbar-width: none; }
 }
@@ -187,6 +189,7 @@
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes tick { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes countdown-pop { from { opacity: .35; transform: translateY(5px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
