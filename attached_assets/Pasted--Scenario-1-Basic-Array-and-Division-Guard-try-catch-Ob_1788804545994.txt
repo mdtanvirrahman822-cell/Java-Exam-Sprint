@@ -1,0 +1,380 @@
+* **Scenario 1: Basic Array and Division Guard (`try-catch`)**
+* **Objective**: Prevent application termination caused by invalid array indices or division by zero.
+
+
+* **Concepts Tested**: Basic `try-catch` syntax, `ArithmeticException`, and `ArrayIndexOutOfBoundsException`.
+
+
+* **Problem**: Write a program that takes an array of integers, attempts to divide a target element by a given divisor, and logs any arithmetic or indexing errors gracefully without crashing.
+
+
+* **Implementation**:
+
+
+
+```java
+public class ArrayDivisionGuard {
+    public static void divideElement(int[] numbers, int index, int divisor) {
+        try {
+            int result = numbers[index] / divisor;
+            System.out.println("Result: " + result);
+        } catch (ArithmeticException e) {
+            System.out.println("Error: Cannot divide by zero.");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Error: Invalid array index accessed.");
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] data = {10, 20, 30};
+        divideElement(data, 1, 0); // Handles ArithmeticException
+        divideElement(data, 5, 2); // Handles ArrayIndexOutOfBoundsException
+    }
+}
+
+```
+
+* **Scenario 2: Input Parsing with Single-Line Multi-Catch Syntax**
+* **Objective**: Consolidate exception handling for multiple unrelated exception types using pipe syntax.
+
+
+* **Concepts Tested**: Multi-catch shortcut (`|`), `NumberFormatException`, `NullPointerException`, and the no-inheritance constraint.
+
+
+* **Problem**: Parse a String input into an integer and compute its reciprocal, handling both missing inputs and format errors uniformly in a single `catch` block.
+
+
+* **Implementation**:
+
+
+
+```java
+public class InputParser {
+    public static void parseAndCompute(String input) {
+        try {
+            int number = Integer.parseInt(input);
+            int reciprocal = 100 / number;
+            System.out.println("Reciprocal result: " + reciprocal);
+        } catch (NumberFormatException | ArithmeticException e) {
+            // Pipe syntax handles both independent exception types identically
+            System.out.println("Invalid input or calculation error: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        parseAndCompute("abc"); // Triggers NumberFormatException
+        parseAndCompute("0");   // Triggers ArithmeticException
+    }
+}
+
+```
+
+* **Scenario 3: Exception Ordering Rules and Catch Hierarchy**
+* **Objective**: Correctly structure sequential `catch` blocks according to Java inheritance rules.
+
+
+* **Concepts Tested**: Inheritance hierarchy (`Exception` parent vs subclass exceptions) and compile-time ordering enforcement.
+
+
+* **Problem**: Catch specific runtime errors (`NullPointerException`) first while maintaining a general `Exception` block as a fallback handler.
+
+
+* **Implementation**:
+
+
+
+```java
+public class ExceptionHierarchyDemo {
+    public static void processText(String text) {
+        try {
+            System.out.println("Text length: " + text.length());
+            int val = Integer.parseInt(text);
+        } catch (NullPointerException e) {
+            // Specific exception must come BEFORE general parent exception
+            System.out.println("Error: String reference is null.");
+        } catch (Exception e) {
+            // General fallback exception catch block
+            System.out.println("General error encountered: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        processText(null);    // Caught by NullPointerException block
+        processText("invalid"); // Caught by general Exception block
+    }
+}
+
+```
+
+* **Scenario 4: Execution Flow and Resource Cleanup with `finally**`
+* **Objective**: Ensure cleanup actions run regardless of whether errors occur or early `return` statements execute.
+
+
+* **Concepts Tested**: Guaranteed execution of `finally` blocks.
+
+
+* **Problem**: Simulate opening and closing a database connection inside a method that returns a value from inside `try` and `catch` blocks.
+
+
+* **Implementation**:
+
+
+
+```java
+public class DatabaseTask {
+    public static boolean executeQuery(String query) {
+        try {
+            System.out.println("Database connection opened.");
+            if (query == null) {
+                throw new IllegalArgumentException("Query cannot be null.");
+            }
+            System.out.println("Executing: " + query);
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Query execution failed: " + e.getMessage());
+            return false;
+        } finally {
+            // Always executes before method returns
+            System.out.println("Database connection closed cleanly.");
+        }
+    }
+
+    public static void main(String[] args) {
+        executeQuery(null);
+    }
+}
+
+```
+
+* **Scenario 5: Manual Exception Triggering using `throw**`
+* **Objective**: Enforce domain validation rules inside method logic.
+
+
+* **Concepts Tested**: `throw` keyword, creating exception instances, and built-in `IllegalArgumentException`.
+
+
+* **Problem**: Create a method `registerUser(int age)` that manually raises an `IllegalArgumentException` if the user is under 18 years old.
+
+
+* **Implementation**:
+
+
+
+```java
+public class UserRegistration {
+    public static void registerUser(int age) {
+        if (age < 18) {
+            // Explicitly instantiating and throwing an exception
+            throw new IllegalArgumentException("Registration failed: User must be at least 18 years old.");
+        }
+        System.out.println("User registered successfully!");
+    }
+
+    public static void main(String[] args) {
+        try {
+            registerUser(15);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Handled: " + e.getMessage());
+        }
+    }
+}
+
+```
+
+* **Scenario 6: Checked Exception Method Signatures using `throws**`
+* **Objective**: Pass risk responsibility up to calling methods when handling checked I/O operations.
+
+
+* **Concepts Tested**: `throws` clause in method signatures, compile-time checked exception requirements, and `IOException`.
+
+
+* **Problem**: Declare a method that performs file operations and uses `throws` to mandate that caller methods handle potential `IOException` risks.
+
+
+* **Implementation**:
+
+
+
+```java
+import java.io.FileReader;
+import java.io.IOException;
+
+public class FileHandler {
+    // Declares checked exception risk in method signature
+    public static void openFile(String path) throws IOException {
+        FileReader reader = new FileReader(path);
+        reader.read();
+    }
+
+    public static void main(String[] args) {
+        try {
+            openFile("non_existent_file.txt");
+        } catch (IOException e) {
+            System.out.println("Caller caught checked exception: File not found or unreadable.");
+        }
+    }
+}
+
+```
+
+* **Scenario 7: Multi-Layer Call Stack Exception Propagation**
+* **Objective**: Trace uncaught exceptions across caller method stacks to a centralized error handler.
+
+
+* **Concepts Tested**: Exception propagation through method call chains.
+
+
+* **Problem**: Demonstrate an uncaught runtime error originating in a deeply nested method propagating up through intermediate methods to `main()`.
+
+
+* **Implementation**:
+
+
+
+```java
+public class StackPropagationDemo {
+    public static void level3() {
+        int result = 50 / 0; // Throws ArithmeticException
+    }
+
+    public static void level2() {
+        level3(); // Does not catch exception; passes up stack
+    }
+
+    public static void level1() {
+        level2(); // Does not catch exception; passes up stack
+    }
+
+    public static void main(String[] args) {
+        try {
+            level1();
+        } catch (ArithmeticException e) {
+            System.out.println("Centralized main handler caught error propagated from level3.");
+        }
+    }
+}
+
+```
+
+* **Scenario 8: Resource Management using `try-with-resources**`
+* **Objective**: Cleanly handle file input streams without writing verbose manual cleanup code inside `finally` blocks.
+
+
+* **Concepts Tested**: `try-with-resources` syntax and implicit `.close()` invocation.
+
+
+* **Problem**: Use `try-with-resources` to open and automatically close a `FileReader` instance upon block termination.
+
+
+* **Implementation**:
+
+
+
+```java
+import java.io.FileReader;
+import java.io.IOException;
+
+public class AutoCloseDemo {
+    public static void readData(String filename) {
+        // Resource initialized inside try (...) header auto-closes at block end
+        try (FileReader reader = new FileReader(filename)) {
+            System.out.println("Reading file data...");
+            reader.read();
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        readData("sample.txt");
+    }
+}
+
+```
+
+* **Scenario 9: Custom Checked Exception (`SeatNotAvailableException`)**
+* **Objective**: Enforce application business rules that callers are required to handle at compile time.
+
+
+* **Concepts Tested**: Custom checked exceptions extending `Exception`.
+
+
+* **Problem**: Define a custom checked exception `SeatNotAvailableException` for a theater booking system that triggers when attempting to book an already reserved seat.
+
+
+* **Implementation**:
+
+
+
+```java
+// Custom checked exception extending Exception
+class SeatNotAvailableException extends Exception {
+    public SeatNotAvailableException(String message) {
+        super(message);
+    }
+}
+
+public class ReservationSystem {
+    private boolean seatTaken = true;
+
+    public void bookSeat() throws SeatNotAvailableException {
+        if (seatTaken) {
+            throw new SeatNotAvailableException("Booking failed: Selected seat is already reserved.");
+        }
+        System.out.println("Seat booked successfully!");
+    }
+
+    public static void main(String[] args) {
+        ReservationSystem system = new ReservationSystem();
+        try {
+            system.bookSeat();
+        } catch (SeatNotAvailableException e) {
+            System.out.println("Handling business rule exception: " + e.getMessage());
+        }
+    }
+}
+
+```
+
+* **Scenario 10: Custom Unchecked Exception (`InvalidStudentIdException`)**
+* **Objective**: Represent application programming errors that callers are not forced to explicitly catch.
+
+
+* **Concepts Tested**: Custom unchecked exceptions extending `RuntimeException`.
+
+
+* **Problem**: Build a custom unchecked exception `InvalidStudentIdException` to validate student ID formatting upon object creation.
+
+
+* **Implementation**:
+
+
+
+```java
+// Custom unchecked exception extending RuntimeException
+class InvalidStudentIdException extends RuntimeException {
+    public InvalidStudentIdException(String message) {
+        super(message);
+    }
+}
+
+public class Student {
+    private String studentId;
+
+    public Student(String studentId) {
+        if (studentId == null || !studentId.startsWith("STU")) {
+            throw new InvalidStudentIdException("ID format error: Must start with 'STU'.");
+        }
+        this.studentId = studentId;
+    }
+
+    public static void main(String[] args) {
+        // Unchecked exceptions do not force mandatory try-catch blocks
+        Student s1 = new Student("STU1001"); // Valid ID
+        System.out.println("Student created: STU1001");
+
+        Student s2 = new Student("1001"); // Throws InvalidStudentIdException at runtime
+    }
+}
+
+```

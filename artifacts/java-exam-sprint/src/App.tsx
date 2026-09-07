@@ -577,6 +577,240 @@ const scenarios: Scenario[] = [
   { id: 'c3', title: 'Choose the boundary', topic: 'Composition', prompt: 'Which constructor best keeps Report independent from a concrete database?', code: `final class Report {\n  // collaborator needed to load data\n}`, options: ['Report() { db = new MySqlDatabase(); }', 'Report(MySqlDatabase db) { this.db = db; }', 'Report(Database db) { this.db = db; }', 'static Database db = new Database();'], answer: 2, explanation: 'Accept the narrow abstraction the class needs. A Database interface lets production and test implementations slot in.' },
 ];
 
+const lecture09Scenarios: Scenario[] = [
+  {
+    id: 'lecture09-c1',
+    title: 'Guard the array and divisor',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'What does this method do for the two calls in main, and why does the application keep running?',
+    code: `static void divideElement(int[] numbers, int index, int divisor) {
+  try {
+    int result = numbers[index] / divisor;
+    System.out.println("Result: " + result);
+  } catch (ArithmeticException e) {
+    System.out.println("Error: Cannot divide by zero.");
+  } catch (ArrayIndexOutOfBoundsException e) {
+    System.out.println("Error: Invalid array index accessed.");
+  }
+}
+
+int[] data = {10, 20, 30};
+divideElement(data, 1, 0);
+divideElement(data, 5, 2);`,
+    options: [
+      'The first call reports division by zero; the second reports an invalid index.',
+      'The first prints 20; the second stops the whole application.',
+      'Both calls are handled by ArithmeticException.',
+      'The array-index catch must come before the arithmetic catch.',
+    ],
+    answer: 0,
+    explanation: 'The first call reaches a zero divisor, while the second evaluates an invalid index. Each specific catch handles its own failure, so neither exception escapes the method.',
+  },
+  {
+    id: 'lecture09-c2',
+    title: 'Use multi-catch for one recovery path',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'Which pair of inputs is handled by the same multi-catch block in parseAndCompute?',
+    code: `static void parseAndCompute(String input) {
+  try {
+    int number = Integer.parseInt(input);
+    int reciprocal = 100 / number;
+  } catch (NumberFormatException | ArithmeticException e) {
+    System.out.println("Invalid input or calculation error");
+  }
+}`,
+    options: [
+      '"abc" and "0"',
+      '"12" and "5"',
+      'null and "12"',
+      '"abc" and null only',
+    ],
+    answer: 0,
+    explanation: 'Parsing "abc" raises NumberFormatException and dividing by zero from input "0" raises ArithmeticException. Both are unrelated exception types, so the pipe syntax is legal.',
+  },
+  {
+    id: 'lecture09-c3',
+    title: 'Order catches from specific to general',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'Which change makes this catch hierarchy compile while preserving the specialized null message?',
+    code: `try {
+  System.out.println(text.length());
+  int value = Integer.parseInt(text);
+} catch (Exception e) {
+  System.out.println("General error");
+} catch (NullPointerException e) {
+  System.out.println("String reference is null");
+}`,
+    options: [
+      'Move NullPointerException before Exception.',
+      'Move Exception into a finally block.',
+      'Replace Exception with Error.',
+      'Put both types in one multi-catch block.',
+    ],
+    answer: 0,
+    explanation: 'NullPointerException is a subclass of Exception. The specific catch must appear first; otherwise the general catch makes the later branch unreachable.',
+  },
+  {
+    id: 'lecture09-c4',
+    title: 'Trust finally to clean up',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'What output order should executeQuery(null) produce?',
+    code: `static boolean executeQuery(String query) {
+  try {
+    System.out.println("Database connection opened.");
+    if (query == null) throw new IllegalArgumentException("Query cannot be null.");
+    return true;
+  } catch (IllegalArgumentException e) {
+    System.out.println("Query execution failed");
+    return false;
+  } finally {
+    System.out.println("Database connection closed cleanly.");
+  }
+}`,
+    options: [
+      'Only "Query execution failed".',
+      '"Query execution failed", then "Database connection closed cleanly."',
+      '"Database connection closed cleanly." before the catch message.',
+      'The finally block is skipped because catch returns false.',
+    ],
+    answer: 1,
+    explanation: 'finally runs after the try/catch path even when the catch block returns. It is the reliable cleanup point for this method.',
+  },
+  {
+    id: 'lecture09-c5',
+    title: 'Trigger a domain rule with throw',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'What happens when the caller invokes registerUser(15) inside the shown try block?',
+    code: `static void registerUser(int age) {
+  if (age < 18) {
+    throw new IllegalArgumentException(
+      "User must be at least 18 years old.");
+  }
+  System.out.println("User registered successfully!");
+}`,
+    options: [
+      'The method silently returns because age is invalid.',
+      'It creates and throws IllegalArgumentException, which the caller can catch.',
+      'The compiler changes it into a checked IOException.',
+      'The success message prints before the exception.',
+    ],
+    answer: 1,
+    explanation: 'throw manually creates an exception event at the validation boundary. The surrounding caller catch can handle the IllegalArgumentException.',
+  },
+  {
+    id: 'lecture09-c6',
+    title: 'Declare checked I/O risk with throws',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'What must a caller do when it invokes openFile, because the method declares throws IOException?',
+    code: `static void openFile(String path) throws IOException {
+  FileReader reader = new FileReader(path);
+  reader.read();
+}
+
+openFile("non_existent_file.txt");`,
+    options: [
+      'Nothing; IOException is always unchecked.',
+      'Catch IOException or declare it with throws too.',
+      'Replace throws with throw at the call site.',
+      'Catch only RuntimeException.',
+    ],
+    answer: 1,
+    explanation: 'IOException is checked. Every caller must handle it with catch or pass the responsibility upward by declaring throws.',
+  },
+  {
+    id: 'lecture09-c7',
+    title: 'Trace the call stack',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'Where is the ArithmeticException finally handled when level3 divides by zero?',
+    code: `static void level3() { int result = 50 / 0; }
+static void level2() { level3(); }
+static void level1() { level2(); }
+
+try {
+  level1();
+} catch (ArithmeticException e) {
+  System.out.println("Centralized handler");
+}`,
+    options: [
+      'Inside level3 automatically, because it caused the error.',
+      'Inside level2, because every caller must catch runtime exceptions.',
+      'Inside level1, because propagation stops after one method.',
+      'In main, after the exception propagates through level2 and level1.',
+    ],
+    answer: 3,
+    explanation: 'The runtime exception is not caught in the nested methods, so it travels back up the call stack until main’s catch block handles it.',
+  },
+  {
+    id: 'lecture09-c8',
+    title: 'Let try-with-resources close the file',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'What resource-management guarantee does this method get from try-with-resources?',
+    code: `static void readData(String filename) {
+  try (FileReader reader = new FileReader(filename)) {
+    System.out.println("Reading file data...");
+    reader.read();
+  } catch (IOException e) {
+    System.out.println("Error reading file");
+  }
+}`,
+    options: [
+      'The FileReader is closed automatically when the try block ends.',
+      'The FileReader stays open until the JVM exits.',
+      'The catch block must manually call reader.close().',
+      'try-with-resources only works for unchecked exceptions.',
+    ],
+    answer: 0,
+    explanation: 'FileReader is AutoCloseable. Java inserts the close operation when the try block exits, including when an IOException occurs.',
+  },
+  {
+    id: 'lecture09-c9',
+    title: 'Enforce a checked business rule',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'Why must the caller of bookSeat handle SeatNotAvailableException?',
+    code: `class SeatNotAvailableException extends Exception { }
+
+void bookSeat() throws SeatNotAvailableException {
+  if (seatTaken) {
+    throw new SeatNotAvailableException();
+  }
+}
+
+system.bookSeat();`,
+    options: [
+      'It extends Exception, so the compiler requires catch or throws.',
+      'Every custom exception is automatically unchecked.',
+      'Only main methods can throw custom exceptions.',
+      'The caller must catch RuntimeException instead.',
+    ],
+    answer: 0,
+    explanation: 'Extending Exception creates a checked exception. The throws declaration makes the handling responsibility visible at compile time.',
+  },
+  {
+    id: 'lecture09-c10',
+    title: 'Validate with an unchecked exception',
+    topic: 'Lecture 09 · Exceptions',
+    prompt: 'What happens when new Student("1001") is evaluated?',
+    code: `class InvalidStudentIdException extends RuntimeException { }
+
+Student(String studentId) {
+  if (studentId == null || !studentId.startsWith("STU")) {
+    throw new InvalidStudentIdException("ID format error");
+  }
+}
+
+Student s1 = new Student("STU1001");
+Student s2 = new Student("1001");`,
+    options: [
+      's2 is created with a null ID.',
+      'The constructor throws InvalidStudentIdException at runtime.',
+      'The compiler requires every caller to declare throws.',
+      'The invalid ID is silently converted to STU1001.',
+    ],
+    answer: 1,
+    explanation: 'InvalidStudentIdException extends RuntimeException, so the invalid value fails at runtime and callers are not forced to catch or declare it.',
+  },
+];
+
 const navItems = [
   { href: '/', label: 'Cockpit', icon: LayoutDashboard },
   { href: '/learn', label: 'Learn', icon: Library },
@@ -960,13 +1194,25 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const scenario = scenarios[index % scenarios.length];
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'mixed'>('lecture09');
+  const activeScenarios = labTrack === 'lecture09' ? lecture09Scenarios : scenarios;
+  const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
-  const next = () => { setChoice(null); setIndex((index + 1) % scenarios.length); };
+  const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
+  const selectTrack = (track: 'lecture09' | 'mixed') => {
+    setLabTrack(track);
+    setIndex(0);
+    setChoice(null);
+  };
+  const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker="Coding lab · predict before you run" title="Think like the compiler." detail="Small Java situations, high signal. Pick the fix or behavior you expect, then read the why." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{Object.values(results).filter((item) => item === 1).length}/{Object.keys(results).length || 0} solved</span></div>} />
-    <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {scenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'mixed'} onClick={() => selectTrack('mixed')} data-testid="button-lab-mixed" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'mixed' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Mixed review <span className="ml-1 opacity-70">3</span></button>
+    </div>
+    <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
   </div>;
 }
 
