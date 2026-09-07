@@ -811,11 +811,11 @@ Student s2 = new Student("1001");`,
   },
 ];
 
-const lecture11Scenarios: Scenario[] = [
+const lecture10Scenarios: Scenario[] = [
   {
-    id: 'lecture11-c1',
+    id: 'lecture10-c1',
     title: 'Read the reference type',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'What does this print, and which rule explains the result?',
     code: `class Animal {
   String type = "Animal";
@@ -837,9 +837,9 @@ System.out.println(animal.type);`,
     explanation: 'The solution prints "Animal". Fields are hidden rather than dynamically overridden, so animal.type uses the declared reference type Animal even though the object is a Cat.',
   },
   {
-    id: 'lecture11-c2',
+    id: 'lecture10-c2',
     title: 'Recover a subtype-only method',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'Which fix allows the code to call meow after the Cat has been upcast?',
     code: `Cat cat = new Cat();
 Animal animal = cat;
@@ -856,9 +856,9 @@ Animal animal = cat;
     explanation: 'The Animal reference exposes only Animal members. A downcast to Cat is valid here because the actual object originally came from new Cat(), allowing ((Cat) animal).meow().',
   },
   {
-    id: 'lecture11-c3',
+    id: 'lecture10-c3',
     title: 'Predict runtime polymorphism',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'What sequence is printed by the loop over this mixed Animal array?',
     code: `class Animal { void display() { System.out.println("Animal"); } }
 class Dog extends Animal {
@@ -880,9 +880,9 @@ for (Animal animal : animals) animal.display();`,
     explanation: 'The solution prints Dog, Cat, Animal. Overridden methods use the runtime object type, so one Animal reference array can dispatch to different implementations.',
   },
   {
-    id: 'lecture11-c4',
+    id: 'lecture10-c4',
     title: 'Confirm a safe downcast',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'Why is this explicit cast guaranteed to succeed?',
     code: `class Animal {}
 class Cat extends Animal {
@@ -902,9 +902,9 @@ cat.meow();`,
     explanation: 'The cast is safe because the object created by new Cat() really is a Cat. The reference type is broader, but the runtime type matches the target subtype.',
   },
   {
-    id: 'lecture11-c5',
+    id: 'lecture10-c5',
     title: 'Catch an invalid downcast',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'What happens when this code tries to cast a Cat object to Dog?',
     code: `Animal animal = new Cat();
 try {
@@ -923,9 +923,9 @@ try {
     explanation: 'The explicit cast is allowed by the compiler because the types are related, but the runtime object is a Cat, not a Dog. Java throws ClassCastException and the catch handles it.',
   },
   {
-    id: 'lecture11-c6',
+    id: 'lecture10-c6',
     title: 'Separate compile time from runtime',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'Which statement correctly distinguishes the two invalid assignments?',
     code: `// Snippet A
 Dog dogA = new Animal();
@@ -943,9 +943,9 @@ Dog dogB = (Dog) animalB;`,
     explanation: 'Snippet A has no valid implicit conversion from a superclass object to a Dog reference. Snippet B uses an explicit cast, so it compiles, then fails because the actual object is only an Animal.',
   },
   {
-    id: 'lecture11-c7',
+    id: 'lecture10-c7',
     title: 'Use old-style instanceof safely',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'Which implementation safely calls the subtype method for either a Dog or Cat?',
     code: `static void describe(Animal animal) {
   // Dog should bark, Cat should meow,
@@ -961,9 +961,9 @@ Dog dogB = (Dog) animalB;`,
     explanation: 'The old-style solution checks each runtime type before casting: instanceof first, then an explicit cast inside the guarded branch. That prevents an unsafe cast for unknown animals.',
   },
   {
-    id: 'lecture11-c8',
+    id: 'lecture10-c8',
     title: 'Refactor with a pattern variable',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'Which modern rewrite removes the separate cast while keeping the same safe behavior?',
     code: `static void describe(Animal animal) {
   // Replace the old instanceof + cast sequence
@@ -978,9 +978,9 @@ Dog dogB = (Dog) animalB;`,
     explanation: 'Pattern matching binds the checked object as d or c inside the true branch. It combines the type check and cast into one readable expression.',
   },
   {
-    id: 'lecture11-c9',
+    id: 'lecture10-c9',
     title: 'Follow pattern scope through &&',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'What does checkSenior print for new Dog(7), new Dog(2), and new Animal()?',
     code: `static void checkSenior(Animal animal) {
   if (animal instanceof Dog d && d.getAge() > 5) {
@@ -999,9 +999,9 @@ Dog dogB = (Dog) animalB;`,
     explanation: 'The first check confirms the runtime type before d.getAge() runs. A seven-year-old Dog is senior; a two-year-old Dog is not; an Animal short-circuits safely before accessing getAge().',
   },
   {
-    id: 'lecture11-c10',
+    id: 'lecture10-c10',
     title: 'Understand negated pattern scope',
-    topic: 'Lecture 11 · Typecasting',
+    topic: 'Lecture 10 · Typecasting',
     prompt: 'Why can d.bark() be used after this early-return check?',
     code: `static void examineAnimal(Animal animal) {
   if (!(animal instanceof Dog d)) {
@@ -1403,23 +1403,23 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture11' | 'mixed'>('lecture09');
-  const activeScenarios = labTrack === 'lecture09' ? lecture09Scenarios : labTrack === 'lecture11' ? lecture11Scenarios : scenarios;
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'mixed'>('lecture09');
+  const activeScenarios = labTrack === 'lecture09' ? lecture09Scenarios : labTrack === 'lecture10' ? lecture10Scenarios : scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture11' | 'mixed') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'mixed') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture11' ? 'Lecture 11 typecasting' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
-      <button type="button" role="tab" aria-selected={labTrack === 'lecture11'} onClick={() => selectTrack('lecture11')} data-testid="button-lab-lecture11" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture11' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 11 · Typecasting <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'mixed'} onClick={() => selectTrack('mixed')} data-testid="button-lab-mixed" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'mixed' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Mixed review <span className="ml-1 opacity-70">3</span></button>
     </div>
     <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
