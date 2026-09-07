@@ -1,0 +1,37 @@
+Here are the 10 exercises again (same as above) for your notes:
+
+## Exercises
+
+**1. Non-Breaking Interface Evolution**
+You have an existing interface `Payable` with `long amountOwedThisMonth()`, and an existing class `Employee implements Payable` that already compiles. Add a **default method** `receiptLine()` to `Payable` that returns a formatted string using `amountOwedThisMonth()`. Confirm `Employee` still compiles without any changes.
+
+**2. Overriding a Default Method**
+Using your `Payable` interface with the default `receiptLine()` method, create a class `Contractor implements Payable` that overrides `receiptLine()` with a custom, more detailed message instead of using the default.
+
+**3. The Diamond Problem, Reborn**
+Create two interfaces `Payable` and `Refundable`, each declaring a **default method** `note()` with a different body/message. Create a class `Contractor implements Payable, Refundable` and try compiling without overriding `note()`. Confirm the compiler error, then fix it.
+
+**4. Explicit Diamond Resolution**
+Fix Exercise 3 by having `Contractor` override `note()` and explicitly delegate to one parent using `Payable.super.note()`. Then write a second version where it calls **both** `Payable.super.note()` and `Refundable.super.note()`, combining their outputs.
+
+**5. Static Utility Method on an Interface**
+Create an interface `Flyable` with a **static method** `mphToKmh(int mph)` that converts speed. Call it directly using `Flyable.mphToKmh(60)` from `main()` — without needing an implementing object.
+
+**6. Private Helper Methods**
+Extend your `Flyable` interface: add a **default method** `takeOff()` that calls a **private method** `prepareEngine()` internally. Confirm `prepareEngine()` cannot be called from outside the interface (comment out an attempted external call and note why it fails).
+
+**7. Interface Constants**
+Create an interface `Payable` with a constant `long MIN_PAYOUT_PAISA = 10000;` and method `amountOwedThisMonth()`. Write a method that checks whether a `Payable` object's amount owed meets the minimum, referencing the constant as `Payable.MIN_PAYOUT_PAISA`.
+
+**8. Building a Functional Interface**
+Create a `@FunctionalInterface` named `PayRule` with a single abstract method `long compute(long basePaisa)`. Write three different implementations using **lambda expressions** (e.g., a flat 10% bonus, a flat deduction, a doubling rule) and apply each to a base pay value, printing the results.
+
+**9. Interfaces Extending Interfaces**
+Create `Payable` and `Auditable` interfaces. Create a new interface `Settlement extends Payable, Auditable` that adds its own method `settlementReference()`. Create a class implementing `Settlement` and confirm it must provide bodies for methods from all three contracts.
+
+**10. Program to the Interface — Swappable Implementations**
+Create an interface `LedgerSink` with method `void write(String line)`. Write a method `settle(Payable[] payees, LedgerSink sink)` that loops through payees and writes a receipt line to the sink for each. Create two implementations: `ConsoleSink` (prints to console) and `ListSink` (stores lines in an internal `List<String>`). Call `settle()` with each sink without changing the `settle()` method itself, proving the engine only depends on the `LedgerSink` contract.
+
+---
+
+Just say the word and I'll paste the full solution code for all 10 as well.

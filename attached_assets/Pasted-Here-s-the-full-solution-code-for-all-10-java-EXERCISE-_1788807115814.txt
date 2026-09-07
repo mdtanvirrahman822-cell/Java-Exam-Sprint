@@ -1,0 +1,309 @@
+Here's the full solution code for all 10:
+
+```java
+// ===== EXERCISE 1: Non-Breaking Interface Evolution =====
+interface Payable1 {
+    long amountOwedThisMonth();
+    default String receiptLine() {
+        return "Owed: " + amountOwedThisMonth();
+    }
+}
+
+class Employee1 implements Payable1 {
+    long salary;
+    Employee1(long salary) { this.salary = salary; }
+    public long amountOwedThisMonth() { return salary; }
+    // No changes needed — Employee1 compiles unchanged and gets receiptLine() for free
+}
+
+public class Exercise1 {
+    public static void main(String[] args) {
+        Employee1 e = new Employee1(50000);
+        System.out.println(e.receiptLine());
+    }
+}
+
+
+// ===== EXERCISE 2: Overriding a Default Method =====
+interface Payable2 {
+    long amountOwedThisMonth();
+    default String receiptLine() {
+        return "Owed: " + amountOwedThisMonth();
+    }
+}
+
+class Contractor2 implements Payable2 {
+    long rate; int milestones;
+    Contractor2(long rate, int milestones) {
+        this.rate = rate;
+        this.milestones = milestones;
+    }
+    public long amountOwedThisMonth() { return rate * milestones; }
+
+    @Override
+    public String receiptLine() {
+        return "Contractor receipt: " + milestones + " milestones @ " + rate
+                + " = " + amountOwedThisMonth();
+    }
+}
+
+public class Exercise2 {
+    public static void main(String[] args) {
+        Contractor2 c = new Contractor2(1000, 5);
+        System.out.println(c.receiptLine());
+    }
+}
+
+
+// ===== EXERCISE 3: The Diamond Problem, Reborn =====
+interface Payable3 {
+    default String note() { return "Payable note"; }
+}
+
+interface Refundable3 {
+    default String note() { return "Refundable note"; }
+}
+
+class Contractor3 implements Payable3, Refundable3 {
+    // Without overriding note(), this won't compile:
+    // "class Contractor3 inherits unrelated defaults for note() from
+    //  Payable3 and Refundable3"
+
+    @Override
+    public String note() {
+        return Payable3.super.note(); // must choose explicitly
+    }
+}
+
+public class Exercise3 {
+    public static void main(String[] args) {
+        Contractor3 c = new Contractor3();
+        System.out.println(c.note());
+    }
+}
+
+
+// ===== EXERCISE 4: Explicit Diamond Resolution =====
+interface Payable4 {
+    default String note() { return "Payable note"; }
+}
+
+interface Refundable4 {
+    default String note() { return "Refundable note"; }
+}
+
+// Version A: choose one explicitly
+class Contractor4a implements Payable4, Refundable4 {
+    @Override
+    public String note() {
+        return Payable4.super.note();
+    }
+}
+
+// Version B: combine both
+class Contractor4b implements Payable4, Refundable4 {
+    @Override
+    public String note() {
+        return Payable4.super.note() + " | " + Refundable4.super.note();
+    }
+}
+
+public class Exercise4 {
+    public static void main(String[] args) {
+        System.out.println(new Contractor4a().note());
+        System.out.println(new Contractor4b().note());
+    }
+}
+
+
+// ===== EXERCISE 5: Static Utility Method on an Interface =====
+interface Flyable5 {
+    static int mphToKmh(int mph) {
+        return (int) (mph * 1.609);
+    }
+}
+
+public class Exercise5 {
+    public static void main(String[] args) {
+        int kmh = Flyable5.mphToKmh(60);
+        System.out.println(kmh + " km/h");
+        // No implementing object needed — called directly on the interface name
+    }
+}
+
+
+// ===== EXERCISE 6: Private Helper Methods =====
+interface Flyable6 {
+    static int mphToKmh(int mph) {
+        return (int) (mph * 1.609);
+    }
+
+    default void takeOff() {
+        prepareEngine(); // uses the private helper
+        System.out.println("Taking off!");
+    }
+
+    private void prepareEngine() {
+        System.out.println("Checking engine");
+    }
+}
+
+class Plane6 implements Flyable6 {}
+
+public class Exercise6 {
+    public static void main(String[] args) {
+        Plane6 p = new Plane6();
+        p.takeOff();
+
+        // p.prepareEngine(); // Compile error — private interface methods
+        // are only accessible from within the interface's own default/private methods
+    }
+}
+
+
+// ===== EXERCISE 7: Interface Constants =====
+interface Payable7 {
+    long MIN_PAYOUT_PAISA = 10000;
+    long amountOwedThisMonth();
+}
+
+class Vendor7 implements Payable7 {
+    long invoice;
+    Vendor7(long invoice) { this.invoice = invoice; }
+    public long amountOwedThisMonth() { return invoice; }
+}
+
+public class Exercise7 {
+    static boolean meetsMinimum(Payable7 p) {
+        return p.amountOwedThisMonth() >= Payable7.MIN_PAYOUT_PAISA;
+    }
+
+    public static void main(String[] args) {
+        Vendor7 v1 = new Vendor7(5000);
+        Vendor7 v2 = new Vendor7(15000);
+        System.out.println(meetsMinimum(v1)); // false
+        System.out.println(meetsMinimum(v2)); // true
+    }
+}
+
+
+// ===== EXERCISE 8: Building a Functional Interface =====
+@FunctionalInterface
+interface PayRule8 {
+    long compute(long basePaisa);
+}
+
+public class Exercise8 {
+    public static void main(String[] args) {
+        PayRule8 tenPercentBonus = base -> base + (base / 10);
+        PayRule8 flatDeduction = base -> base - 500;
+        PayRule8 doubler = base -> base * 2;
+
+        long basePay = 10000;
+        System.out.println("Bonus rule: " + tenPercentBonus.compute(basePay));
+        System.out.println("Deduction rule: " + flatDeduction.compute(basePay));
+        System.out.println("Doubler rule: " + doubler.compute(basePay));
+    }
+}
+
+
+// ===== EXERCISE 9: Interfaces Extending Interfaces =====
+interface Payable9 {
+    long amountOwedThisMonth();
+}
+
+interface Auditable9 {
+    String auditTrail();
+}
+
+interface Settlement9 extends Payable9, Auditable9 {
+    String settlementReference();
+}
+
+class ContractorSettlement9 implements Settlement9 {
+    long amount;
+    ContractorSettlement9(long amount) { this.amount = amount; }
+
+    @Override
+    public long amountOwedThisMonth() { return amount; }
+
+    @Override
+    public String auditTrail() { return "Audited amount: " + amount; }
+
+    @Override
+    public String settlementReference() { return "REF-" + amount; }
+}
+
+public class Exercise9 {
+    public static void main(String[] args) {
+        ContractorSettlement9 cs = new ContractorSettlement9(25000);
+        System.out.println(cs.amountOwedThisMonth());
+        System.out.println(cs.auditTrail());
+        System.out.println(cs.settlementReference());
+        // Must implement all three contracts — Payable9, Auditable9, and Settlement9's own method
+    }
+}
+
+
+// ===== EXERCISE 10: Program to the Interface — Swappable Implementations =====
+import java.util.ArrayList;
+import java.util.List;
+
+interface Payable10 {
+    long amountOwedThisMonth();
+    default String receiptLine() {
+        return "Owed: " + amountOwedThisMonth();
+    }
+}
+
+interface LedgerSink10 {
+    void write(String line);
+}
+
+class ConsoleSink10 implements LedgerSink10 {
+    @Override
+    public void write(String line) {
+        System.out.println(line);
+    }
+}
+
+class ListSink10 implements LedgerSink10 {
+    List<String> lines = new ArrayList<>();
+
+    @Override
+    public void write(String line) {
+        lines.add(line);
+    }
+}
+
+class Employee10 implements Payable10 {
+    long salary;
+    Employee10(long salary) { this.salary = salary; }
+    public long amountOwedThisMonth() { return salary; }
+}
+
+public class Exercise10 {
+    static void settle(Payable10[] payees, LedgerSink10 sink) {
+        for (Payable10 p : payees) {
+            sink.write(p.receiptLine());
+        }
+    }
+
+    public static void main(String[] args) {
+        Payable10[] payees = {
+            new Employee10(50000),
+            new Employee10(60000)
+        };
+
+        // Same settle() method, different sink behavior
+        settle(payees, new ConsoleSink10());
+
+        ListSink10 listSink = new ListSink10();
+        settle(payees, listSink);
+        System.out.println("Stored lines: " + listSink.lines);
+        // Not one line of settle() changed between the two calls
+    }
+}
+```
+
+Same rule as before — split into separate `.java` files (or rename the numbered classes) before compiling, since Java requires one public top-level class per file matching the filename.

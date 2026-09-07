@@ -1247,6 +1247,242 @@ class Contractor /* should use which relationship? */`,
   },
 ];
 
+const lecture12Part1Scenarios: Scenario[] = [
+  {
+    id: 'lecture12p1-c1',
+    title: 'Evolve an interface safely',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'Why can Employee keep compiling after Payable receives the new default method?',
+    code: `interface Payable {
+  long amountOwedThisMonth();
+
+  default String receiptLine() {
+    return "Owed: " + amountOwedThisMonth();
+  }
+}
+
+class Employee implements Payable {
+  public long amountOwedThisMonth() { return 50000; }
+}`,
+    options: [
+      'Default methods supply a body, so existing implementers inherit receiptLine().',
+      'Java silently removes the new method from the interface.',
+      'Employee becomes abstract automatically.',
+      'Every interface method is optional once a default exists.',
+    ],
+    answer: 0,
+    explanation: 'A default method lets an interface evolve without forcing every existing implementation to change. Employee inherits receiptLine() and uses its own amountOwedThisMonth() implementation.',
+  },
+  {
+    id: 'lecture12p1-c2',
+    title: 'Override a default intentionally',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'Which implementation gives Contractor its detailed receipt instead of the generic default?',
+    code: `interface Payable {
+  long amountOwedThisMonth();
+  default String receiptLine() {
+    return "Owed: " + amountOwedThisMonth();
+  }
+}
+
+class Contractor implements Payable {
+  long rate = 1000;
+  int milestones = 5;
+  // Choose the correct override
+}`,
+    options: [
+      'public String receiptLine() { return "Contractor: " + (rate * milestones); }',
+      'private String receiptLine() { return "Contractor"; }',
+      'public void receiptLine(String detail) { }',
+      'static String receiptLine() { return "Contractor"; }',
+    ],
+    answer: 0,
+    explanation: 'Contractor overrides the inherited default with the same public, no-argument String-returning signature. The custom method can include milestones and the calculated amount.',
+  },
+  {
+    id: 'lecture12p1-c3',
+    title: 'Spot a default-method conflict',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'What happens if Contractor implements both interfaces without overriding note()?',
+    code: `interface Payable {
+  default String note() { return "Payable note"; }
+}
+interface Refundable {
+  default String note() { return "Refundable note"; }
+}
+
+class Contractor implements Payable, Refundable {
+  // no note() override
+}`,
+    options: [
+      'The compiler rejects it because the inherited defaults are unrelated.',
+      'Payable.note() always wins because it is listed first.',
+      'Refundable.note() wins because it is listed second.',
+      'The class compiles and note() returns both strings automatically.',
+    ],
+    answer: 0,
+    explanation: 'Java cannot choose between two unrelated default implementations with the same signature. Contractor must override note() and resolve the conflict explicitly.',
+  },
+  {
+    id: 'lecture12p1-c4',
+    title: 'Choose one parent default',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'Which body explicitly resolves the Payable/Refundable note conflict by choosing Payable?',
+    code: `class Contractor implements Payable, Refundable {
+  @Override
+  public String note() {
+    // choose one interface default
+  }
+}`,
+    options: [
+      'return Payable.super.note();',
+      'return super.note();',
+      'return Payable.note();',
+      'return new Payable().note();',
+    ],
+    answer: 0,
+    explanation: 'InterfaceName.super.method() explicitly delegates to a default method inherited from that interface. Payable.super.note() selects the Payable version.',
+  },
+  {
+    id: 'lecture12p1-c5',
+    title: 'Combine two defaults',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'How can Contractor keep both parent messages in one resolved note?',
+    code: `class Contractor implements Payable, Refundable {
+  @Override
+  public String note() {
+    // combine both defaults
+  }
+}`,
+    options: [
+      'return Payable.super.note() + " | " + Refundable.super.note();',
+      'return super.Payable.note() + super.Refundable.note();',
+      'return Payable.note() & Refundable.note();',
+      'Do not override; Java combines defaults automatically.',
+    ],
+    answer: 0,
+    explanation: 'The class must still override note(), but it can call each interface default explicitly with Payable.super.note() and Refundable.super.note(), then combine the results.',
+  },
+  {
+    id: 'lecture12p1-c6',
+    title: 'Call an interface static utility',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'How should mphToKmh be called when it is declared static on Flyable?',
+    code: `interface Flyable {
+  static int mphToKmh(int mph) {
+    return (int) (mph * 1.609);
+  }
+}
+
+// Convert 60 mph`,
+    options: [
+      'Flyable.mphToKmh(60)',
+      'new Flyable().mphToKmh(60)',
+      'Plane.mphToKmh(60) through any implementer',
+      'flyable.super.mphToKmh(60)',
+    ],
+    answer: 0,
+    explanation: 'Interface static methods belong to the interface itself. Call them with Flyable.mphToKmh(60); they are not inherited by implementing classes or instances.',
+  },
+  {
+    id: 'lecture12p1-c7',
+    title: 'Hide a private interface helper',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'Why can takeOff call prepareEngine(), but Plane cannot call it directly?',
+    code: `interface Flyable {
+  default void takeOff() {
+    prepareEngine();
+    System.out.println("Taking off!");
+  }
+
+  private void prepareEngine() {
+    System.out.println("Checking engine");
+  }
+}
+
+class Plane implements Flyable { }
+Plane plane = new Plane();
+plane.takeOff();`,
+    options: [
+      'Private interface methods are helpers accessible only inside the interface.',
+      'Plane inherits every private method as public.',
+      'prepareEngine is static and must be called on Plane.',
+      'The code cannot compile because defaults cannot call private methods.',
+    ],
+    answer: 0,
+    explanation: 'Java permits private interface methods as reusable implementation helpers for default methods. They are not part of the public contract, so external code cannot call plane.prepareEngine().',
+  },
+  {
+    id: 'lecture12p1-c8',
+    title: 'Use an interface constant',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'What does meetsMinimum return for invoices of 5,000 and 15,000?',
+    code: `interface Payable {
+  long MIN_PAYOUT_PAISA = 10000;
+  long amountOwedThisMonth();
+}
+
+static boolean meetsMinimum(Payable p) {
+  return p.amountOwedThisMonth() >= Payable.MIN_PAYOUT_PAISA;
+}`,
+    options: [
+      'false, then true',
+      'true, then false',
+      'true for both because interface constants are ignored',
+      'The comparison cannot use an interface constant',
+    ],
+    answer: 0,
+    explanation: 'Interface fields are public static final constants. The 5,000 amount is below Payable.MIN_PAYOUT_PAISA, while 15,000 meets the minimum.',
+  },
+  {
+    id: 'lecture12p1-c9',
+    title: 'Recognize a functional interface',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'Why can these three rules be written as lambdas?',
+    code: `@FunctionalInterface
+interface PayRule {
+  long compute(long basePaisa);
+}
+
+PayRule bonus = base -> base + (base / 10);
+PayRule deduction = base -> base - 500;
+PayRule doubler = base -> base * 2;`,
+    options: [
+      'PayRule has exactly one abstract method, so each lambda supplies compute().',
+      'Every interface automatically supports lambdas.',
+      'The @FunctionalInterface annotation creates the method body.',
+      'Lambdas can implement only interfaces with default methods.',
+    ],
+    answer: 0,
+    explanation: 'A functional interface has one abstract method. Each lambda is a compact implementation of compute(long), while any default or static methods would not count toward that single abstract method.',
+  },
+  {
+    id: 'lecture12p1-c10',
+    title: 'Compose contracts and swap sinks',
+    topic: 'Lecture 12 · Part 1',
+    prompt: 'What makes Settlement and settle() flexible in these two designs?',
+    code: `interface Settlement extends Payable, Auditable {
+  String settlementReference();
+}
+
+interface LedgerSink {
+  void write(String line);
+}
+
+static void settle(Payable[] payees, LedgerSink sink) {
+  for (Payable p : payees) sink.write(p.receiptLine());
+}`,
+    options: [
+      'Settlement inherits all parent contracts, and settle() can use ConsoleSink or ListSink without changing its code.',
+      'Settlement can extend only one interface, and settle() must know every sink class.',
+      'LedgerSink must be an abstract class for swapping to work.',
+      'The method must downcast every Payable to a concrete Employee.',
+    ],
+    answer: 0,
+    explanation: 'Settlement combines Payable, Auditable, and its own method, so implementers provide all three contracts. settle() depends only on LedgerSink, allowing console and list implementations to be swapped without changing the engine.',
+  },
+];
+
 const navItems = [
   { href: '/', label: 'Cockpit', icon: LayoutDashboard },
   { href: '/learn', label: 'Learn', icon: Library },
@@ -1630,30 +1866,33 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'mixed'>('lecture09');
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'mixed'>('lecture09');
   const activeScenarios = labTrack === 'lecture09'
     ? lecture09Scenarios
     : labTrack === 'lecture10'
       ? lecture10Scenarios
       : labTrack === 'lecture11'
         ? lecture11Scenarios
-        : scenarios;
+        : labTrack === 'lecture12p1'
+          ? lecture12Part1Scenarios
+          : scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'mixed') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'mixed') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture11'} onClick={() => selectTrack('lecture11')} data-testid="button-lab-lecture11" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture11' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 11 · Interfaces <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture12p1'} onClick={() => selectTrack('lecture12p1')} data-testid="button-lab-lecture12p1" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p1' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 1 <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'mixed'} onClick={() => selectTrack('mixed')} data-testid="button-lab-mixed" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'mixed' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Mixed review <span className="ml-1 opacity-70">3</span></button>
     </div>
     <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
