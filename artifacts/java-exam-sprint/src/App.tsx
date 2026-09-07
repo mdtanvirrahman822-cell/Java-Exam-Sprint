@@ -732,11 +732,13 @@ function CountdownCard() {
   </section>;
 }
 
-function ProgressRing({ value }: { value: number }) {
+function ProgressRing({ value, onAccent = false }: { value: number; onAccent?: boolean }) {
   const [animatedValue, setAnimatedValue] = useState(value);
   const progress = Math.min(100, Math.max(0, value));
   const radius = 46;
   const circumference = 2 * Math.PI * radius;
+  const trackColor = onAccent ? 'hsl(var(--accent-foreground) / 0.2)' : 'hsl(var(--muted))';
+  const progressColor = onAccent ? 'hsl(var(--accent-foreground))' : 'hsl(var(--accent))';
 
   useEffect(() => {
     const startValue = animatedValue;
@@ -758,10 +760,10 @@ function ProgressRing({ value }: { value: number }) {
 
   return <div role="progressbar" aria-label={`Study progress: ${progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="relative grid size-[122px] place-items-center rounded-full">
     <svg aria-hidden="true" className="absolute inset-0 size-full -rotate-90">
-      <circle cx="61" cy="61" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="12" />
-      <circle cx="61" cy="61" r={radius} fill="none" stroke="hsl(var(--accent))" strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference - (animatedValue / 100) * circumference} style={{ transition: 'stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1)' }} />
+      <circle cx="61" cy="61" r={radius} fill="none" stroke={trackColor} strokeWidth="12" />
+      <circle cx="61" cy="61" r={radius} fill="none" stroke={progressColor} strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference - (animatedValue / 100) * circumference} style={{ transition: 'stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1)' }} />
     </svg>
-    <div className="relative grid size-[94px] place-items-center rounded-full bg-card"><div className="text-center"><div className="display text-[27px] font-bold">{animatedValue}%</div><div className="mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">ready</div></div></div>
+    <div className={`relative grid size-[94px] place-items-center rounded-full ${onAccent ? 'bg-accent-foreground/10' : 'bg-card'}`}><div className="text-center"><div className="display text-[27px] font-bold">{animatedValue}%</div><div className={`mono text-[9px] uppercase tracking-[0.12em] ${onAccent ? 'text-accent-foreground/60' : 'text-muted-foreground'}`}>ready</div></div></div>
   </div>;
 }
 
@@ -836,9 +838,9 @@ function Dashboard() {
     <SectionIntro kicker="Tuesday, September 7 · 23:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <CountdownCard />
-      <section className="flex flex-col justify-between rounded-[24px] border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center xl:flex-col xl:items-start">
-        <div><div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Sprint progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-muted-foreground">Complete the plan, then use practice to find the fuzzy edges.</p></div>
-         <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-muted-foreground">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
+       <section className="flex flex-col justify-between rounded-[24px] border border-accent/70 bg-accent p-6 text-accent-foreground shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center xl:flex-col xl:items-start">
+         <div><div className="flex items-center gap-2 text-accent-foreground/70"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Sprint progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-accent-foreground/75">Complete the plan, then use practice to find the fuzzy edges.</p></div>
+          <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} onAccent /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-accent-foreground/65">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-accent-foreground/70">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground/70">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
       </section>
     </div>
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
