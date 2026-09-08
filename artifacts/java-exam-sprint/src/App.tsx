@@ -617,16 +617,16 @@ const lecture15Sections: LectureSection[] = [
   },
 ];
 
-type ScheduleTask = { id: string; day: string; time: string; duration: string; practice?: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
+type ScheduleTask = { id: string; day: string; time: string; duration: string; practice?: string; breakAfter?: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
 const schedule: ScheduleTask[] = [
-  { id: 's1', day: 'Tue · Sep 8', time: '10:00', duration: '4h total', practice: '1h practice', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
-  { id: 's2', day: 'Tue · Sep 8', time: '14:00', duration: '4h total', practice: '1h practice', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
-  { id: 's3', day: 'Tue · Sep 8', time: '18:00', duration: '4h total', practice: '1h practice', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
-  { id: 's4a', day: 'Wed · Sep 9', time: '10:00', duration: '4h total', practice: '1h practice', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
-  { id: 's4b', day: 'Wed · Sep 9', time: '14:00', duration: '4h total', practice: '1h practice', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
-  { id: 's5', day: 'Wed · Sep 9', time: '18:00', duration: '4h total', practice: '1h practice', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
-  { id: 's6', day: 'Thu · Sep 10', time: '07:30', duration: '4h total', practice: '1h practice', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
-  { id: 's7', day: 'Thu · Sep 10', time: '11:45', duration: '2h total', title: 'Map the object model', detail: 'UML notation, relationships, multiplicity, translation', topic: 'Week 15', lecture: 'Lecture 15', lectureSections: lecture15Sections },
+  { id: 's1', day: 'Tue · Sep 8', time: '08:00', duration: '2h focus', practice: 'practice included', breakAfter: '2h recovery break · food, walk, reset', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
+  { id: 's2', day: 'Tue · Sep 8', time: '12:00', duration: '2h focus', practice: 'practice included', breakAfter: '2h recovery break · step away from the screen', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
+  { id: 's3', day: 'Tue · Sep 8', time: '16:00', duration: '2h focus', practice: 'practice included', breakAfter: 'Overnight reset · resume tomorrow at 08:00', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
+  { id: 's4a', day: 'Wed · Sep 9', time: '08:00', duration: '2h focus', practice: 'practice included', breakAfter: '2h recovery break · breakfast and movement', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
+  { id: 's4b', day: 'Wed · Sep 9', time: '12:00', duration: '2h focus', practice: 'practice included', breakAfter: '2h recovery break · lunch and full reset', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
+  { id: 's5', day: 'Wed · Sep 9', time: '16:00', duration: '2h focus', practice: 'practice included', breakAfter: 'Overnight reset · protect your sleep', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
+  { id: 's6', day: 'Thu · Sep 10', time: '08:00', duration: '2h focus', practice: 'practice included', breakAfter: '1h 30m exam buffer · stop studying and reset', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
+  { id: 's7', day: 'Thu · Sep 10', time: '11:30', duration: '2h focus', practice: 'practice included', breakAfter: 'Exam starts at 14:30 · pack up and arrive calm', title: 'Map the object model', detail: 'UML notation, relationships, multiplicity, translation', topic: 'Week 15', lecture: 'Lecture 15', lectureSections: lecture15Sections },
 ];
 
 type Question = { id: string; topic: string; prompt: string; code?: string; options: string[]; answer: number; explanation: string };
@@ -2701,7 +2701,7 @@ function Dashboard() {
   const toggleLecture14Section = (id: string) => setCompletedLecture14((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture15Section = (id: string) => setCompletedLecture15((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
-    <SectionIntro kicker="Tuesday, September 8 · 10:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
+    <SectionIntro kicker="Tuesday, September 8 · 08:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <CountdownCard />
        <section className="flex flex-col justify-between rounded-[24px] border border-accent/70 bg-accent p-6 text-accent-foreground shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center xl:flex-col xl:items-start">
@@ -2733,7 +2733,7 @@ function Dashboard() {
                           : task.id === 's7'
                             ? { completed: completedLecture15, ready: lecture15Ready, toggle: toggleLecture15Section }
                : null;
-          return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
+          return <Fragment key={task.id}><div className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
               <span className={`grid size-7 shrink-0 place-items-center rounded-full border ${done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{done ? <Check size={14} strokeWidth={3} /> : <Circle size={13} />}</span>
               <span className="min-w-0 flex-1">
@@ -2763,8 +2763,8 @@ function Dashboard() {
                    {sectionState.ready ? `All ${task.lectureSections.length} topics complete. ${task.lecture} can now be marked complete.` : `Complete all ${task.lectureSections.length} topics to unlock ${task.lecture} completion. ${task.lectureSections.length - sectionState.completed.length} remaining.`}
                 </div>
               </div>}
-            </div>}
-          </div>;
+             </div>}
+          </div>{task.breakAfter && <div className="flex items-center gap-3 px-4 py-2 text-muted-foreground"><span className="h-px flex-1 bg-border/70" /><span className="mono text-[9px] uppercase tracking-[0.12em]">{task.breakAfter}</span><span className="h-px flex-1 bg-border/70" /></div>}</Fragment>;
         })}</div>
       </section>
       <div className="space-y-5">
