@@ -2501,6 +2501,39 @@ function formatTime(totalSeconds: number) {
   return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
 }
 
+function usePomodoroTimer() {
+  const [mode, setMode] = usePersisted<'focus' | 'break'>('java-timer-mode', 'focus');
+  const [seconds, setSeconds] = usePersisted('java-timer-seconds', 25 * 60);
+  const [running, setRunning] = useState(false);
+  const [sessions, setSessions] = usePersisted('java-focus-sessions', 0);
+  const duration = mode === 'focus' ? 25 * 60 : 5 * 60;
+
+  useEffect(() => {
+    if (!running) return;
+    const timer = window.setInterval(() => setSeconds((value) => {
+      if (value <= 1) {
+        setRunning(false);
+        setSessions((count) => count + (mode === 'focus' ? 1 : 0));
+        return duration;
+      }
+      return value - 1;
+    }), 1000);
+    return () => window.clearInterval(timer);
+  }, [running, duration, mode, setSeconds, setSessions]);
+
+  const changeMode = (next: 'focus' | 'break') => {
+    setMode(next);
+    setRunning(false);
+    setSeconds(next === 'focus' ? 25 * 60 : 5 * 60);
+  };
+  const reset = () => {
+    setRunning(false);
+    setSeconds(duration);
+  };
+
+  return { mode, seconds, running, sessions, duration, progress: 1 - seconds / duration, changeMode, reset, toggle: () => setRunning((value) => !value) };
+}
+
 function Shell({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -2600,6 +2633,39 @@ function CountdownCard() {
         <span className="rounded-full bg-accent px-3 py-1.5 mono text-[10px] font-medium uppercase tracking-[0.12em] text-accent-foreground">Sep 10 · 14:30</span>
         <span className="text-[12px] text-primary-foreground/60">One focused block at a time.</span>
         <Link href="/focus" data-testid="link-countdown-focus" className="inline-flex items-center gap-1 rounded-full border border-primary-foreground/20 px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition-colors hover:border-accent hover:bg-accent hover:text-accent-foreground">Open focus timer <ArrowRight size={13} /></Link>
+      </div>
+    </div>
+  </section>;
+}
+
+function DashboardPomodoro() {
+  const { mode, seconds, running, sessions, progress, changeMode, reset, toggle } = usePomodoroTimer();
+  return <section className="relative overflow-hidden rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-8">
+    <div className="absolute -right-20 -top-24 size-64 rounded-full border-[20px] border-accent/10" />
+    <div className="relative flex min-h-[276px] flex-col justify-between">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-primary-foreground/65"><Flame size={15} /><span className="mono text-[10px] uppercase tracking-[0.18em]">Pomodoro focus</span></div>
+        <span className="rounded-full bg-primary-foreground/10 px-2.5 py-1 mono text-[9px] text-primary-foreground/65">{sessions} completed</span>
+      </div>
+      <div className="mt-5 flex items-center gap-5">
+        <div className="grid size-[142px] shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}>
+          <div className="grid size-[122px] place-items-center rounded-full bg-primary">
+            <div className="text-center"><div data-testid="text-dashboard-timer" className="display text-[31px] font-bold tracking-tight">{formatTime(seconds)}</div><div className="mono mt-1 text-[9px] uppercase tracking-[0.14em] text-primary-foreground/50">{running ? 'in the zone' : 'ready'}</div></div>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <h2 className="display text-[22px] font-bold">One clean sprint.</h2>
+          <p className="mt-2 text-[12px] leading-5 text-primary-foreground/65">Use the timer beside your plan, then take the break seriously.</p>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => changeMode('focus')} data-testid="button-dashboard-timer-focus-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button>
+            <button onClick={() => changeMode('break')} data-testid="button-dashboard-timer-break-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button>
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 flex items-center gap-2">
+        <button onClick={toggle} data-testid="button-dashboard-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-[12px] font-bold text-accent-foreground">{running ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{running ? 'Pause' : 'Start focus'}</button>
+        <button onClick={reset} data-testid="button-dashboard-timer-reset" className="rounded-xl border border-primary-foreground/20 px-3 py-2.5 text-[11px] text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10">Reset</button>
+        <Link href="/focus" data-testid="link-dashboard-focus" className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-primary-foreground/70 hover:text-primary-foreground">Full room <ArrowRight size={13} /></Link>
       </div>
     </div>
   </section>;
@@ -2723,10 +2789,7 @@ function Dashboard() {
     <SectionIntro kicker="Tuesday, September 8 · 08:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <CountdownCard />
-       <section className="flex flex-col justify-between rounded-[24px] border border-accent/70 bg-accent p-6 text-accent-foreground shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center xl:flex-col xl:items-start">
-         <div><div className="flex items-center gap-2 text-accent-foreground/70"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Sprint progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-accent-foreground/75">Complete the plan, then use practice to find the fuzzy edges.</p></div>
-          <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} onAccent /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-accent-foreground/65">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-accent-foreground/70">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground/70">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
-      </section>
+      <DashboardPomodoro />
     </div>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -2788,6 +2851,10 @@ function Dashboard() {
         })}</div>
       </section>
       <div className="space-y-5">
+        <section className="flex flex-col justify-between rounded-[24px] border border-accent/70 bg-accent p-6 text-accent-foreground shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center xl:flex-col xl:items-start">
+          <div><div className="flex items-center gap-2 text-accent-foreground/70"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Sprint progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-accent-foreground/75">Complete the plan, then use practice to find the fuzzy edges.</p></div>
+          <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} onAccent /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-accent-foreground/65">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-accent-foreground/70">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground/70">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
+        </section>
         <section className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-muted-foreground"><Zap size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Quick start</span></div><span className="rounded-full bg-[#e66b5d]/15 px-2.5 py-1 mono text-[9px] text-[#b94a40]">25 min</span></div>
           <h2 className="mt-4 display text-[23px] font-bold">Exceptions, first principles</h2><p className="mt-2 text-[13px] leading-5 text-muted-foreground">Map the hierarchy, then predict a try / catch / finally flow.</p>
@@ -2913,16 +2980,9 @@ function CodingLab() {
 }
 
 function Focus() {
-  const [mode, setMode] = usePersisted<'focus' | 'break'>('java-timer-mode', 'focus');
-  const [seconds, setSeconds] = usePersisted('java-timer-seconds', 25 * 60);
-  const [running, setRunning] = useState(false);
-  const [sessions, setSessions] = usePersisted('java-focus-sessions', 0);
-  const duration = mode === 'focus' ? 25 * 60 : 5 * 60;
-  useEffect(() => { if (!running) return; const timer = window.setInterval(() => setSeconds((value) => { if (value <= 1) { setRunning(false); setSessions((count) => count + (mode === 'focus' ? 1 : 0)); return duration; } return value - 1; }), 1000); return () => window.clearInterval(timer); }, [running, duration, mode, setSeconds, setSessions]);
-  const changeMode = (next: 'focus' | 'break') => { setMode(next); setRunning(false); setSeconds(next === 'focus' ? 25 * 60 : 5 * 60); };
-  const progress = 1 - seconds / duration;
+  const { mode, seconds, running, sessions, progress, changeMode, reset, toggle } = usePomodoroTimer();
   return <div className="rise"><SectionIntro kicker="Focus room · one block" title="Protect your attention." detail="A quiet timer for the work that moves the score. Put the phone face down; keep this room open." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Flame size={16} className="text-[#e66b5d]" /><span className="mono text-[12px]">{sessions} focus blocks logged</span></div>} />
-    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={() => setRunning((value) => !value)} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={() => { setRunning(false); setSeconds(duration); }} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><div className="space-y-5"><section className="rounded-[24px] border border-border bg-card p-6 shadow-sm"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Block brief</span></div><h2 className="mt-4 display text-[22px] font-bold">Explain exceptions out loud.</h2><p className="mt-2 text-[13px] leading-6 text-muted-foreground">In this block: sketch the hierarchy, write one checked example, and say what finally guarantees.</p><div className="mt-5 space-y-3">{['Throwable → Exception → RuntimeException', 'One try / catch / finally from memory', 'Finish with one practice question'].map((item) => <div key={item} className="flex items-center gap-2 text-[12px]"><CheckCircle2 size={15} className="text-[#4f9c7a]" />{item}</div>)}</div></section><section className="rounded-[24px] border border-border bg-[#f3e9d7] p-6 dark:bg-card"><div className="flex items-center gap-2 text-[#9b6e27] dark:text-accent"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Tiny ritual</span></div><p className="mt-3 text-[14px] leading-6 text-[#654b26] dark:text-muted-foreground">Before you start, write the one thing this block will make easier tomorrow.</p><Link href="/notes" data-testid="link-focus-notes" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#9b6e27] dark:text-accent">Open scratchpad <ArrowRight size={14} /></Link></section></div></div>
+    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={toggle} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={reset} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><div className="space-y-5"><section className="rounded-[24px] border border-border bg-card p-6 shadow-sm"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Block brief</span></div><h2 className="mt-4 display text-[22px] font-bold">Explain exceptions out loud.</h2><p className="mt-2 text-[13px] leading-6 text-muted-foreground">In this block: sketch the hierarchy, write one checked example, and say what finally guarantees.</p><div className="mt-5 space-y-3">{['Throwable → Exception → RuntimeException', 'One try / catch / finally from memory', 'Finish with one practice question'].map((item) => <div key={item} className="flex items-center gap-2 text-[12px]"><CheckCircle2 size={15} className="text-[#4f9c7a]" />{item}</div>)}</div></section><section className="rounded-[24px] border border-border bg-[#f3e9d7] p-6 dark:bg-card"><div className="flex items-center gap-2 text-[#9b6e27] dark:text-accent"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Tiny ritual</span></div><p className="mt-3 text-[14px] leading-6 text-[#654b26] dark:text-muted-foreground">Before you start, write the one thing this block will make easier tomorrow.</p><Link href="/notes" data-testid="link-focus-notes" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#9b6e27] dark:text-accent">Open scratchpad <ArrowRight size={14} /></Link></section></div></div>
   </div>;
 }
 
