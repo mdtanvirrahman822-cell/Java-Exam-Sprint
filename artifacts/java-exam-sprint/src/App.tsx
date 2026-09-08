@@ -2506,6 +2506,7 @@ function usePomodoroTimer() {
   const [seconds, setSeconds] = usePersisted('java-timer-seconds', 25 * 60);
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = usePersisted('java-focus-sessions', 0);
+  const [topic, setTopic] = usePersisted('java-pomodoro-topic', 'OOP focus');
   const duration = mode === 'focus' ? 25 * 60 : 5 * 60;
 
   useEffect(() => {
@@ -2531,7 +2532,7 @@ function usePomodoroTimer() {
     setSeconds(duration);
   };
 
-  return { mode, seconds, running, sessions, duration, progress: 1 - seconds / duration, changeMode, reset, toggle: () => setRunning((value) => !value) };
+  return { mode, seconds, running, sessions, topic, setTopic, duration, progress: 1 - seconds / duration, changeMode, reset, toggle: () => setRunning((value) => !value) };
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -2638,7 +2639,7 @@ function CountdownCard() {
   </section>;
 }
 
-function DashboardPomodoro() {
+function DashboardPomodoro({ selectedTopic }: { selectedTopic: string }) {
   const { mode, seconds, running, sessions, progress, changeMode, reset, toggle } = usePomodoroTimer();
   return <section className="relative overflow-hidden rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-8">
     <div className="absolute -right-20 -top-24 size-64 rounded-full border-[20px] border-accent/10" />
@@ -2655,7 +2656,8 @@ function DashboardPomodoro() {
         </div>
         <div className="min-w-0">
           <h2 className="display text-[22px] font-bold">One clean sprint.</h2>
-          <p className="mt-2 text-[12px] leading-5 text-primary-foreground/65">Use the timer beside your plan, then take the break seriously.</p>
+          <p className="mt-2 text-[12px] font-semibold leading-5 text-accent">{selectedTopic}</p>
+          <p className="mt-1 text-[12px] leading-5 text-primary-foreground/65">Use the timer beside your plan, then take the break seriously.</p>
           <div className="mt-4 flex gap-2">
             <button onClick={() => changeMode('focus')} data-testid="button-dashboard-timer-focus-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button>
             <button onClick={() => changeMode('break')} data-testid="button-dashboard-timer-break-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button>
@@ -2717,6 +2719,7 @@ function Dashboard() {
   const [completedLecture14, setCompletedLecture14] = usePersisted<string[]>('java-sprint-lecture14-sections', []);
   const [completedLecture15, setCompletedLecture15] = usePersisted<string[]>('java-sprint-lecture15-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
+  const [pomodoroTopic, setPomodoroTopic] = usePersisted('java-pomodoro-topic', 'OOP focus');
   const [scheduleNow, setScheduleNow] = useState(() => new Date());
   const [, setLocation] = useLocation();
   useEffect(() => {
@@ -2789,7 +2792,7 @@ function Dashboard() {
     <SectionIntro kicker="Tuesday, September 8 · 08:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <CountdownCard />
-      <DashboardPomodoro />
+      <DashboardPomodoro selectedTopic={pomodoroTopic} />
     </div>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -2835,10 +2838,15 @@ function Dashboard() {
                 {task.lectureSections.map((section) => {
                    const sectionDone = sectionState.completed.includes(section.id);
                    return <div key={section.id} className={`rounded-lg border p-3 ${sectionDone ? 'border-accent/45 bg-accent/10' : 'border-border/70 bg-background/35'}`}>
-                     <button type="button" onClick={() => sectionState.toggle(section.id)} aria-pressed={sectionDone} data-testid={`button-${task.lecture.toLowerCase().replaceAll(' ', '-')}-section-${section.id}`} className="flex w-full items-start gap-3 text-left">
-                      <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${sectionDone ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{sectionDone ? <Check size={12} strokeWidth={3} /> : <Circle size={11} />}</span>
-                      <span className={`text-[12px] font-semibold leading-5 ${sectionDone ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{section.title}</span>
-                    </button>
+                     <div className="flex items-start gap-2">
+                       <button type="button" onClick={() => setPomodoroTopic(section.title)} aria-pressed={pomodoroTopic === section.title} data-testid={`button-pomodoro-topic-${section.id}`} className={`flex min-w-0 flex-1 items-start gap-2 rounded-lg px-2 py-1 text-left transition-colors ${pomodoroTopic === section.title ? 'bg-accent/20 text-accent-foreground' : 'hover:bg-accent/10'}`}>
+                        <Target size={14} className={`mt-0.5 shrink-0 ${pomodoroTopic === section.title ? 'text-accent-foreground' : 'text-muted-foreground'}`} />
+                        <span className={`text-[12px] font-semibold leading-5 ${sectionDone ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{section.title}</span>
+                      </button>
+                      <button type="button" onClick={() => sectionState.toggle(section.id)} aria-label={`${sectionDone ? 'Mark incomplete' : 'Mark complete'}: ${section.title}`} aria-pressed={sectionDone} data-testid={`button-${task.lecture.toLowerCase().replaceAll(' ', '-')}-section-${section.id}`} className="mt-1 shrink-0">
+                        <span className={`grid size-5 place-items-center rounded-full border ${sectionDone ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{sectionDone ? <Check size={12} strokeWidth={3} /> : <Circle size={11} />}</span>
+                      </button>
+                    </div>
                     <ul className="ml-8 mt-2 space-y-1.5">{section.points.map((point) => <li key={point} className="flex gap-2 text-[11px] leading-5 text-muted-foreground"><span className="mt-2 size-1 shrink-0 rounded-full bg-accent/70" /><span>{point}</span></li>)}</ul>
                   </div>;
                 })}
@@ -2980,9 +2988,9 @@ function CodingLab() {
 }
 
 function Focus() {
-  const { mode, seconds, running, sessions, progress, changeMode, reset, toggle } = usePomodoroTimer();
+  const { mode, seconds, running, sessions, topic, progress, changeMode, reset, toggle } = usePomodoroTimer();
   return <div className="rise"><SectionIntro kicker="Focus room · one block" title="Protect your attention." detail="A quiet timer for the work that moves the score. Put the phone face down; keep this room open." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Flame size={16} className="text-[#e66b5d]" /><span className="mono text-[12px]">{sessions} focus blocks logged</span></div>} />
-    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={toggle} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={reset} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><div className="space-y-5"><section className="rounded-[24px] border border-border bg-card p-6 shadow-sm"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Block brief</span></div><h2 className="mt-4 display text-[22px] font-bold">Explain exceptions out loud.</h2><p className="mt-2 text-[13px] leading-6 text-muted-foreground">In this block: sketch the hierarchy, write one checked example, and say what finally guarantees.</p><div className="mt-5 space-y-3">{['Throwable → Exception → RuntimeException', 'One try / catch / finally from memory', 'Finish with one practice question'].map((item) => <div key={item} className="flex items-center gap-2 text-[12px]"><CheckCircle2 size={15} className="text-[#4f9c7a]" />{item}</div>)}</div></section><section className="rounded-[24px] border border-border bg-[#f3e9d7] p-6 dark:bg-card"><div className="flex items-center gap-2 text-[#9b6e27] dark:text-accent"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Tiny ritual</span></div><p className="mt-3 text-[14px] leading-6 text-[#654b26] dark:text-muted-foreground">Before you start, write the one thing this block will make easier tomorrow.</p><Link href="/notes" data-testid="link-focus-notes" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#9b6e27] dark:text-accent">Open scratchpad <ArrowRight size={14} /></Link></section></div></div>
+    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={toggle} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={reset} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><div className="space-y-5"><section className="rounded-[24px] border border-border bg-card p-6 shadow-sm"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Pomodoro topic</span></div><h2 className="mt-4 display text-[22px] font-bold">{topic}</h2><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Selected from your study plan. Keep this subsection visible while you explain the rule, trace an example, and test yourself.</p><div className="mt-5 space-y-3">{['Explain the rule in your own words', 'Trace one example without notes', 'Finish with one practice question'].map((item) => <div key={item} className="flex items-center gap-2 text-[12px]"><CheckCircle2 size={15} className="text-[#4f9c7a]" />{item}</div>)}</div></section><section className="rounded-[24px] border border-border bg-[#f3e9d7] p-6 dark:bg-card"><div className="flex items-center gap-2 text-[#9b6e27] dark:text-accent"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Tiny ritual</span></div><p className="mt-3 text-[14px] leading-6 text-[#654b26] dark:text-muted-foreground">Before you start, write the one thing this block will make easier tomorrow.</p><Link href="/notes" data-testid="link-focus-notes" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#9b6e27] dark:text-accent">Open scratchpad <ArrowRight size={14} /></Link></section></div></div>
   </div>;
 }
 
