@@ -1,0 +1,37 @@
+Same file, same request — here are the 10 exercises again for your notes:
+
+## Exercises
+
+**1. Building a Generic Class**
+You have three near-identical classes: `IntegerPrinter`, `DoublePrinter`, `StringPrinter`, each holding one value and printing it. Replace all three with a single generic class `Printer<T>` that holds a `T thingToPrint` and has a `print()` method. Instantiate it three times using the diamond operator with `Integer`, `Double`, and `String`.
+
+**2. Generic Class with Multiple Fields**
+Create a generic class `Pair<T>` that holds two values of the same type: `first` and `second`. Add a method `swap()` that swaps them, and a method `printBoth()` that prints both values. Test it with `Pair<String>` and `Pair<Integer>`.
+
+**3. Generics with Collections**
+Create an `ArrayList<Cat>` and add a `Cat` to it. Then write commented-out code attempting `cats.add(new Dog())`, and explain in a comment why this fails to compile. Then write the "raw `Object` list" version (`ArrayList<Object>`) that lets you add a `Dog` into what's meant to be a `Cat` list, and show the `ClassCastException` that occurs when retrieving it as a `Cat`.
+
+**4. Bounded Generic Class**
+Create an abstract class `Animal` with a method `eat()`. Create a generic class `Printer<T extends Animal>` whose `print()` method calls `thingToPrint.eat()`. Instantiate it with a `Cat` (which extends `Animal`), and write commented-out code showing `Printer<Integer>` would fail to compile.
+
+**5. Multiple Bounds**
+Create an interface `Flyable` with method `fly()`. Create a class `Printer<T extends Animal & Flyable>` whose `print()` method calls both `eat()` and `fly()`. Create a class `FlyingCat extends Animal implements Flyable` and instantiate `Printer<FlyingCat>` to prove it compiles.
+
+**6. Generic Interface, Two Ways**
+Create a generic interface `Container<T>` with methods `T get()` and `void set(T value)`. Implement it two ways: a still-generic class `Box<T> implements Container<T>`, and a concrete class `StringContainer implements Container<String>`. Test both.
+
+**7. Generic Method with Its Own Type Parameter**
+Inside a non-generic utility class, write a generic method `<T> void shout(T thingToShout)` that prints the item followed by `"!!!"`. Call it with a `String`, an `Integer`, and a custom object, without writing three overloads.
+
+**8. Multiple Type Parameters & Returning a Generic Type**
+Write a static generic method `<T, V> T pickFirst(T first, V second)` that returns only the first argument, correctly typed (no cast needed). Then write a separate static generic method `<T> T echo(T item)` that just returns whatever was passed in. Test both with mismatched types (e.g., `pickFirst("hello", 42)`).
+
+**9. Wildcards vs Generic Methods**
+Write a method `printList(List<?> myList)` using a wildcard that can accept a `List<Integer>` or a `List<Cat>` and print it. Then write commented-out code showing why a `printList(List<Object> myList)` version would fail to compile when passed a `List<Integer>`. Test your wildcard version with two different list types.
+
+**10. Bounded Wildcards — Upper and Lower**
+Create an `Animal` class with `eat()`, and `Dog`/`Puppy extends Dog`. Write a method `feedAnimals(List<? extends Animal> animals)` that loops through and calls `eat()` on each (read-only), with a commented-out line showing `animals.add(new Dog())` would fail. Write a second method `addDogs(List<? super Dog> animals)` that adds a `Dog` and a `Puppy` to the list (write-only), with commented-out lines showing why adding a `Cat` or reading elements as `Dog` would fail.
+
+---
+
+Say the word for the full solution code.

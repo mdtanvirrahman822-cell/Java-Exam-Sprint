@@ -642,6 +642,243 @@ const questions: Question[] = [
 ];
 
 type Scenario = { id: string; title: string; topic: string; prompt: string; code: string; options: string[]; answer: number; explanation: string };
+const lecture13Scenarios: Scenario[] = [
+  {
+    id: 'lecture13-c1',
+    title: 'Replace duplicate printers with one generic class',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'Which generic design replaces separate IntegerPrinter, DoublePrinter, and StringPrinter classes?',
+    code: `class Printer<T> {
+  T thingToPrint;
+  Printer(T thingToPrint) {
+    this.thingToPrint = thingToPrint;
+  }
+  void print() { /* ... */ }
+}
+
+// Choose the valid uses`,
+    options: [
+      'new Printer<>(23), new Printer<>(33.5), and new Printer<>("Hello")',
+      'new Printer<int>(23), new Printer<double>(33.5), and new Printer<string>("Hello")',
+      'Printer<Object> for every value is the only valid approach',
+      'A generic class can hold only one concrete type for the whole program',
+    ],
+    answer: 0,
+    explanation: 'The diamond operator infers T from each constructor argument. Java uses wrapper types for generic arguments, so Printer<Integer>, Printer<Double>, and Printer<String> are inferred without repeating the type.',
+  },
+  {
+    id: 'lecture13-c2',
+    title: 'Swap values without losing type safety',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'Why can one swap method safely exchange both fields in Pair<T>?',
+    code: `class Pair<T> {
+  T first;
+  T second;
+
+  void swap() {
+    T temp = first;
+    first = second;
+    second = temp;
+  }
+}`,
+    options: [
+      'Both fields have the same T, so a temporary T can move either value safely.',
+      'The compiler converts every value to Object before swapping.',
+      'swap() works only when T is String.',
+      'A cast to Integer is required before assigning second to first.',
+    ],
+    answer: 0,
+    explanation: 'Pair<T> guarantees that first and second have the same type parameter. A temporary variable of type T preserves that guarantee for Pair<String>, Pair<Integer>, and every other valid T.',
+  },
+  {
+    id: 'lecture13-c3',
+    title: 'Let the collection enforce its contract',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'What happens in the typed Cat list versus the Object list?',
+    code: `ArrayList<Cat> cats = new ArrayList<>();
+cats.add(new Cat());
+// cats.add(new Dog()); // line to evaluate
+
+ArrayList<Object> rawList = new ArrayList<>();
+rawList.add(new Cat());
+rawList.add(new Dog());
+Cat wrongCat = (Cat) rawList.get(1);`,
+    options: [
+      'The Cat list rejects Dog at compile time; the Object list accepts it but the cast throws ClassCastException.',
+      'Both lists reject Dog at compile time.',
+      'Both lists accept Dog and the cast changes Dog into Cat.',
+      'The Cat list throws ClassCastException before the program runs.',
+    ],
+    answer: 0,
+    explanation: 'ArrayList<Cat> gives compile-time protection. ArrayList<Object> accepts anything, so the invalid assumption is delayed until retrieving the Dog as Cat, where ClassCastException occurs.',
+  },
+  {
+    id: 'lecture13-c4',
+    title: 'Bound a generic class to Animal',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'Why can Printer<Cat> call eat(), while Printer<Integer> is rejected?',
+    code: `abstract class Animal {
+  abstract void eat();
+}
+
+class Printer<T extends Animal> {
+  T thingToPrint;
+  void print() {
+    thingToPrint.eat();
+  }
+}
+
+Printer<Cat> cats = new Printer<>();
+// Printer<Integer> numbers = new Printer<>();`,
+    options: [
+      'T extends Animal guarantees every T has eat(); Integer does not satisfy the bound.',
+      'All generic types inherit Animal methods automatically.',
+      'Integer is accepted but eat() is skipped at runtime.',
+      'The bound means T must be exactly Animal, so Cat is rejected too.',
+    ],
+    answer: 0,
+    explanation: 'The upper bound gives the compiler a safe Animal view of every T. Cat extends Animal, but Integer does not, so Printer<Integer> fails at compile time.',
+  },
+  {
+    id: 'lecture13-c5',
+    title: 'Apply multiple bounds',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'What must FlyingCat satisfy for Printer<T extends Animal & Flyable>?',
+    code: `class Printer<T extends Animal & Flyable> {
+  void print(T thing) {
+    thing.eat();
+    thing.fly();
+  }
+}
+
+class FlyingCat extends Animal implements Flyable { /* both methods */ }
+Printer<FlyingCat> printer = new Printer<>();`,
+    options: [
+      'T must extend the class Animal and implement the Flyable interface.',
+      'T may be any class because interfaces are ignored in bounds.',
+      'T must implement Animal and extend Flyable.',
+      'Multiple bounds are valid only when all bounds are classes.',
+    ],
+    answer: 0,
+    explanation: 'A multiple bound combines one class bound first with interface bounds after it. FlyingCat satisfies both contracts, so the generic body can safely call eat() and fly().',
+  },
+  {
+    id: 'lecture13-c6',
+    title: 'Implement a generic interface two ways',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'What is the difference between Box<T> and StringContainer?',
+    code: `interface Container<T> {
+  T get();
+  void set(T value);
+}
+
+class Box<T> implements Container<T> { /* generic */ }
+class StringContainer implements Container<String> { /* concrete */ }`,
+    options: [
+      'Box stays generic for any T; StringContainer fixes the contract to String.',
+      'Both classes are concrete String containers.',
+      'Box cannot implement a generic interface without extending Object.',
+      'StringContainer can set any Object because String is only documentation.',
+    ],
+    answer: 0,
+    explanation: 'Box<T> passes its type parameter through to Container<T>. StringContainer chooses String, so its get and set methods are specifically typed as String.',
+  },
+  {
+    id: 'lecture13-c7',
+    title: 'Give a method its own type parameter',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'Why can one shout method accept a String, Integer, and Cat?',
+    code: `class Shouter {
+  <T> void shout(T thingToShout) {
+    System.out.println(thingToShout + "!!!");
+  }
+}
+
+Shouter s = new Shouter();
+s.shout("John");
+s.shout(57);
+s.shout(new Cat());`,
+    options: [
+      'The method declares T independently for each call, so no overloads are needed.',
+      'T is fixed to String when Shouter is constructed.',
+      'Java uses unsafe casts from every argument to String.',
+      'Generic methods can accept only primitive values.',
+    ],
+    answer: 0,
+    explanation: 'The method-level <T> is inferred separately at each invocation. It can represent String, Integer, Cat, or another reference type while preserving one reusable method body.',
+  },
+  {
+    id: 'lecture13-c8',
+    title: 'Return the exact generic type',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'What types are inferred by pickFirst("hello", 42) and echo(57)?',
+    code: `static <T, V> T pickFirst(T first, V second) {
+  return first;
+}
+static <T> T echo(T item) {
+  return item;
+}
+
+String text = pickFirst("hello", 42);
+int number = echo(57);`,
+    options: [
+      'T is String for pickFirst and Integer for echo; no cast is needed.',
+      'Both methods return Object, so both assignments require casts.',
+      'T must be the same type as V, so the first call is invalid.',
+      'echo always returns String because it has one type parameter.',
+    ],
+    answer: 0,
+    explanation: 'pickFirst has separate T and V parameters, so T is String and V is Integer. echo infers T as Integer, and Java unboxes the returned Integer to int.',
+  },
+  {
+    id: 'lecture13-c9',
+    title: 'Read any parameterized list with ?',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'Why can printList(List<?> myList) accept both lists, while List<Object> cannot?',
+    code: `static void printList(List<?> myList) {
+  System.out.println(myList);
+}
+
+List<Integer> numbers = new ArrayList<>();
+List<Cat> cats = new ArrayList<>();
+
+printList(numbers);
+printList(cats);`,
+    options: [
+      '<?> means an unknown element type, so any parameterized List can be read safely.',
+      'List<Integer> is a subtype of List<Object> because Integer extends Object.',
+      'The wildcard converts every element to Object permanently.',
+      'List<?> allows adding arbitrary objects to every list.',
+    ],
+    answer: 0,
+    explanation: 'List<?> accepts a list of an unknown specific type and is safe for reading as Object. Java generics are invariant, so List<Integer> is not a List<Object>.',
+  },
+  {
+    id: 'lecture13-c10',
+    title: 'Choose upper and lower wildcard bounds',
+    topic: 'Lecture 13 · Generics',
+    prompt: 'Which PECS interpretation correctly describes these methods?',
+    code: `static void feedAnimals(List<? extends Animal> animals) {
+  for (Animal a : animals) a.eat();
+  // animals.add(new Dog()); // unsafe
+}
+
+static void addDogs(List<? super Dog> animals) {
+  animals.add(new Dog());
+  animals.add(new Puppy());
+  // animals.add(new Cat()); // unsafe
+}`,
+    options: [
+      '? extends is a producer to read Animals; ? super is a consumer that safely accepts Dogs and Puppies.',
+      '? extends is for adding any subtype; ? super is for reading only as Dog.',
+      'Both bounds mean the list can contain exactly Animal and no subtype.',
+      'The two methods are equivalent because wildcards only affect syntax.',
+    ],
+    answer: 0,
+    explanation: 'With ? extends Animal, values can safely be read as Animal but a new subtype cannot safely be added. With ? super Dog, Dog and Puppy can be added, while reads are only guaranteed as Object.',
+  },
+];
+
 const lecture15Scenarios: Scenario[] = [
   {
     id: 'lecture15-c1',
@@ -2380,7 +2617,7 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture15'>('lecture09');
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture13' | 'lecture15'>('lecture09');
   const activeScenarios = labTrack === 'lecture09'
     ? lecture09Scenarios
     : labTrack === 'lecture10'
@@ -2391,25 +2628,28 @@ function CodingLab() {
           ? lecture12Part1Scenarios
           : labTrack === 'lecture12p2'
             ? lecture12Part2Scenarios
-            : lecture15Scenarios;
+            : labTrack === 'lecture13'
+              ? lecture13Scenarios
+              : lecture15Scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture15') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture13' | 'lecture15') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : labTrack === 'lecture12p2' ? 'Lecture 12 Part 2 classes & records' : 'Lecture 15 UML class diagrams'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : labTrack === 'lecture12p2' ? 'Lecture 12 Part 2 classes & records' : labTrack === 'lecture13' ? 'Lecture 13 generics' : 'Lecture 15 UML class diagrams'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture11'} onClick={() => selectTrack('lecture11')} data-testid="button-lab-lecture11" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture11' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 11 · Interfaces <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p1'} onClick={() => selectTrack('lecture12p1')} data-testid="button-lab-lecture12p1" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p1' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 1 <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p2'} onClick={() => selectTrack('lecture12p2')} data-testid="button-lab-lecture12p2" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p2' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 2 <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture13'} onClick={() => selectTrack('lecture13')} data-testid="button-lab-lecture13" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture13' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 13 · Generics <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture15'} onClick={() => selectTrack('lecture15')} data-testid="button-lab-lecture15" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture15' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 15 · UML <span className="ml-1 opacity-70">10</span></button>
     </div>
     <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>

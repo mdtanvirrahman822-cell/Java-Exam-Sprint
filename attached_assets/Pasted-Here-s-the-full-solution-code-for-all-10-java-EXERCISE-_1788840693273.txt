@@ -1,0 +1,316 @@
+Here's the full solution code for all 10:
+
+```java
+// ===== EXERCISE 1: Building a Generic Class =====
+class Printer1<T> {
+    T thingToPrint;
+
+    Printer1(T thingToPrint) {
+        this.thingToPrint = thingToPrint;
+    }
+
+    public void print() {
+        System.out.println(thingToPrint);
+    }
+}
+
+public class Exercise1 {
+    public static void main(String[] args) {
+        Printer1<Integer> intPrinter = new Printer1<>(23);
+        intPrinter.print();
+
+        Printer1<Double> doublePrinter = new Printer1<>(33.5);
+        doublePrinter.print();
+
+        Printer1<String> stringPrinter = new Printer1<>("Hello, Generics!");
+        stringPrinter.print();
+        // One class replaces IntegerPrinter, DoublePrinter, and StringPrinter
+    }
+}
+
+
+// ===== EXERCISE 2: Generic Class with Multiple Fields =====
+class Pair2<T> {
+    T first;
+    T second;
+
+    Pair2(T first, T second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    void swap() {
+        T temp = first;
+        first = second;
+        second = temp;
+    }
+
+    void printBoth() {
+        System.out.println(first + ", " + second);
+    }
+}
+
+public class Exercise2 {
+    public static void main(String[] args) {
+        Pair2<String> names = new Pair2<>("Alice", "Bob");
+        names.printBoth(); // Alice, Bob
+        names.swap();
+        names.printBoth(); // Bob, Alice
+
+        Pair2<Integer> numbers = new Pair2<>(1, 2);
+        numbers.printBoth(); // 1, 2
+        numbers.swap();
+        numbers.printBoth(); // 2, 1
+    }
+}
+
+
+// ===== EXERCISE 3: Generics with Collections =====
+import java.util.ArrayList;
+
+class Animal3 {}
+class Cat3 extends Animal3 {}
+class Dog3 extends Animal3 {}
+
+public class Exercise3 {
+    public static void main(String[] args) {
+        // Typed list — compiler enforces the contract
+        ArrayList<Cat3> cats = new ArrayList<>();
+        cats.add(new Cat3()); // fine
+        // cats.add(new Dog3()); // compile error!
+        // The compiler knows this list is Cat3-only and rejects a Dog3 immediately
+
+        // Raw Object list — no compile-time protection
+        ArrayList<Object> rawList = new ArrayList<>();
+        rawList.add(new Cat3());
+        rawList.add(new Dog3()); // compiles fine — rawList holds anything
+
+        Cat3 myCat = (Cat3) rawList.get(0); // fine, this really is a Cat3
+        try {
+            Cat3 wrongCat = (Cat3) rawList.get(1); // ClassCastException at runtime!
+        } catch (ClassCastException e) {
+            System.out.println("Crashed: " + e);
+        }
+    }
+}
+
+
+// ===== EXERCISE 4: Bounded Generic Class =====
+abstract class Animal4 {
+    abstract void eat();
+}
+
+class Cat4 extends Animal4 {
+    void eat() { System.out.println("Cat is eating"); }
+}
+
+class Printer4<T extends Animal4> {
+    T thingToPrint;
+
+    Printer4(T thingToPrint) {
+        this.thingToPrint = thingToPrint;
+    }
+
+    void print() {
+        thingToPrint.eat(); // safe — every T is guaranteed to be an Animal4
+    }
+}
+
+public class Exercise4 {
+    public static void main(String[] args) {
+        Printer4<Cat4> catPrinter = new Printer4<>(new Cat4());
+        catPrinter.print();
+
+        // Printer4<Integer> intPrinter = new Printer4<>(23); // compile error!
+        // Integer doesn't extend Animal4
+    }
+}
+
+
+// ===== EXERCISE 5: Multiple Bounds =====
+abstract class Animal5 {
+    abstract void eat();
+}
+
+interface Flyable5 {
+    void fly();
+}
+
+class FlyingCat5 extends Animal5 implements Flyable5 {
+    void eat() { System.out.println("FlyingCat eating"); }
+    public void fly() { System.out.println("FlyingCat flying"); }
+}
+
+class Printer5<T extends Animal5 & Flyable5> {
+    T thingToPrint;
+
+    Printer5(T thingToPrint) {
+        this.thingToPrint = thingToPrint;
+    }
+
+    void print() {
+        thingToPrint.eat();
+        thingToPrint.fly();
+    }
+}
+
+public class Exercise5 {
+    public static void main(String[] args) {
+        Printer5<FlyingCat5> printer = new Printer5<>(new FlyingCat5());
+        printer.print();
+        // T must satisfy BOTH bounds — class first, interfaces after
+    }
+}
+
+
+// ===== EXERCISE 6: Generic Interface, Two Ways =====
+interface Container6<T> {
+    T get();
+    void set(T value);
+}
+
+class Box6<T> implements Container6<T> {
+    private T value;
+    public T get() { return value; }
+    public void set(T value) { this.value = value; }
+}
+
+class StringContainer6 implements Container6<String> {
+    private String value;
+    public String get() { return value; }
+    public void set(String value) { this.value = value; }
+}
+
+public class Exercise6 {
+    public static void main(String[] args) {
+        Box6<Integer> intBox = new Box6<>();
+        intBox.set(42);
+        System.out.println(intBox.get());
+
+        StringContainer6 sc = new StringContainer6();
+        sc.set("Hello");
+        System.out.println(sc.get());
+        // Box stays generic, StringContainer is fully concrete
+    }
+}
+
+
+// ===== EXERCISE 7: Generic Method with Its Own Type Parameter =====
+class Shouter7 {
+    <T> void shout(T thingToShout) {
+        System.out.println(thingToShout + "!!!");
+    }
+}
+
+class Cat7 {
+    public String toString() { return "Cat"; }
+}
+
+public class Exercise7 {
+    public static void main(String[] args) {
+        Shouter7 s = new Shouter7();
+        s.shout("John");
+        s.shout(57);
+        s.shout(new Cat7());
+        // One method, no overloads — <T> is inferred from whatever is passed in
+    }
+}
+
+
+// ===== EXERCISE 8: Multiple Type Parameters & Returning a Generic Type =====
+public class Exercise8 {
+    static <T, V> T pickFirst(T first, V second) {
+        return first;
+    }
+
+    static <T> T echo(T item) {
+        return item;
+    }
+
+    public static void main(String[] args) {
+        String s = pickFirst("hello", 42); // T=String, V=Integer
+        System.out.println(s);
+
+        int n = echo(57);
+        String e = echo("world");
+        System.out.println(n);
+        System.out.println(e);
+        // No casts needed anywhere — Java infers and preserves the exact type
+    }
+}
+
+
+// ===== EXERCISE 9: Wildcards vs Generic Methods =====
+import java.util.ArrayList;
+import java.util.List;
+
+class Cat9 {}
+
+public class Exercise9 {
+    static void printList(List<?> myList) {
+        System.out.println(myList);
+    }
+
+    // static void printListBroken(List<Object> myList) { ... }
+    // Calling printListBroken(intList) would fail to compile:
+    // List<Integer> is NOT a subclass of List<Object>, even though
+    // Integer is a subclass of Object — generics don't work that way
+
+    public static void main(String[] args) {
+        List<Integer> intList = new ArrayList<>();
+        intList.add(1);
+        intList.add(2);
+
+        List<Cat9> catList = new ArrayList<>();
+        catList.add(new Cat9());
+
+        printList(intList); // works
+        printList(catList); // works too
+    }
+}
+
+
+// ===== EXERCISE 10: Bounded Wildcards — Upper and Lower =====
+import java.util.ArrayList;
+import java.util.List;
+
+class Animal10 {
+    void eat() { System.out.println(this.getClass().getSimpleName() + " eating"); }
+}
+
+class Dog10 extends Animal10 {}
+class Puppy10 extends Dog10 {}
+class Cat10 extends Animal10 {}
+
+public class Exercise10 {
+    // Upper bounded wildcard — read-only
+    static void feedAnimals(List<? extends Animal10> animals) {
+        for (Animal10 a : animals) {
+            a.eat(); // safe to read
+        }
+        // animals.add(new Dog10()); // compile error —
+        // compiler can't guarantee the list's real type accepts Dog10
+    }
+
+    // Lower bounded wildcard — write-only
+    static void addDogs(List<? super Dog10> animals) {
+        animals.add(new Dog10());   // safe
+        animals.add(new Puppy10()); // safe — Puppy10 extends Dog10
+        // animals.add(new Cat10()); // compile error — Cat10 isn't a Dog10
+        // for (Dog10 d : animals) d.eat(); // compile error —
+        // elements could be any supertype of Dog10, not guaranteed to be Dog10
+    }
+
+    public static void main(String[] args) {
+        List<Dog10> dogs = new ArrayList<>();
+        feedAnimals(dogs);
+        addDogs(dogs);
+
+        List<Animal10> animals = new ArrayList<>();
+        addDogs(animals); // Animal10 is a supertype of Dog10, so this works too
+        feedAnimals(animals);
+    }
+}
+```
+
+Same rule as always — split into separate `.java` files (or rename the numbered classes) before compiling.
