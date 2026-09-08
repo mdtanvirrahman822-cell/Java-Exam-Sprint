@@ -633,6 +633,16 @@ const schedule: ScheduleTask[] = [
   { id: 's11', day: 'Thu · Sep 10', time: '11:00', duration: '2h focus', practice: 'past-year solving', breakAfter: 'Finish at 13:00 · 90m exam buffer', title: 'Past-year questions · final set', detail: 'Final timed solving session, then stop and reset for the exam', topic: 'Past Year Questions', lecture: 'Past-Year Set 2' },
 ];
 
+function isScheduleTaskRunning(task: ScheduleTask, reference: Date) {
+  const [, dateLabel] = task.day.split(' · ');
+  const [monthName, dayValue] = dateLabel.split(' ');
+  const [hourValue, minuteValue] = task.time.split(':').map(Number);
+  const monthIndex = new Date(`${monthName} 1, 2000`).getMonth();
+  const start = new Date(reference.getFullYear(), monthIndex, Number(dayValue), hourValue, minuteValue);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  return reference >= start && reference < end;
+}
+
 type Question = { id: string; topic: string; prompt: string; code?: string; options: string[]; answer: number; explanation: string };
 const questions: Question[] = [
   { id: 'q1', topic: 'Exceptions', prompt: 'Which statement about a checked exception is true?', options: ['It always extends Error.', 'It must be caught or declared with throws.', 'It can never be thrown manually.', 'It is always caused by a syntax error.'], answer: 1, explanation: 'Checked exceptions are verified by the compiler. The method must handle them or include them in its throws clause.' },
@@ -2641,7 +2651,12 @@ function Dashboard() {
   const [completedLecture14, setCompletedLecture14] = usePersisted<string[]>('java-sprint-lecture14-sections', []);
   const [completedLecture15, setCompletedLecture15] = usePersisted<string[]>('java-sprint-lecture15-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
+  const [scheduleNow, setScheduleNow] = useState(() => new Date());
   const [, setLocation] = useLocation();
+  useEffect(() => {
+    const timer = window.setInterval(() => setScheduleNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
   const lecture10Ready = lecture10Sections.every((section) => completedLecture10.includes(section.id));
   const lecture11Ready = lecture11Sections.every((section) => completedLecture11.includes(section.id));
@@ -2737,11 +2752,12 @@ function Dashboard() {
                           : task.id === 's7'
                             ? { completed: completedLecture15, ready: lecture15Ready, toggle: toggleLecture15Section }
                : null;
-          return <Fragment key={task.id}><div className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
+          const isRunning = isScheduleTaskRunning(task, scheduleNow);
+          return <Fragment key={task.id}><div className={`rounded-xl border transition-all ${isRunning ? 'border-accent bg-accent/20 shadow-md ring-2 ring-accent/30' : done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
               <span className={`grid size-7 shrink-0 place-items-center rounded-full border ${done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}>{done ? <Check size={14} strokeWidth={3} /> : <Circle size={13} />}</span>
               <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2"><span className={`text-[13px] font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>{task.title}</span><span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-0.5 mono text-[9px] uppercase tracking-[0.08em] text-accent-foreground">{task.lecture}</span></span>
+                <span className="flex flex-wrap items-center gap-2"><span className={`text-[13px] font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>{task.title}</span><span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-0.5 mono text-[9px] uppercase tracking-[0.08em] text-accent-foreground">{task.lecture}</span>{isRunning && <span className="rounded-md bg-accent px-2 py-0.5 mono text-[9px] font-bold uppercase tracking-[0.08em] text-accent-foreground">Now running</span>}</span>
                   <span className="mt-0.5 block text-[11px] text-muted-foreground">{task.day} · {task.detail}{task.practice ? ` · ${task.practice}` : ''}{sectionState && !sectionState.ready ? ` · ${task.lectureSections!.length - sectionState.completed.length} topics left` : ''}</span>
               </span>
                <span className="hidden shrink-0 rounded-md bg-secondary px-2 py-1 mono text-[9px] text-secondary-foreground sm:inline">{task.time} · {task.duration}</span>
