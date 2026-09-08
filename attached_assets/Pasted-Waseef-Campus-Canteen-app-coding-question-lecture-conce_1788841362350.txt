@@ -1,0 +1,321 @@
+Waseef, **একটা Campus Canteen app-এর ওপর ১০টা coding question** বানালাম—lecture-এর মূল concepts সব cover হবে। কোডটা শুরুতেই চলে, কিন্তু design-এ ঝামেলা আছে; তোর কাজ refactor করে ঠিক করা। মানে app বেঁচে আছে, architecture ICU-তে। 😭
+
+**নিচের পুরো block অন্য AI-তে paste কর।** প্রশ্নগুলো comments-এ, তারপর runnable Java starter code। Full solution দিইনি, যাতে নিজের understanding test করতে পারিস।
+
+```java
+/*
+NOTE TO THE AI COMPILING MY NOTES:
+Add this exercise as "OOC Week 14 — Scenario-Based Understanding Test".
+Preserve all 10 questions, the starter code, and acceptance criteria.
+Do not solve the questions or fill in the refactoring unless I ask.
+
+SOURCE:
+OOC Week 14.pdf, SWE 4101 — Object Oriented Concepts I.
+Page references below use PDF page numbers.
+
+SCENARIO:
+Your university uses a Campus Canteen application.
+The current program works, but one class handles orders, payment,
+delivery, payroll, and output formatting.
+
+Refactor it incrementally while preserving the required behavior.
+Use plain Java. No frameworks, database, or real payment service.
+All payment operations are simulations.
+
+============================================================
+THE 10 QUESTIONS
+============================================================
+
+Q1. IDENTIFY AND SEPARATE RESPONSIBILITIES [Pages 11–15, 19–20]
+
+CampusCanteen currently mixes several responsibilities.
+
+Refactor calculateSalary() and printEmployeeReport() into an
+EmployeeAdministration class.
+
+Keep the payroll calculation unchanged.
+Write one sentence explaining why sharing the same university
+or canteen context does not automatically make methods cohesive.
+
+Acceptance:
+EmployeeAdministration calculates 12 * 200 = 2400.
+CampusCanteen no longer contains payroll or employee-report logic.
+
+
+Q2. SEPARATE DISPLAY FROM APPLICATION BEHAVIOR [Pages 12–15]
+
+Move receipt formatting and printing into a ReceiptPrinter class.
+
+Decide which order data the printer needs and pass that data through
+parameters or an Order object. It must not calculate payments,
+dispatch deliveries, or modify order state.
+
+Acceptance:
+Changing "Receipt:" to "Canteen Receipt:" requires editing only
+ReceiptPrinter.
+
+
+Q3. REMOVE KNOWLEDGE OF PAYMENT INTERNALS [Pages 5–9]
+
+placeOrder() directly reads and modifies MobileWallet's balance.
+
+Move the balance check and deduction into:
+    boolean processPayment(int amount)
+
+Return true if payment succeeds and false otherwise.
+Update placeOrder() to call this behavior instead of manipulating
+the balance.
+
+Acceptance:
+A payment of 120 from a balance of 500 leaves 380.
+An unaffordable payment returns false and leaves the balance unchanged.
+
+Explain which dependency existed before and how this change
+reduces coupling.
+
+
+Q4. ENCAPSULATE RELATED STATE AND BEHAVIOR [Page 16]
+
+Make MobileWallet.balance private.
+
+Provide a constructor for its initial balance and a read-only
+getBalance() method. Do not introduce a public balance setter.
+
+Reject non-positive payment amounts without changing the balance.
+
+Acceptance:
+processPayment(0) and processPayment(-50) both return false.
+Other classes cannot directly assign to balance.
+
+Explain how keeping wallet state and payment behavior together
+supports cohesion.
+
+
+Q5. DEPEND ON A PAYMENT CONTRACT [Pages 16–17]
+
+Introduce:
+    interface PaymentService {
+        boolean processPayment(int amount);
+    }
+
+Make MobileWallet implement it.
+Change CampusCanteen to receive a PaymentService through its
+constructor and store it in a field.
+
+Remove "new MobileWallet()" from CampusCanteen.
+Create the concrete wallet in main().
+
+Acceptance:
+CampusCanteen contains no MobileWallet-specific operations.
+
+Explain what dependency remains after introducing the interface.
+
+
+Q6. REPLACE AN IMPLEMENTATION WITHOUT EDITING THE CLIENT
+[Pages 6–8, 16–17]
+
+Create VoucherPayment implementing PaymentService.
+
+It starts with a voucher balance, accepts only positive amounts,
+deducts affordable payments, and rejects unaffordable ones.
+
+Run the same order workflow once with MobileWallet and once with
+VoucherPayment by changing object construction in main().
+
+Acceptance:
+Each implementation, starting with 500, accepts a payment of 120.
+No changes are made to CampusCanteen.placeOrder().
+
+Explain why the method signature alone is insufficient if an
+implementation returns true without actually recording payment.
+
+
+Q7. REMOVE DELIVERY IMPLEMENTATION DEPENDENCIES
+[Pages 5, 10, 21–22]
+
+placeOrder() currently knows the delivery provider's zone-code field.
+
+Introduce:
+    interface DeliveryService {
+        void deliver(String customerName);
+    }
+
+Make CampusDelivery implement it and hide its zone code internally.
+Pass a DeliveryService into CampusCanteen's constructor.
+
+Acceptance:
+CampusCanteen does not read a delivery zone field.
+Changing the internal zone representation does not require editing it.
+
+
+Q8. USE COMPOSITION AND PRESERVE WORKFLOW [Pages 4, 21–22]
+
+Introduce an Order class containing customerName and total.
+Give it a constructor and read-only getters.
+
+Change the workflow to:
+    boolean placeOrder(Order order)
+
+CampusCanteen should hold PaymentService, DeliveryService,
+and ReceiptPrinter objects as fields.
+
+Required sequence:
+1. Attempt payment.
+2. If payment fails, return false immediately.
+3. If payment succeeds, deliver the order and print its receipt.
+4. Return true.
+
+Acceptance:
+A failed payment causes no delivery and no receipt.
+An order genuinely connects payment, delivery, and customer data.
+
+Identify the "has-a" relationships. Explain why having several
+collaborators does not automatically imply bad coupling.
+
+
+Q9. REPAIR AN INHERITANCE-BASED DEPENDENCY [Page 16]
+
+A teammate proposes:
+
+    class DiscountCanteen extends MobileWallet {
+        boolean payDiscounted(int total) {
+            int payable = total - 20;
+            if (balance < payable) return false;
+            balance -= payable;
+            return true;
+        }
+    }
+
+Explain why this fails after Q4 and why making balance protected
+would still leave a dependency on the parent's representation.
+
+Rewrite DiscountCanteen to HOLD a PaymentService instead.
+Its payDiscounted(int total) must delegate payment of total - 20.
+For this exercise, reject totals of 20 or below.
+
+Acceptance:
+A total of 120 charges 100.
+DiscountCanteen never reads or writes a wallet balance.
+Explain why a canteen "is a wallet" is a poor model.
+
+
+Q10. VERIFY THE DESIGN AND EXPLAIN THE TRADE-OFF
+[Pages 3, 10, 18, 23]
+
+Create two small test implementations:
+
+    StubPayment implements PaymentService
+    - Receives a fixed success/failure result.
+    - Records the requested amount.
+
+    RecordingDelivery implements DeliveryService
+    - Counts calls to deliver().
+
+Use them to verify the refactored workflow without real services.
+
+Acceptance:
+A. Successful payment of 120:
+   - placeOrder() returns true.
+   - StubPayment records 120.
+   - Delivery is called exactly once.
+   - One receipt is printed.
+
+B. Failed payment:
+   - placeOrder() returns false.
+   - Delivery is never called.
+   - No receipt is printed.
+
+C. Internal payment changes:
+   - Replacing the payment implementation requires no changes
+     to placeOrder().
+
+Finally, name:
+- Two dependencies that remain and why they are necessary.
+- Two classes with improved cohesion and their purposes.
+- One concrete implementation dependency you removed.
+- Why zero coupling is not the goal.
+- Why introducing an interface for every class is not required.
+
+============================================================
+RUNNABLE STARTER CODE — INTENTIONALLY POOR DESIGN
+Save as Main.java.
+Run: javac Main.java
+Then: java Main
+============================================================
+*/
+
+public class Main {
+    public static void main(String[] args) {
+        CampusCanteen canteen = new CampusCanteen();
+
+        canteen.placeOrder("Waseef", 120);
+
+        int salary = canteen.calculateSalary(12, 200);
+        canteen.printEmployeeReport("Rahim", salary);
+    }
+}
+
+class MobileWallet {
+    public int balance = 500;
+}
+
+class CampusDelivery {
+    public String zoneCode = "HALL-A";
+
+    public void dispatch(String customerName, String zone) {
+        System.out.println(
+            "Delivered to " + customerName + " at " + zone
+        );
+    }
+}
+
+class CampusCanteen {
+    private MobileWallet wallet = new MobileWallet();
+    private CampusDelivery delivery = new CampusDelivery();
+
+    public void placeOrder(String customerName, int total) {
+        // Problem: the canteen knows how a wallet stores money.
+        if (wallet.balance < total) {
+            System.out.println("Payment failed");
+            return;
+        }
+
+        wallet.balance -= total;
+        System.out.println("Payment successful: " + total);
+
+        // Problem: the canteen knows a delivery configuration detail.
+        delivery.dispatch(customerName, delivery.zoneCode);
+
+        printReceipt(customerName, total);
+    }
+
+    public void printReceipt(String customerName, int total) {
+        System.out.println(
+            "Receipt: " + customerName + " | Total: " + total
+        );
+    }
+
+    public int calculateSalary(int hours, int hourlyRate) {
+        return hours * hourlyRate;
+    }
+
+    public void printEmployeeReport(String name, int salary) {
+        System.out.println(
+            "Employee: " + name + " | Salary: " + salary
+        );
+    }
+}
+
+/*
+EXPECTED STARTER OUTPUT:
+
+Payment successful: 120
+Delivered to Waseef at HALL-A
+Receipt: Waseef | Total: 120
+Employee: Rahim | Salary: 2400
+
+The refactored application should preserve this successful workflow.
+The questions also introduce failure handling and implementation
+replacement checks that the original design does not support cleanly.
+*/
+```

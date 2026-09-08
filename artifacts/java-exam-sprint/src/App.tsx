@@ -641,7 +641,7 @@ const questions: Question[] = [
   { id: 'q8', topic: 'Generics', prompt: 'Why is List<Dog> not a subtype of List<Animal>?', options: ['Dog is not an Animal.', 'Generics are invariant to prevent unsafe writes.', 'Lists cannot contain objects.', 'The JVM erases all classes.'], answer: 1, explanation: 'If it were allowed, code could put a Cat into a List<Dog>. Invariance keeps generic writes type-safe.' },
 ];
 
-type Scenario = { id: string; title: string; topic: string; prompt: string; code: string; options: string[]; answer: number; explanation: string };
+type Scenario = { id: string; title: string; topic: string; prompt: string; code: string; options: string[]; answer?: number; explanation?: string; openEnded?: boolean; acceptance?: string[] };
 const lecture13Scenarios: Scenario[] = [
   {
     id: 'lecture13-c1',
@@ -876,6 +876,217 @@ static void addDogs(List<? super Dog> animals) {
     ],
     answer: 0,
     explanation: 'With ? extends Animal, values can safely be read as Animal but a new subtype cannot safely be added. With ? super Dog, Dog and Puppy can be added, while reads are only guaranteed as Object.',
+  },
+];
+
+const lecture14StarterCode = `public class Main {
+    public static void main(String[] args) {
+        CampusCanteen canteen = new CampusCanteen();
+
+        canteen.placeOrder("Waseef", 120);
+
+        int salary = canteen.calculateSalary(12, 200);
+        canteen.printEmployeeReport("Rahim", salary);
+    }
+}
+
+class MobileWallet {
+    public int balance = 500;
+}
+
+class CampusDelivery {
+    public String zoneCode = "HALL-A";
+
+    public void dispatch(String customerName, String zone) {
+        System.out.println(
+            "Delivered to " + customerName + " at " + zone
+        );
+    }
+}
+
+class CampusCanteen {
+    private MobileWallet wallet = new MobileWallet();
+    private CampusDelivery delivery = new CampusDelivery();
+
+    public void placeOrder(String customerName, int total) {
+        if (wallet.balance < total) {
+            System.out.println("Payment failed");
+            return;
+        }
+
+        wallet.balance -= total;
+        System.out.println("Payment successful: " + total);
+        delivery.dispatch(customerName, delivery.zoneCode);
+        printReceipt(customerName, total);
+    }
+
+    public void printReceipt(String customerName, int total) {
+        System.out.println(
+            "Receipt: " + customerName + " | Total: " + total
+        );
+    }
+
+    public int calculateSalary(int hours, int hourlyRate) {
+        return hours * hourlyRate;
+    }
+
+    public void printEmployeeReport(String name, int salary) {
+        System.out.println(
+            "Employee: " + name + " | Salary: " + salary
+        );
+    }
+}`;
+
+const lecture14Scenarios: Scenario[] = [
+  {
+    id: 'lecture14-c1',
+    title: 'Q1 · Identify and separate responsibilities',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Refactor calculateSalary() and printEmployeeReport() into an EmployeeAdministration class. Keep payroll calculation unchanged, then write one sentence explaining why sharing the same university or canteen context does not automatically make methods cohesive.',
+    code: `calculateSalary(12, 200)
+printEmployeeReport("Rahim", salary)`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'EmployeeAdministration calculates 12 * 200 = 2400.',
+      'CampusCanteen no longer contains payroll or employee-report logic.',
+    ],
+  },
+  {
+    id: 'lecture14-c2',
+    title: 'Q2 · Separate display from application behavior',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Move receipt formatting and printing into a ReceiptPrinter class. Decide which order data the printer needs and pass it through parameters or an Order object. It must not calculate payments, dispatch deliveries, or modify order state.',
+    code: `printReceipt("Waseef", 120);`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'Changing "Receipt:" to "Canteen Receipt:" requires editing only ReceiptPrinter.',
+    ],
+  },
+  {
+    id: 'lecture14-c3',
+    title: 'Q3 · Remove knowledge of payment internals',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'MobileWallet balance is read and modified directly by placeOrder(). Move the balance check and deduction into boolean processPayment(int amount), return true only when payment succeeds, and update placeOrder() to call that behavior. Explain which dependency existed before and how this change reduces coupling.',
+    code: `if (wallet.balance < total) {
+    System.out.println("Payment failed");
+    return;
+}
+wallet.balance -= total;`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'A payment of 120 from a balance of 500 leaves 380.',
+      'An unaffordable payment returns false and leaves the balance unchanged.',
+    ],
+  },
+  {
+    id: 'lecture14-c4',
+    title: 'Q4 · Encapsulate related state and behavior',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Make MobileWallet.balance private. Provide a constructor for its initial balance and a read-only getBalance() method. Do not introduce a public balance setter. Reject non-positive payment amounts without changing the balance, then explain how keeping wallet state and payment behavior together supports cohesion.',
+    code: `class MobileWallet {
+    public int balance = 500;
+}`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'processPayment(0) and processPayment(-50) both return false.',
+      'Other classes cannot directly assign to balance.',
+    ],
+  },
+  {
+    id: 'lecture14-c5',
+    title: 'Q5 · Depend on a payment contract',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Introduce interface PaymentService with boolean processPayment(int amount). Make MobileWallet implement it. Change CampusCanteen to receive a PaymentService through its constructor, store it in a field, remove new MobileWallet() from CampusCanteen, and create the concrete wallet in main(). Explain what dependency remains after introducing the interface.',
+    code: `interface PaymentService {
+    boolean processPayment(int amount);
+}`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'CampusCanteen contains no MobileWallet-specific operations.',
+    ],
+  },
+  {
+    id: 'lecture14-c6',
+    title: 'Q6 · Replace an implementation without editing the client',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Create VoucherPayment implementing PaymentService. It starts with a voucher balance, accepts only positive affordable payments, and rejects unaffordable ones. Run the same order workflow once with MobileWallet and once with VoucherPayment by changing object construction in main(). Explain why the method signature alone is insufficient if an implementation returns true without actually recording payment.',
+    code: `PaymentService payment = /* choose an implementation */;
+CampusCanteen canteen = new CampusCanteen(payment, delivery, printer);`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'Each implementation, starting with 500, accepts a payment of 120.',
+      'No changes are made to CampusCanteen.placeOrder().',
+    ],
+  },
+  {
+    id: 'lecture14-c7',
+    title: 'Q7 · Remove delivery implementation dependencies',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'placeOrder() currently knows the delivery provider’s zone-code field. Introduce DeliveryService with void deliver(String customerName), make CampusDelivery implement it and hide its zone code internally, then pass a DeliveryService into CampusCanteen’s constructor.',
+    code: `delivery.dispatch(customerName, delivery.zoneCode);`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'CampusCanteen does not read a delivery zone field.',
+      'Changing the internal zone representation does not require editing CampusCanteen.',
+    ],
+  },
+  {
+    id: 'lecture14-c8',
+    title: 'Q8 · Use composition and preserve workflow',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Introduce Order containing customerName and total with a constructor and read-only getters. Change the workflow to boolean placeOrder(Order order). CampusCanteen should hold PaymentService, DeliveryService, and ReceiptPrinter objects as fields. Preserve this sequence: attempt payment; return false immediately on failure; otherwise deliver and print the receipt; return true. Identify the has-a relationships and explain why several collaborators do not automatically imply bad coupling.',
+    code: `boolean placeOrder(Order order) {
+    // payment → delivery → receipt
+}`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'A failed payment causes no delivery and no receipt.',
+      'An order genuinely connects payment, delivery, and customer data.',
+    ],
+  },
+  {
+    id: 'lecture14-c9',
+    title: 'Q9 · Repair an inheritance-based dependency',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'A teammate proposes DiscountCanteen extends MobileWallet and reads balance directly. Explain why this fails after Q4 and why making balance protected would still leave a dependency on the parent’s representation. Rewrite DiscountCanteen to hold a PaymentService instead and delegate total - 20, rejecting totals of 20 or below. Explain why a canteen “is a wallet” is a poor model.',
+    code: `class DiscountCanteen extends MobileWallet {
+    boolean payDiscounted(int total) {
+        int payable = total - 20;
+        if (balance < payable) return false;
+        balance -= payable;
+        return true;
+    }
+}`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'A total of 120 charges 100.',
+      'DiscountCanteen never reads or writes a wallet balance.',
+    ],
+  },
+  {
+    id: 'lecture14-c10',
+    title: 'Q10 · Verify the design and explain the trade-off',
+    topic: 'OOC Week 14 · Scenario-Based Understanding Test',
+    prompt: 'Create StubPayment implementing PaymentService with a fixed success/failure result and a recorded requested amount. Create RecordingDelivery implementing DeliveryService with a deliver() call counter. Use them to verify the refactored workflow without real services, then name two necessary remaining dependencies, two cohesive classes and their purposes, one removed concrete implementation dependency, why zero coupling is not the goal, and why an interface for every class is unnecessary.',
+    code: `StubPayment payment = new StubPayment(true);
+RecordingDelivery delivery = new RecordingDelivery();
+// Verify successful and failed placeOrder(Order) paths`,
+    options: [],
+    openEnded: true,
+    acceptance: [
+      'Successful payment of 120 returns true, records 120, delivers exactly once, and prints one receipt.',
+      'Failed payment returns false, never delivers, and prints no receipt.',
+      'Replacing the payment implementation requires no changes to placeOrder().',
+    ],
   },
 ];
 
@@ -2617,7 +2828,7 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture13' | 'lecture15'>('lecture09');
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture13' | 'lecture14' | 'lecture15'>('lecture09');
   const activeScenarios = labTrack === 'lecture09'
     ? lecture09Scenarios
     : labTrack === 'lecture10'
@@ -2630,19 +2841,39 @@ function CodingLab() {
             ? lecture12Part2Scenarios
             : labTrack === 'lecture13'
               ? lecture13Scenarios
-              : lecture15Scenarios;
+                : labTrack === 'lecture14'
+                  ? lecture14Scenarios
+                  : lecture15Scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
+  const isOpenEnded = scenario.openEnded === true;
   const answered = choice !== null;
-  const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
+  const reviewed = isOpenEnded && results[scenario.id] === 1;
+  const select = (value: number) => { if (!answered && scenario.answer !== undefined) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
+  const reviewOpenScenario = () => { setChoice(-1); setResults((current) => ({ ...current, [scenario.id]: 1 })); };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture13' | 'lecture15') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture13' | 'lecture14' | 'lecture15') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
+  const trackLabel = labTrack === 'lecture09'
+    ? 'Lecture 09 exceptions'
+    : labTrack === 'lecture10'
+      ? 'Lecture 10 typecasting'
+      : labTrack === 'lecture11'
+        ? 'Lecture 11 interfaces'
+        : labTrack === 'lecture12p1'
+          ? 'Lecture 12 Part 1 evolution'
+          : labTrack === 'lecture12p2'
+            ? 'Lecture 12 Part 2 classes & records'
+            : labTrack === 'lecture13'
+              ? 'Lecture 13 generics'
+              : labTrack === 'lecture14'
+                ? 'OOC Week 14 scenario test'
+                : 'Lecture 15 UML class diagrams';
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : labTrack === 'lecture12p2' ? 'Lecture 12 Part 2 classes & records' : labTrack === 'lecture13' ? 'Lecture 13 generics' : 'Lecture 15 UML class diagrams'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${trackLabel}`} title={isOpenEnded ? 'Refactor the canteen, one concern at a time.' : 'Think like the compiler.'} detail={isOpenEnded ? 'The source prompt intentionally leaves the refactoring unsolved. Work through each requirement in plain Java, then mark the prompt reviewed.' : 'Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device.'} action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} {isOpenEnded ? 'reviewed' : 'solved'}</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
@@ -2650,9 +2881,11 @@ function CodingLab() {
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p1'} onClick={() => selectTrack('lecture12p1')} data-testid="button-lab-lecture12p1" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p1' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 1 <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p2'} onClick={() => selectTrack('lecture12p2')} data-testid="button-lab-lecture12p2" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p2' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 2 <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture13'} onClick={() => selectTrack('lecture13')} data-testid="button-lab-lecture13" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture13' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 13 · Generics <span className="ml-1 opacity-70">10</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture14'} onClick={() => selectTrack('lecture14')} data-testid="button-lab-lecture14" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture14' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Week 14 · Canteen <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture15'} onClick={() => selectTrack('lecture15')} data-testid="button-lab-lecture15" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture15' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 15 · UML <span className="ml-1 opacity-70">10</span></button>
     </div>
-    <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
+    {isOpenEnded && <details className="mb-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><summary className="cursor-pointer list-none"><div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Original starter file</div><h2 className="mt-2 display text-[22px] font-bold">Main.java · intentionally poor design</h2></div><ChevronDown size={18} className="text-muted-foreground" /></div><p className="mt-3 text-[13px] leading-6 text-muted-foreground">Preserve the successful workflow while refactoring incrementally. Plain Java only; no frameworks, database, or real payment service.</p></summary><pre className="mt-5 max-h-[520px] overflow-auto rounded-2xl bg-primary p-4 text-[11px] leading-6 text-primary-foreground"><code>{lecture14StarterCode}</code></pre><p className="mt-4 text-[12px] leading-5 text-muted-foreground">Expected starter success: Payment successful: 120 · Delivered to Waseef at HALL-A · Receipt: Waseef | Total: 120 · Employee: Rahim | Salary: 2400</p></details>}
+    <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 whitespace-pre-line text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7">{isOpenEnded ? <><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Acceptance criteria</div><ul className="mt-4 space-y-3">{scenario.acceptance?.map((item) => <li key={item} className="flex gap-2 text-[13px] leading-6"><CheckCircle2 size={16} className="mt-1 shrink-0 text-[#4f9c7a]" />{item}</li>)}</ul><div className="mt-6 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold"><MessageSquareText size={17} className="text-[#d19a39]" />Open-ended refactoring prompt</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Write and test your own refactoring. This exercise intentionally does not reveal a solution.</p></div><div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{reviewed || answered ? <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next prompt <ArrowRight size={15} /></button> : <button onClick={reviewOpenScenario} data-testid={`button-review-scenario-${scenario.id}`} className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-[12px] font-bold text-accent-foreground">Mark prompt reviewed <Check size={15} /></button>}</div></> : <><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></>}</section></div>
   </div>;
 }
 
