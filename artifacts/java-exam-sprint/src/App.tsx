@@ -627,6 +627,10 @@ const schedule: ScheduleTask[] = [
   { id: 's5', day: 'Wed · Sep 9', time: '08:00', duration: '2h focus', practice: 'practice included', breakAfter: '30m reset · breakfast and movement', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
   { id: 's6', day: 'Wed · Sep 9', time: '10:30', duration: '2h focus', practice: 'practice included', breakAfter: '30m reset · breathe and change context', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
   { id: 's7', day: 'Wed · Sep 9', time: '13:00', duration: '2h focus', practice: 'practice included', breakAfter: 'Finish line · all chapters complete by 15:00', title: 'Map the object model', detail: 'UML notation, relationships, multiplicity, translation', topic: 'Week 15', lecture: 'Lecture 15', lectureSections: lecture15Sections },
+  { id: 's8', day: 'Wed · Sep 9', time: '19:00', duration: '2h focus', practice: 'timed practice', breakAfter: '1h dinner/reset break', title: 'Practice sprint · all lectures', detail: 'Mixed retrieval, Coding Lab scenarios, and weak-spot drills', topic: 'Practice', lecture: 'Practice Sprint' },
+  { id: 's9', day: 'Wed · Sep 9', time: '22:00', duration: '2h focus', practice: 'past-year solving', breakAfter: 'Overnight reset · sleep before the final review', title: 'Past-year questions · set 1', detail: 'Solve a timed past-year set, then mark uncertain answers', topic: 'Past Year Questions', lecture: 'Past-Year Set 1' },
+  { id: 's10', day: 'Thu · Sep 10', time: '08:00', duration: '2h focus', practice: 'targeted practice', breakAfter: '1h recovery break · breakfast and movement', title: 'Practice weak spots', detail: 'Revisit missed concepts and explain each rule out loud', topic: 'Practice', lecture: 'Final Practice' },
+  { id: 's11', day: 'Thu · Sep 10', time: '11:00', duration: '2h focus', practice: 'past-year solving', breakAfter: 'Finish at 13:00 · 90m exam buffer', title: 'Past-year questions · final set', detail: 'Final timed solving session, then stop and reset for the exam', topic: 'Past Year Questions', lecture: 'Past-Year Set 2' },
 ];
 
 type Question = { id: string; topic: string; prompt: string; code?: string; options: string[]; answer: number; explanation: string };
@@ -2711,7 +2715,7 @@ function Dashboard() {
     </div>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
-        <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">The two-day finish line</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
+        <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Finish line + exam rehearsal</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
