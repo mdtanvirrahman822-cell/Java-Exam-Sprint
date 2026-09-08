@@ -174,6 +174,24 @@ void addScores(List<? super Integer> out) {
 }`,
     check: 'Prefer high cohesion within a class and low coupling between classes. Program to interfaces and compose focused collaborators so changes stay isolated.',
   },
+  {
+    id: 'uml',
+    week: 'Week 15',
+    title: 'UML Class Diagrams',
+    eyebrow: 'Visual modeling',
+    blurb: 'Read and draw the blueprint: class members, type relationships, ownership, and multiplicity.',
+    accent: '#5e8fcb',
+    concepts: ['Class boxes', 'Visibility symbols', 'Inheritance & realization', 'Multiplicity'],
+    summary: 'A UML class diagram describes an object-oriented system without writing the implementation. It shows classes, attributes, methods, and the relationships that connect them so design decisions can be checked before code.',
+    example: `interface Drawable { void draw(); }
+abstract class Shape implements Drawable {
+  private Point center;
+}
+class Circle extends Shape {
+  private double radius;
+}`,
+    check: 'A solid line with a hollow triangle points from subclass to superclass. A dashed line with a hollow triangle means realization (implements). Diamonds belong at the whole side: hollow for aggregation, filled for composition.',
+  },
 ];
 
 type LectureSection = { id: string; title: string; points: string[] };
@@ -546,6 +564,59 @@ const lecture11Sections: LectureSection[] = [
   },
 ];
 
+const lecture15Sections: LectureSection[] = [
+  {
+    id: 'lecture15-class-boxes',
+    title: '1. UML Class Box Syntax and Member Notation',
+    points: [
+      'Read the three compartments: class name, attributes, and methods.',
+      'Write attributes as visibility name : Type.',
+      'Write methods as visibility name(parameters) : ReturnType.',
+      'Use UML as a language-neutral blueprint for object-oriented structure.',
+    ],
+  },
+  {
+    id: 'lecture15-visibility-members',
+    title: '2. Visibility, Static, and Abstract Members',
+    points: [
+      'Map + to public, - to private, # to protected, and ~ to package-private.',
+      'Show static members with an underline.',
+      'Show abstract classes and abstract methods in italics.',
+      'Remember that an abstract class cannot be instantiated directly.',
+    ],
+  },
+  {
+    id: 'lecture15-inheritance-realization',
+    title: '3. Inheritance and Interface Realization',
+    points: [
+      'Model extends with a solid line and hollow triangle.',
+      'Model implements with a dashed line and hollow triangle.',
+      'Point the hollow triangle toward the more general class or interface.',
+      'Translate is-a relationships between Java code and UML consistently.',
+    ],
+  },
+  {
+    id: 'lecture15-object-relationships',
+    title: '4. Association, Aggregation, and Composition',
+    points: [
+      'Use a plain line for an independent association.',
+      'Use a hollow diamond for aggregation when parts can outlive the whole.',
+      'Use a filled diamond for composition when the whole owns the parts’ lifecycle.',
+      'Place the diamond beside the whole, not beside the contained part.',
+    ],
+  },
+  {
+    id: 'lecture15-multiplicity-translation',
+    title: '5. Multiplicity and Code-to-Diagram Translation',
+    points: [
+      'Read 1, 0..1, 0..*, 1..*, and exact ranges near relationship ends.',
+      'Translate fields, constructors, and collections into relationships.',
+      'Use lifecycle and ownership evidence to choose aggregation versus composition.',
+      'Move in both directions: derive a diagram from Java and Java classes from a diagram.',
+    ],
+  },
+];
+
 type ScheduleTask = { id: string; day: string; time: string; duration: string; practice?: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
 const schedule: ScheduleTask[] = [
   { id: 's1', day: 'Tue · Sep 8', time: '10:00', duration: '4h total', practice: '1h practice', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
@@ -555,7 +626,7 @@ const schedule: ScheduleTask[] = [
   { id: 's4b', day: 'Wed · Sep 9', time: '14:00', duration: '4h total', practice: '1h practice', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
   { id: 's5', day: 'Wed · Sep 9', time: '18:00', duration: '4h total', practice: '1h practice', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
   { id: 's6', day: 'Thu · Sep 10', time: '07:30', duration: '4h total', practice: '1h practice', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
-  { id: 's7', day: 'Thu · Sep 10', time: '11:45', duration: '2h rehearsal', title: 'Mixed exam rehearsal', detail: 'Practice + two coding scenarios', topic: 'All weeks', lecture: 'Lectures 09–14' },
+  { id: 's7', day: 'Thu · Sep 10', time: '11:45', duration: '2h total', title: 'Map the object model', detail: 'UML notation, relationships, multiplicity, translation', topic: 'Week 15', lecture: 'Lecture 15', lectureSections: lecture15Sections },
 ];
 
 type Question = { id: string; topic: string; prompt: string; code?: string; options: string[]; answer: number; explanation: string };
@@ -571,10 +642,206 @@ const questions: Question[] = [
 ];
 
 type Scenario = { id: string; title: string; topic: string; prompt: string; code: string; options: string[]; answer: number; explanation: string };
-const scenarios: Scenario[] = [
-  { id: 'c1', title: 'Catch the right branch', topic: 'Exceptions', prompt: 'Which edit lets this program compile and preserve the specific recovery?', code: `void load() {\n  try {\n    read();\n  } catch (Exception e) {\n    useBackup();\n  } catch (IOException e) {\n    retry();\n  }\n}`, options: ['Swap the catch blocks: IOException first.', 'Replace IOException with RuntimeException.', 'Move retry into finally.', 'Remove both catches.'], answer: 0, explanation: 'Catch clauses go from specific to general. Exception first makes the IOException branch unreachable.' },
-  { id: 'c2', title: 'Read the runtime type', topic: 'Casting', prompt: 'Which line is the safe, modern way to call fetch?', code: `Animal animal = getAnimal();\n// call Dog.fetch() only when possible`, options: ['Dog dog = (Dog) animal; dog.fetch();', 'if (animal instanceof Dog dog) dog.fetch();', 'Animal.fetch(animal);', 'if (animal == Dog) animal.fetch();'], answer: 1, explanation: 'Pattern matching checks the runtime type and introduces a correctly typed variable inside the guarded branch.' },
-  { id: 'c3', title: 'Choose the boundary', topic: 'Composition', prompt: 'Which constructor best keeps Report independent from a concrete database?', code: `final class Report {\n  // collaborator needed to load data\n}`, options: ['Report() { db = new MySqlDatabase(); }', 'Report(MySqlDatabase db) { this.db = db; }', 'Report(Database db) { this.db = db; }', 'static Database db = new Database();'], answer: 2, explanation: 'Accept the narrow abstraction the class needs. A Database interface lets production and test implementations slot in.' },
+const lecture15Scenarios: Scenario[] = [
+  {
+    id: 'lecture15-c1',
+    title: 'Read a UML class box',
+    topic: 'Lecture 15 · UML',
+    prompt: 'Which statement correctly translates the three UML compartments into Java?',
+    code: `Student
+-----------------------------
+- name : String
+- id : int
+-----------------------------
++ Student(name : String, id : int)
++ getName() : String
++ registerCourse(courseName : String) : void`,
+    options: [
+      'The top is the class name, the middle lists attributes, and the bottom lists methods.',
+      'The top lists methods, the middle lists constructors, and the bottom lists packages.',
+      'The plus and minus signs are Java operators rather than visibility markers.',
+      'UML class boxes describe only database tables, not Java classes.',
+    ],
+    answer: 0,
+    explanation: 'A UML class box has three compartments: the class name, attributes, and operations. Attribute and method signatures show visibility, names, types, parameters, and return types.',
+  },
+  {
+    id: 'lecture15-c2',
+    title: 'Decode visibility and member style',
+    topic: 'Lecture 15 · UML',
+    prompt: 'What do the UML symbols and text styles communicate?',
+    code: `Employee
+-----------------------------
+- name : String
+# baseSalary : double
+_totalEmployees : int_
+-----------------------------
++ getName() : String
+_+ getTotalEmployees() : int_
+_+ calculatePay() : double_`,
+    options: [
+      '- is private, # is protected, underlining means static, and italics indicate abstract.',
+      '- is public, # is private, underlining means final, and italics indicate static.',
+      'All fields are package-private because UML has no visibility notation.',
+      'Underlining means an instance field and italics mean a constructor.',
+    ],
+    answer: 0,
+    explanation: 'UML maps - to private and # to protected. Static members are underlined, while abstract classes and methods are written in italics.',
+  },
+  {
+    id: 'lecture15-c3',
+    title: 'Point inheritance the right way',
+    topic: 'Lecture 15 · UML',
+    prompt: 'Which UML relationship represents Manager extends Employee?',
+    code: `class Employee { }
+class Manager extends Employee { }`,
+    options: [
+      'A solid line with a hollow triangle pointing from Manager to Employee.',
+      'A dashed line with a filled diamond pointing from Employee to Manager.',
+      'A solid line with a filled triangle pointing from Employee to Manager.',
+      'A plain line with no arrow because inheritance has no diagram notation.',
+    ],
+    answer: 0,
+    explanation: 'Inheritance uses a solid line and hollow triangle. The triangle points toward the more general type, so Manager points to Employee.',
+  },
+  {
+    id: 'lecture15-c4',
+    title: 'Distinguish realization from inheritance',
+    topic: 'Lecture 15 · UML',
+    prompt: 'How should this Java relationship be drawn?',
+    code: `interface Drawable {
+  void draw();
+}
+class Shape implements Drawable {
+  public void draw() { }
+}`,
+    options: [
+      'A dashed line with a hollow triangle from Shape to Drawable.',
+      'A solid line with a hollow triangle from Drawable to Shape.',
+      'A filled diamond from Shape to Drawable.',
+      'A plain association line with multiplicity 1..*.',
+    ],
+    answer: 0,
+    explanation: 'Interface implementation is realization: a dashed line with a hollow triangle pointing to the interface. A solid line is reserved for class inheritance.',
+  },
+  {
+    id: 'lecture15-c5',
+    title: 'Choose a plain association',
+    topic: 'Lecture 15 · UML',
+    prompt: 'Which relationship best models Doctor holding a current Patient reference?',
+    code: `class Doctor {
+  private Patient currentPatient;
+  void diagnose(Patient patient) { }
+}
+class Patient { }`,
+    options: [
+      'Association: both Doctor and Patient can exist independently, so use a plain line.',
+      'Composition: Doctor creates and owns each Patient’s lifetime.',
+      'Aggregation: Patient cannot exist without a Doctor.',
+      'Inheritance: Patient is a specialized kind of Doctor.',
+    ],
+    answer: 0,
+    explanation: 'This is an association because Doctor and Patient are related but independent. The code does not show ownership or a lifecycle dependency.',
+  },
+  {
+    id: 'lecture15-c6',
+    title: 'Recognize aggregation',
+    topic: 'Lecture 15 · UML',
+    prompt: 'Why is Team–Player aggregation rather than composition?',
+    code: `class Team {
+  private List<Player> players;
+  void addPlayer(Player player) { players.add(player); }
+}
+class Player { }`,
+    options: [
+      'Players are supplied from outside and can outlive or join another Team; use a hollow diamond.',
+      'Team creates every Player internally and destroys them with itself; use a filled diamond.',
+      'Player extends Team, so use a hollow triangle.',
+      'There is no relationship because List fields are ignored in UML.',
+    ],
+    answer: 0,
+    explanation: 'Aggregation is a whole–part relationship with independent part lifetimes. Team contains Players, but Players are added from outside and can survive Team deletion.',
+  },
+  {
+    id: 'lecture15-c7',
+    title: 'Recognize composition',
+    topic: 'Lecture 15 · UML',
+    prompt: 'Which notation matches Car creating and owning its Engine?',
+    code: `class Car {
+  private Engine engine;
+  Car() {
+    engine = new Engine();
+  }
+}
+class Engine { }`,
+    options: [
+      'A filled diamond at Car, because Car owns the Engine lifecycle.',
+      'A hollow diamond at Engine, because Engine is a reusable whole.',
+      'A dashed hollow triangle from Car to Engine.',
+      'A plain line because constructors never affect UML relationships.',
+    ],
+    answer: 0,
+    explanation: 'Composition expresses strong ownership: Car creates the Engine internally and its lifetime is tied to the Car. The filled diamond sits beside the whole, Car.',
+  },
+  {
+    id: 'lecture15-c8',
+    title: 'Place multiplicities correctly',
+    topic: 'Lecture 15 · UML',
+    prompt: 'What multiplicities describe a Playlist that can contain zero or many Songs?',
+    code: `class Playlist {
+  private List<Song> songs;
+}
+class Song { }`,
+    options: [
+      'Playlist–Song is 0..* at the Song end; a Song may be in 0..* Playlists if reuse is allowed.',
+      'Playlist–Song is exactly 1 at both ends because every field means one object.',
+      'Playlist–Song is 1..* at the Playlist end and 0..1 at the Song end.',
+      'Multiplicity is written only for inheritance, not for collection relationships.',
+    ],
+    answer: 0,
+    explanation: 'A List<Song> permits zero or many Songs for each Playlist, so write 0..* near Song. The opposite end depends on the design; reusable Songs may belong to zero or many Playlists.',
+  },
+  {
+    id: 'lecture15-c9',
+    title: 'Translate Java into a diagram',
+    topic: 'Lecture 15 · UML',
+    prompt: 'Which diagram facts follow from this code?',
+    code: `interface Payable {
+  double calculatePay();
+}
+abstract class Employee implements Payable {
+  private String name;
+  protected double baseSalary;
+}
+class Manager extends Employee {
+  private Department department;
+}`,
+    options: [
+      'Payable is an interface, Employee is abstract, Manager inherits Employee, and Manager associates with Department.',
+      'Employee is concrete, Manager implements Employee, and Department must be composed.',
+      'Manager is the general type and Employee is its implementation interface.',
+      'All three types belong in one class box because fields create inheritance.',
+    ],
+    answer: 0,
+    explanation: 'The code yields a dashed realization from Employee to Payable, a solid inheritance arrow from Manager to Employee, and an association from Manager to Department unless ownership evidence says otherwise.',
+  },
+  {
+    id: 'lecture15-c10',
+    title: 'Translate a diagram into code',
+    topic: 'Lecture 15 · UML',
+    prompt: 'What Java structure matches a dashed realization, solid inheritance, and filled-diamond Point relationship?',
+    code: `Drawable ..> Shape
+Shape <|-- Circle
+Shape ◆-- Point`,
+    options: [
+      'Shape implements Drawable; Circle extends Shape; Shape creates and owns a Point.',
+      'Drawable extends Shape; Shape implements Circle; Point extends Shape.',
+      'Circle implements Drawable; Point aggregates Shape; Shape extends Circle.',
+      'All three connections are plain associations with no Java keywords.',
+    ],
+    answer: 0,
+    explanation: 'A dashed hollow triangle is implements, a solid hollow triangle is extends, and a filled diamond means composition. The diagram therefore maps to Shape implements Drawable, Circle extends Shape, and Shape owning a Point.',
+  },
 ];
 
 const lecture09Scenarios: Scenario[] = [
@@ -1920,6 +2187,7 @@ function Dashboard() {
   const [completedLecture12Part2, setCompletedLecture12Part2] = usePersisted<string[]>('java-sprint-lecture12-part2-sections', []);
   const [completedLecture13, setCompletedLecture13] = usePersisted<string[]>('java-sprint-lecture13-sections', []);
   const [completedLecture14, setCompletedLecture14] = usePersisted<string[]>('java-sprint-lecture14-sections', []);
+  const [completedLecture15, setCompletedLecture15] = usePersisted<string[]>('java-sprint-lecture15-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
@@ -1929,6 +2197,7 @@ function Dashboard() {
   const lecture12Part2Ready = lecture12Part2Sections.every((section) => completedLecture12Part2.includes(section.id));
   const lecture13Ready = lecture13Sections.every((section) => completedLecture13.includes(section.id));
   const lecture14Ready = lecture14Sections.every((section) => completedLecture14.includes(section.id));
+  const lecture15Ready = lecture15Sections.every((section) => completedLecture15.includes(section.id));
   const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
     ? completed.includes(task.id) && lecture09Ready
     : task.id === 's2'
@@ -1943,7 +2212,9 @@ function Dashboard() {
               ? completed.includes(task.id) && lecture13Ready
               : task.id === 's6'
                 ? completed.includes(task.id) && lecture14Ready
-      : completed.includes(task.id);
+                : task.id === 's7'
+                  ? completed.includes(task.id) && lecture15Ready
+                  : completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
   const sectionProgressPairs = [
     [lecture09Sections, completedLecture09],
@@ -1953,6 +2224,7 @@ function Dashboard() {
     [lecture12Part2Sections, completedLecture12Part2],
     [lecture13Sections, completedLecture13],
     [lecture14Sections, completedLecture14],
+    [lecture15Sections, completedLecture15],
   ] as const;
   const completedSectionCount = sectionProgressPairs.reduce((total, [sections, completedSections]) => total + sections.filter((section) => completedSections.includes(section.id)).length, 0);
   const totalSectionCount = sectionProgressPairs.reduce((total, [sections]) => total + sections.length, 0);
@@ -1967,7 +2239,8 @@ function Dashboard() {
       (id === 's4a' && !lecture12Part1Ready) ||
       (id === 's4b' && !lecture12Part2Ready) ||
       (id === 's5' && !lecture13Ready) ||
-      (id === 's6' && !lecture14Ready)
+      (id === 's6' && !lecture14Ready) ||
+      (id === 's7' && !lecture15Ready)
     ) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
@@ -1978,6 +2251,7 @@ function Dashboard() {
   const toggleLecture12Part2Section = (id: string) => setCompletedLecture12Part2((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture13Section = (id: string) => setCompletedLecture13((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture14Section = (id: string) => setCompletedLecture14((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture15Section = (id: string) => setCompletedLecture15((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Tuesday, September 8 · 10:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
@@ -1993,7 +2267,7 @@ function Dashboard() {
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
-            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready) || (task.id === 's5' && !lecture13Ready) || (task.id === 's6' && !lecture14Ready);
+            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready) || (task.id === 's5' && !lecture13Ready) || (task.id === 's6' && !lecture14Ready) || (task.id === 's7' && !lecture15Ready);
            const sectionState = task.id === 's1'
              ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
              : task.id === 's2'
@@ -2008,6 +2282,8 @@ function Dashboard() {
                         ? { completed: completedLecture13, ready: lecture13Ready, toggle: toggleLecture13Section }
                         : task.id === 's6'
                           ? { completed: completedLecture14, ready: lecture14Ready, toggle: toggleLecture14Section }
+                          : task.id === 's7'
+                            ? { completed: completedLecture15, ready: lecture15Ready, toggle: toggleLecture15Section }
                : null;
           return <div key={task.id} className={`rounded-xl border transition-all ${done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
@@ -2067,7 +2343,7 @@ function Learn() {
   const active = topics.find((topic) => topic.id === selected) ?? topics[0];
   const filtered = topics.filter((topic) => `${topic.title} ${topic.concepts.join(' ')}`.toLowerCase().includes(query.toLowerCase()));
   return <div className="rise">
-    <SectionIntro kicker="Learn · Weeks 9—14" title="A compact map of the syllabus." detail="Six high-yield rooms. Read the explanation, trace the example, then test the idea in Practice or the Coding Lab." action={<div className="relative"><BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} data-testid="input-search-topics" placeholder="Search a concept" className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-[13px] shadow-sm outline-none placeholder:text-muted-foreground/70 focus:border-accent sm:w-56" /></div>} />
+    <SectionIntro kicker="Learn · Weeks 9—15" title="A compact map of the syllabus." detail="Seven high-yield rooms. Read the explanation, trace the example, then test the idea in Practice or the Coding Lab." action={<div className="relative"><BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} data-testid="input-search-topics" placeholder="Search a concept" className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-[13px] shadow-sm outline-none placeholder:text-muted-foreground/70 focus:border-accent sm:w-56" /></div>} />
     <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
       <div className="space-y-2">{filtered.map((topic, index) => <button onClick={() => setSelected(topic.id)} key={topic.id} data-testid={`button-topic-${topic.id}`} className={`rise-${Math.min(index + 1, 4)} group w-full rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${active.id === topic.id ? 'border-foreground bg-primary text-primary-foreground shadow-md' : 'border-border bg-card shadow-sm hover:border-accent/60'}`}><div className="flex items-start justify-between gap-3"><div><div className={`mono text-[10px] uppercase tracking-[0.14em] ${active.id === topic.id ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>{topic.week}</div><h2 className="mt-1 display text-[19px] font-bold">{topic.title}</h2></div><span className="mt-1 size-3 rounded-full" style={{ backgroundColor: topic.accent }} /></div><p className={`mt-2 text-[12px] leading-5 ${active.id === topic.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{topic.blurb}</p><div className="mt-3 flex flex-wrap gap-1.5">{topic.concepts.slice(0, 3).map((concept) => <span key={concept} className={`rounded-md px-2 py-1 mono text-[9px] ${active.id === topic.id ? 'bg-primary-foreground/10 text-primary-foreground/75' : 'bg-secondary text-secondary-foreground'}`}>{concept}</span>)}</div></button>)}</div>
       <article className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
@@ -2104,7 +2380,7 @@ function CodingLab() {
   const [index, setIndex] = usePersisted('java-lab-index', 0);
   const [results, setResults] = usePersisted<Record<string, number>>('java-lab-results', {});
   const [choice, setChoice] = useState<number | null>(null);
-  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'mixed'>('lecture09');
+  const [labTrack, setLabTrack] = useState<'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture15'>('lecture09');
   const activeScenarios = labTrack === 'lecture09'
     ? lecture09Scenarios
     : labTrack === 'lecture10'
@@ -2115,26 +2391,26 @@ function CodingLab() {
           ? lecture12Part1Scenarios
           : labTrack === 'lecture12p2'
             ? lecture12Part2Scenarios
-            : scenarios;
+            : lecture15Scenarios;
   const scenario = activeScenarios[index % activeScenarios.length];
   const answered = choice !== null;
   const select = (value: number) => { if (!answered) { setChoice(value); setResults((current) => ({ ...current, [scenario.id]: value === scenario.answer ? 1 : 0 })); } };
   const next = () => { setChoice(null); setIndex((index + 1) % activeScenarios.length); };
-  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'mixed') => {
+  const selectTrack = (track: 'lecture09' | 'lecture10' | 'lecture11' | 'lecture12p1' | 'lecture12p2' | 'lecture15') => {
     setLabTrack(track);
     setIndex(0);
     setChoice(null);
   };
   const solvedCount = activeScenarios.filter((item) => results[item.id] === 1).length;
   return <div className="rise">
-    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : labTrack === 'lecture12p2' ? 'Lecture 12 Part 2 classes & records' : 'mixed review'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
+    <SectionIntro kicker={`Coding lab · ${labTrack === 'lecture09' ? 'Lecture 09 exceptions' : labTrack === 'lecture10' ? 'Lecture 10 typecasting' : labTrack === 'lecture11' ? 'Lecture 11 interfaces' : labTrack === 'lecture12p1' ? 'Lecture 12 Part 1 evolution' : labTrack === 'lecture12p2' ? 'Lecture 12 Part 2 classes & records' : 'Lecture 15 UML class diagrams'}`} title="Think like the compiler." detail="Pick the behavior or fix you expect, commit to an answer, then read the explanation. Your progress stays saved on this device." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Code2 size={16} className="text-[#3e93a8]" /><span className="mono text-[12px]">{solvedCount}/{activeScenarios.length} solved</span></div>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Coding lab scenario sets">
       <button type="button" role="tab" aria-selected={labTrack === 'lecture09'} onClick={() => selectTrack('lecture09')} data-testid="button-lab-lecture09" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture09' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 09 · Exceptions <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture10'} onClick={() => selectTrack('lecture10')} data-testid="button-lab-lecture10" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture10' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 10 · Typecasting <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture11'} onClick={() => selectTrack('lecture11')} data-testid="button-lab-lecture11" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture11' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 11 · Interfaces <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p1'} onClick={() => selectTrack('lecture12p1')} data-testid="button-lab-lecture12p1" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p1' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 1 <span className="ml-1 opacity-70">10</span></button>
       <button type="button" role="tab" aria-selected={labTrack === 'lecture12p2'} onClick={() => selectTrack('lecture12p2')} data-testid="button-lab-lecture12p2" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture12p2' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 12 · Part 2 <span className="ml-1 opacity-70">10</span></button>
-      <button type="button" role="tab" aria-selected={labTrack === 'mixed'} onClick={() => selectTrack('mixed')} data-testid="button-lab-mixed" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'mixed' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Mixed review <span className="ml-1 opacity-70">3</span></button>
+      <button type="button" role="tab" aria-selected={labTrack === 'lecture15'} onClick={() => selectTrack('lecture15')} data-testid="button-lab-lecture15" className={`rounded-full px-3.5 py-2 mono text-[10px] uppercase tracking-[0.1em] transition-colors ${labTrack === 'lecture15' ? 'bg-accent text-accent-foreground' : 'border border-border bg-card text-muted-foreground hover:border-accent'}`}>Lecture 15 · UML <span className="ml-1 opacity-70">10</span></button>
     </div>
     <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]"><section className="rounded-[24px] border border-border bg-primary p-5 text-primary-foreground shadow-sm sm:p-7"><div className="flex items-center justify-between"><span className="rounded-full bg-primary-foreground/10 px-3 py-1 mono text-[10px] uppercase tracking-[0.13em] text-primary-foreground/70">{scenario.topic}</span><span className="mono text-[10px] text-primary-foreground/50">{scenario.id.toUpperCase()}</span></div><h2 className="mt-6 display text-[25px] font-bold leading-tight">{scenario.title}</h2><p className="mt-3 text-[14px] leading-6 text-primary-foreground/70">{scenario.prompt}</p><pre className="mt-6 overflow-x-auto rounded-2xl border border-primary-foreground/10 bg-black/15 p-4 text-[12px] leading-6 text-primary-foreground/90"><code>{scenario.code}</code></pre><div className="mt-6 flex items-center gap-2 text-primary-foreground/50"><Circle size={12} /><span className="mono text-[10px] uppercase tracking-[0.12em]">Read every line</span></div></section><section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Your call</div><div className="mt-4 space-y-2.5">{scenario.options.map((option, optionIndex) => <button key={option} onClick={() => select(optionIndex)} disabled={answered} data-testid={`button-lab-option-${scenario.id}-${optionIndex}`} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-[13px] transition-all ${answered && optionIndex === scenario.answer ? 'border-[#4f9c7a] bg-[#4f9c7a]/10' : answered && optionIndex === choice ? 'border-destructive bg-destructive/10' : 'border-border hover:-translate-y-0.5 hover:border-accent/70'}`}><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary mono text-[10px] text-secondary-foreground">{String.fromCharCode(65 + optionIndex)}</span>{option}</button>)}</div>{answered && <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4"><div className="flex items-center gap-2 text-[13px] font-bold">{choice === scenario.answer ? <CheckCircle2 size={17} className="text-[#4f9c7a]" /> : <MessageSquareText size={17} className="text-[#d19a39]" />}{choice === scenario.answer ? 'Good read.' : 'Use the rule, not the guess.'}</div><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{scenario.explanation}</p></div>}<div className="mt-6 flex items-center justify-between"><span className="mono text-[10px] text-muted-foreground">Scenario {index + 1} / {activeScenarios.length}</span>{answered && <button onClick={next} data-testid="button-next-scenario" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-[12px] font-bold text-primary-foreground">Next scenario <ArrowRight size={15} /></button>}</div></section></div>
   </div>;
