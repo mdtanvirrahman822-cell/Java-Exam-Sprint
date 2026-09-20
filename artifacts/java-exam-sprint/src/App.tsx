@@ -7,6 +7,7 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
+  Calculator,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -53,6 +54,15 @@ type Topic = {
   example: string;
   check: string;
 };
+
+const gpaGradeScale = [
+  { grade: 'A+', points: 4, range: '80% and above' },
+  { grade: 'A', points: 3.75, range: '75% to below 80%' },
+  { grade: 'A-', points: 3.5, range: '70% to below 75%' },
+  { grade: 'B+', points: 3.25, range: '65% to below 70%' },
+  { grade: 'B', points: 3, range: '60% to below 65%' },
+];
+type GpaCourse = { id: number; name: string; credits: number; grade: string };
 
 const topics: Topic[] = [
   {
@@ -619,22 +629,17 @@ const lecture15Sections: LectureSection[] = [
 
 type ScheduleTask = { id: string; day: string; time: string; duration: string; practice?: string; breakAfter?: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
 const schedule: ScheduleTask[] = [
-  { id: 's1', day: 'Tue · Sep 8', time: '08:00', duration: '2h focus', practice: 'practice included', breakAfter: '1h recovery break · food, walk, reset', title: 'Build the exception map', detail: 'Hierarchy, checked / unchecked, cleanup', topic: 'Week 9', lecture: 'Lecture 09', lectureSections: lecture09Sections },
-  { id: 's2', day: 'Tue · Sep 8', time: '11:00', duration: '2h focus', practice: 'practice included', breakAfter: '1h recovery break · step away from the screen', title: 'Object typecasting drills', detail: 'Reference types, dynamic checks, safe casts', topic: 'Week 10', lecture: 'Lecture 10', lectureSections: lecture10Sections },
-  { id: 's3', day: 'Tue · Sep 8', time: '14:00', duration: '2h focus', practice: 'practice included', breakAfter: '1h recovery break · move, hydrate, reset', title: 'Interface contract design', detail: 'Subtyping, roles, multiple interfaces', topic: 'Week 11', lecture: 'Lecture 11', lectureSections: lecture11Sections },
-  { id: 's4a', day: 'Tue · Sep 8', time: '17:00', duration: '2h focus', practice: 'practice included', breakAfter: '1h dinner/reset break', title: 'Evolve interface contracts', detail: 'Defaults, conflicts, lambdas, abstraction', topic: 'Week 12 · Part 1', lecture: 'Lecture 12 · Part 1', lectureSections: lecture12Part1Sections },
-  { id: 's4b', day: 'Tue · Sep 8', time: '20:00', duration: '2h focus', practice: 'practice included', breakAfter: 'Overnight reset · sleep before the final push', title: 'Build immutable data models', detail: 'Static setup, immutability, enums, records', topic: 'Week 12 · Part 2', lecture: 'Lecture 12 · Part 2', lectureSections: lecture12Part2Sections },
-  { id: 's5', day: 'Wed · Sep 9', time: '08:00', duration: '2h focus', practice: 'practice included', breakAfter: '30m reset · breakfast and movement', title: 'Generics deep pass', detail: 'Generic types, bounds, erasure, wildcards', topic: 'Week 13', lecture: 'Lecture 13', lectureSections: lecture13Sections },
-  { id: 's6', day: 'Wed · Sep 9', time: '10:30', duration: '2h focus', practice: 'practice included', breakAfter: '30m reset · breathe and change context', title: 'Refactor the architecture', detail: 'Coupling, cohesion, composition, case analysis', topic: 'Week 14', lecture: 'Lecture 14', lectureSections: lecture14Sections },
-  { id: 's7', day: 'Wed · Sep 9', time: '13:00', duration: '2h focus', practice: 'practice included', breakAfter: 'Finish line · all chapters complete by 15:00', title: 'Map the object model', detail: 'UML notation, relationships, multiplicity, translation', topic: 'Week 15', lecture: 'Lecture 15', lectureSections: lecture15Sections },
-  { id: 's8', day: 'Wed · Sep 9', time: '19:00', duration: '2h focus', practice: 'timed practice', breakAfter: '1h dinner/reset break', title: 'Practice sprint · all lectures', detail: 'Mixed retrieval, Coding Lab scenarios, and weak-spot drills', topic: 'Practice', lecture: 'Practice Sprint' },
-  { id: 's9', day: 'Wed · Sep 9', time: '22:00', duration: '2h focus', practice: 'past-year solving', breakAfter: 'Overnight reset · sleep before the final review', title: 'Past-year questions · set 1', detail: 'Solve a timed past-year set, then mark uncertain answers', topic: 'Past Year Questions', lecture: 'Past-Year Set 1' },
-  { id: 's10', day: 'Thu · Sep 10', time: '08:00', duration: '2h focus', practice: 'targeted practice', breakAfter: '1h recovery break · breakfast and movement', title: 'Practice weak spots', detail: 'Revisit missed concepts and explain each rule out loud', topic: 'Practice', lecture: 'Final Practice' },
-  { id: 's11', day: 'Thu · Sep 10', time: '11:00', duration: '2h focus', practice: 'past-year solving', breakAfter: 'Finish at 13:00 · 90m exam buffer', title: 'Past-year questions · final set', detail: 'Final timed solving session, then stop and reset for the exam', topic: 'Past Year Questions', lecture: 'Past-Year Set 2' },
+  { id: 'week1', day: 'Week 1', time: 'Study + build', duration: '7 days', practice: 'Data Structures Library', breakAfter: 'Keep one recovery block each day', title: 'Linear Algebra I + DS Library', detail: 'Study Ax=B, LU factorization, and vector spaces from Strang Chapters 1–3. Build linked lists, stacks, and queues from scratch.', topic: 'Linear Algebra · Data Structures', lecture: 'Data Structures Library' },
+  { id: 'week2', day: 'Week 2', time: 'Study + build', duration: '7 days', practice: 'Data Structures Library', breakAfter: 'Review Week 1 code before extending it', title: 'Linear Algebra II + DS Library', detail: 'Study eigenvalues, eigenvectors, and determinants. Build trees with BST traversal, then begin hashing.', topic: 'Linear Algebra · Data Structures', lecture: 'Data Structures Library' },
+  { id: 'week3', day: 'Week 3', time: 'Study + build', duration: '7 days', practice: 'Regex Engine', breakAfter: 'Test the matcher against edge cases', title: 'Theory of Computing + Regex Engine', detail: 'Move from discrete math to finite automata and regex. Build a DFA simulator or regex matcher.', topic: 'Theory of Computing', lecture: 'Regex Engine' },
+  { id: 'week4', day: 'Week 4', time: 'Study + build', duration: '7 days', practice: 'Library Mgmt System', breakAfter: 'Diagram the schema before writing tables', title: 'Theory of Computing II + DBMS', detail: 'Study CFGs, Turing machines, and the Chomsky hierarchy alongside relational models, ER diagrams, and normalization. Design the Library Management System schema.', topic: 'Theory of Computing · DBMS', lecture: 'Library Mgmt System' },
+  { id: 'week5', day: 'Week 5', time: 'Study + build', duration: '7 days', practice: 'LMS + CPU Simulator', breakAfter: 'Keep the backend and simulator milestones separate', title: 'DBMS Practice + Computer Organization', detail: 'Practice joins, subqueries, and transactions. Study processor components, instruction cycles, and RISC/CISC. Build the LMS backend and start the CPU simulator.', topic: 'DBMS · Computer Organization', lecture: 'LMS + CPU Simulator' },
+  { id: 'week6', day: 'Week 6', time: 'Integrate + review', duration: '7 days', practice: 'LMS + CPU Simulator', breakAfter: 'Last 2 days · review weak spots only', title: 'OOP II + Integration', detail: 'Study SOLID principles, MVC, and web services. Wrap the LMS in MVC, finish the CPU simulator, then spend the final two days on weak spots only.', topic: 'OOP II · Integration', lecture: 'LMS + CPU Simulator' },
 ];
 
 function isScheduleTaskRunning(task: ScheduleTask, reference: Date) {
   const [, dateLabel] = task.day.split(' · ');
+  if (!dateLabel) return false;
   const [monthName, dayValue] = dateLabel.split(' ');
   const [hourValue, minuteValue] = task.time.split(':').map(Number);
   const monthIndex = new Date(`${monthName} 1, 2000`).getMonth();
@@ -2453,10 +2458,24 @@ team.players().add("Eve");`,
 const navItems = [
   { href: '/', label: 'Cockpit', icon: LayoutDashboard },
   { href: '/learn', label: 'Learn', icon: Library },
+  { href: '/gpa', label: 'GPA', icon: Calculator },
   { href: '/practice', label: 'Practice', icon: ClipboardCheck },
   { href: '/lab', label: 'Coding lab', icon: Code2 },
   { href: '/focus', label: 'Focus timer', icon: Clock3 },
   { href: '/notes', label: 'Notes', icon: FileText },
+];
+
+const nextSemesterCourses = [
+  { code: 'Math 4341', title: 'Linear Algebra', credits: '3.0' },
+  { code: 'CSE 4303', title: 'Data Structures', credits: '3.0' },
+  { code: 'CSE 4304', title: 'Data Structures Lab', credits: '1.5' },
+  { code: 'CSE 4305', title: 'Computer Organization & Architecture', credits: '3.0' },
+  { code: 'CSE 4307', title: 'Database Management Systems', credits: '3.0' },
+  { code: 'CSE 4308', title: 'Database Management Systems Lab', credits: '1.0' },
+  { code: 'CSE 4309', title: 'Theory of Computing', credits: '3.0' },
+  { code: 'SWE 4301', title: 'Object Oriented Concepts II', credits: '3.0' },
+  { code: 'SWE 4302', title: 'Object Oriented Concepts II Lab', credits: '1.5' },
+  { code: 'SWE 4304', title: 'Software Project Lab I · individual', credits: '1.0' },
 ];
 
 function usePersisted<T>(key: string, initial: T) {
@@ -2547,7 +2566,7 @@ function Shell({ children }: { children: ReactNode }) {
           <div className="grid size-10 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"><GraduationCap size={21} strokeWidth={2.5} /></div>
           <div>
             <div className="display text-[16px] font-bold tracking-tight">Sprintroom</div>
-            <div className="mono text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/55">Java OOP · last mile</div>
+            <div className="mono text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/55">2-1 mission · GPA 4.00</div>
           </div>
         </div>
         <div className="mt-8 px-3">
@@ -2595,6 +2614,29 @@ function SectionIntro({ kicker, title, detail, action }: { kicker: string; title
   return <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
     <div><div className="mono mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{kicker}</div><h1 className="display max-w-2xl text-[32px] font-bold leading-[1.05] sm:text-[42px]">{title}</h1><p className="mt-3 max-w-xl text-[14px] leading-6 text-muted-foreground">{detail}</p></div>
     {action}
+  </div>;
+}
+
+function Gpa() {
+  const [courses, setCourses] = usePersisted<GpaCourse[]>('java-gpa-courses', [
+    { id: 1, name: 'Theory course', credits: 3, grade: 'B' },
+    { id: 2, name: 'Lab course', credits: 1, grade: 'A+' },
+  ]);
+  const totalCredits = courses.reduce((total, course) => total + Math.max(0, course.credits), 0);
+  const qualityPoints = courses.reduce((total, course) => total + Math.max(0, course.credits) * (gpaGradeScale.find((item) => item.grade === course.grade)?.points ?? 0), 0);
+  const gpa = totalCredits ? qualityPoints / totalCredits : 0;
+  const updateCourse = (id: number, changes: Partial<GpaCourse>) => setCourses((current) => current.map((course) => course.id === id ? { ...course, ...changes } : course));
+  const addCourse = () => setCourses((current) => [...current, { id: Date.now(), name: `Course ${current.length + 1}`, credits: 3, grade: 'B' }]);
+  return <div className="rise">
+    <SectionIntro kicker="GPA · academic requirement" title="Know what each grade costs." detail="Build a credit-weighted estimate. A dip in a 3.0-credit theory course moves the result more than the same dip in a 1.0-credit lab." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Calculator size={16} className="text-[#d19a39]" /><span className="mono text-[12px]">Weighted average</span></div>} />
+    <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
+      <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7">
+        <div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course inputs</div><h2 className="mt-2 display text-[23px] font-bold">Your current courses</h2></div><button type="button" onClick={addCourse} data-testid="button-add-gpa-course" className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-[12px] font-bold text-primary-foreground"><span className="text-base leading-none">+</span>Add course</button></div>
+        <div className="mt-5 space-y-3">{courses.map((course) => <div key={course.id} className="grid gap-2 rounded-2xl border border-border bg-background/40 p-3 sm:grid-cols-[1fr_100px_120px_auto] sm:items-center"><input value={course.name} onChange={(event) => updateCourse(course.id, { name: event.target.value })} aria-label={`${course.name} name`} className="min-w-0 rounded-lg border border-border bg-card px-3 py-2.5 text-[13px] outline-none focus:border-accent" /><label className="flex items-center gap-2 text-[11px] text-muted-foreground sm:block"><span className="sm:hidden">Credits</span><input type="number" min="0" step="0.5" value={course.credits} onChange={(event) => updateCourse(course.id, { credits: Number(event.target.value) || 0 })} aria-label={`${course.name} credits`} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-[13px] text-foreground outline-none focus:border-accent" /></label><select value={course.grade} onChange={(event) => updateCourse(course.id, { grade: event.target.value })} aria-label={`${course.name} grade`} className="rounded-lg border border-border bg-card px-3 py-2.5 text-[13px] outline-none focus:border-accent">{gpaGradeScale.map((item) => <option key={item.grade} value={item.grade}>{item.grade} · {item.points.toFixed(2)} GP</option>)}</select><button type="button" onClick={() => setCourses((current) => current.filter((item) => item.id !== course.id))} aria-label={`Remove ${course.name}`} className="rounded-lg border border-border px-3 py-2 text-[12px] text-muted-foreground hover:border-destructive hover:text-destructive">Remove</button></div>)}</div>
+        <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-[12px] leading-5 text-muted-foreground"><strong className="text-foreground">Formula:</strong> GPA = (1 / ΣCᵢ) × Σ(Cᵢ × GPᵢ). Credits are the weighting, so equal grade changes do not have equal impact.</div>
+      </section>
+      <section className="rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-7"><div className="flex items-center gap-2 text-primary-foreground/60"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Estimated GPA</span></div><div className="mt-5 display text-[64px] font-bold leading-none">{gpa.toFixed(2)}</div><p className="mt-3 text-[13px] text-primary-foreground/65">{qualityPoints.toFixed(2)} quality points across {totalCredits.toFixed(1)} credits.</p><div className="mt-7 border-t border-primary-foreground/15 pt-5"><div className="mono text-[10px] uppercase tracking-[0.15em] text-primary-foreground/55">Grade scale</div><div className="mt-3 space-y-2">{gpaGradeScale.map((item) => <div key={item.grade} className="flex items-center justify-between text-[12px]"><span className="font-bold">{item.grade}</span><span className="mono text-primary-foreground/70">{item.points.toFixed(2)} · {item.range}</span></div>)}</div></div></section>
+    </div>
   </div>;
 }
 
@@ -2709,7 +2751,7 @@ function ProgressRing({ value, onAccent = false }: { value: number; onAccent?: b
 }
 
 function Dashboard() {
-  const [completed, setCompleted] = usePersisted<string[]>('java-sprint-tasks', ['s1', 's2']);
+  const [completed, setCompleted] = usePersisted<string[]>('java-next-semester-weeks', []);
   const [completedLecture09, setCompletedLecture09] = usePersisted<string[]>('java-sprint-lecture09-sections', []);
   const [completedLecture10, setCompletedLecture10] = usePersisted<string[]>('java-sprint-lecture10-sections', []);
   const [completedLecture11, setCompletedLecture11] = usePersisted<string[]>('java-sprint-lecture11-sections', []);
@@ -2734,50 +2776,15 @@ function Dashboard() {
   const lecture13Ready = lecture13Sections.every((section) => completedLecture13.includes(section.id));
   const lecture14Ready = lecture14Sections.every((section) => completedLecture14.includes(section.id));
   const lecture15Ready = lecture15Sections.every((section) => completedLecture15.includes(section.id));
-  const isTaskComplete = (task: ScheduleTask) => task.id === 's1'
-    ? completed.includes(task.id) && lecture09Ready
-    : task.id === 's2'
-      ? completed.includes(task.id) && lecture10Ready
-      : task.id === 's3'
-        ? completed.includes(task.id) && lecture11Ready
-        : task.id === 's4a'
-          ? completed.includes(task.id) && lecture12Part1Ready
-          : task.id === 's4b'
-            ? completed.includes(task.id) && lecture12Part2Ready
-            : task.id === 's5'
-              ? completed.includes(task.id) && lecture13Ready
-              : task.id === 's6'
-                ? completed.includes(task.id) && lecture14Ready
-                : task.id === 's7'
-                  ? completed.includes(task.id) && lecture15Ready
-                  : completed.includes(task.id);
+  const isTaskComplete = (task: ScheduleTask) => completed.includes(task.id);
   const completedCount = schedule.filter(isTaskComplete).length;
-  const sectionProgressPairs = [
-    [lecture09Sections, completedLecture09],
-    [lecture10Sections, completedLecture10],
-    [lecture11Sections, completedLecture11],
-    [lecture12Part1Sections, completedLecture12Part1],
-    [lecture12Part2Sections, completedLecture12Part2],
-    [lecture13Sections, completedLecture13],
-    [lecture14Sections, completedLecture14],
-    [lecture15Sections, completedLecture15],
-  ] as const;
+  const sectionProgressPairs: readonly (readonly [LectureSection[], string[]])[] = [];
   const completedSectionCount = sectionProgressPairs.reduce((total, [sections, completedSections]) => total + sections.filter((section) => completedSections.includes(section.id)).length, 0);
   const totalSectionCount = sectionProgressPairs.reduce((total, [sections]) => total + sections.length, 0);
   const standaloneBlockCount = schedule.filter((task) => !task.lectureSections).length;
   const completedStandaloneBlockCount = schedule.filter((task) => !task.lectureSections && completed.includes(task.id)).length;
   const progress = Math.round(((completedSectionCount + completedStandaloneBlockCount) / (totalSectionCount + standaloneBlockCount)) * 100);
   const toggleTask = (id: string) => {
-    if (
-      (id === 's1' && !lecture09Ready) ||
-      (id === 's2' && !lecture10Ready) ||
-      (id === 's3' && !lecture11Ready) ||
-      (id === 's4a' && !lecture12Part1Ready) ||
-      (id === 's4b' && !lecture12Part2Ready) ||
-      (id === 's5' && !lecture13Ready) ||
-      (id === 's6' && !lecture14Ready) ||
-      (id === 's7' && !lecture15Ready)
-    ) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
   const toggleLecture09Section = (id: string) => setCompletedLecture09((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
@@ -2789,11 +2796,15 @@ function Dashboard() {
   const toggleLecture14Section = (id: string) => setCompletedLecture14((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture15Section = (id: string) => setCompletedLecture15((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
-    <SectionIntro kicker="Tuesday, September 8 · 08:00 start" title="Make the last miles count." detail="Your exam cockpit for OOP. The plan is already here; your job is to keep moving the next small marker." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
+    <SectionIntro kicker="Six-week runway · next semester" title="Make the last miles count." detail="Your study cockpit for a 4.0 target. Move one week forward, ship the tagged project, and keep the weak spots visible." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
     <div className="grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <CountdownCard />
       <DashboardPomodoro selectedTopic={pomodoroTopic} />
     </div>
+    <section className="mt-5 overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
+      <div className="border-b border-border bg-primary p-5 text-primary-foreground sm:p-7"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-primary-foreground/60"><GraduationCap size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Next semester · battle plan</span></div><h2 className="mt-3 display text-[27px] font-bold leading-tight sm:text-[32px]">GPA 4.0 Battle Plan</h2><p className="mt-2 max-w-2xl text-[13px] leading-6 text-primary-foreground/70">6 weeks. 6 heavy courses. 4 real projects. One clear goal — walk into Third Semester already ahead.</p></div><div className="rounded-xl bg-primary-foreground/10 px-3 py-2 text-right"><div className="display text-[22px] font-bold">23.50</div><div className="mono text-[9px] uppercase tracking-[0.12em] text-primary-foreground/60">total credits</div></div></div></div>
+      <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.2fr_.8fr]"><div><div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course load overview</div><h3 className="mt-2 display text-[21px] font-bold">18.00 theory · 5.50 lab · 10 courses</h3></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">Next sem</span></div><div className="mt-4 grid gap-2 sm:grid-cols-2">{nextSemesterCourses.map((course) => <div key={course.code} className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5"><div className="min-w-0"><div className="mono text-[10px] font-bold text-accent-foreground">{course.code}</div><div className="mt-1 text-[12px] leading-5 text-muted-foreground">{course.title}</div></div><span className="shrink-0 mono text-[11px] font-bold">{course.credits}</span></div>)}</div></div><aside className="rounded-2xl border border-accent/35 bg-accent/10 p-5"><div className="flex items-center gap-2 text-accent-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Protect the 4.0</span></div><h3 className="mt-3 display text-[20px] font-bold">Every course starts at 100%.</h3><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Quizzes & Assignments <strong className="text-foreground">20%</strong> · Mid Semester <strong className="text-foreground">40%</strong> · Semester Final <strong className="text-foreground">40%</strong></p><div className="mt-4 rounded-xl border border-accent/30 bg-background/45 p-3 text-[12px] font-semibold leading-5">A+ needs 80%+. Quizzes + mid are 60% of your grade before the final even happens — do not let small early assignments slip.</div></aside></div>
+    </section>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Finish line + exam rehearsal</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
@@ -3005,7 +3016,7 @@ function Notes() {
 }
 
 function Router() {
-  return <Switch><Route path="/" component={Dashboard} /><Route path="/learn" component={Learn} /><Route path="/learn/:topic" component={Learn} /><Route path="/practice" component={Practice} /><Route path="/lab" component={CodingLab} /><Route path="/focus" component={Focus} /><Route path="/notes" component={Notes} /><Route component={NotFound} /></Switch>;
+  return <Switch><Route path="/" component={Dashboard} /><Route path="/learn" component={Learn} /><Route path="/learn/:topic" component={Learn} /><Route path="/gpa" component={Gpa} /><Route path="/practice" component={Practice} /><Route path="/lab" component={CodingLab} /><Route path="/focus" component={Focus} /><Route path="/notes" component={Notes} /><Route component={NotFound} /></Switch>;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
