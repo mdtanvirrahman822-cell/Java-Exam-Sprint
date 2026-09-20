@@ -2615,12 +2615,13 @@ function usePomodoroTimer() {
 function Shell({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [darkMode, setDarkMode] = usePersisted('java-dark-mode', false);
+  const [theme, setTheme] = usePersisted<'aurora' | 'grid' | 'starlight' | 'neon'>('java-background-theme', 'aurora');
   const countdown = useCountdown();
   const currentLabel = navItems.find((item) => item.href === location)?.label ?? 'Cockpit';
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
+    document.documentElement.classList.add('dark');
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
   return (
     <div className="noise min-h-[100dvh] bg-background">
       <aside className={`fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground transition-transform duration-300 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -2660,7 +2661,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">{countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m to exam</span></div>
-            <button type="button" onClick={() => setDarkMode((value) => !value)} data-testid="button-theme-toggle" className="grid size-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground" aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}>{darkMode ? <Sun size={17} /> : <Moon size={17} />}</button>
+            <div className="relative"><button type="button" onClick={() => setTheme((current) => current === 'aurora' ? 'grid' : current === 'grid' ? 'starlight' : current === 'starlight' ? 'neon' : 'aurora')} data-testid="button-theme-toggle" className="grid size-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground" aria-label={`Theme: ${theme}. Click to change`} title="Change background theme">{theme === 'aurora' ? <Sun size={17} /> : theme === 'grid' ? <Moon size={17} /> : theme === 'starlight' ? <Sparkles size={17} /> : <Zap size={17} />}</button><div className="pointer-events-none absolute right-0 top-11 z-30 whitespace-nowrap rounded-xl border border-border bg-card/95 px-3 py-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100"><span className="mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{theme} theme · click to cycle</span></div></div>
           </div>
         </header>
         <div className="mx-auto max-w-[1440px] px-5 py-7 sm:px-8 lg:px-10 lg:py-9">{children}</div>

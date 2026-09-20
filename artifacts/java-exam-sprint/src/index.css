@@ -196,8 +196,15 @@
   .dark .noise.bg-background {
     background-color: #062e32;
     background-image: radial-gradient(ellipse at 8% 8%, rgba(20, 208, 171, .72), transparent 34%), radial-gradient(ellipse at 92% 88%, rgba(0, 228, 178, .42), transparent 32%), radial-gradient(ellipse at 65% 45%, rgba(7, 87, 91, .9), transparent 54%);
+    transition: background-color .45s ease, background-image .45s ease;
   }
   .dark .noise::before { opacity: .65; background: radial-gradient(ellipse at 14% 20%, transparent 0 22%, rgba(43, 245, 198, .34) 23% 25%, transparent 26%), radial-gradient(ellipse at 78% 72%, transparent 0 25%, rgba(27, 226, 188, .3) 26% 28%, transparent 29%); }
+  .dark[data-theme="grid"] .noise { background-color: #07191d; background-image: linear-gradient(rgba(101, 160, 161, .14) 1px, transparent 1px), linear-gradient(90deg, rgba(101, 160, 161, .14) 1px, transparent 1px), radial-gradient(ellipse at 90% 18%, rgba(19, 157, 163, .45), transparent 38%); background-size: 58px 58px, 58px 58px, auto; }
+  .dark[data-theme="grid"] .noise::before { opacity: .35; background: linear-gradient(24deg, transparent 0 45%, rgba(44, 185, 184, .25) 46% 47%, transparent 48% 100%); filter: blur(12px); }
+  .dark[data-theme="starlight"] .noise { background-color: #061721; background-image: radial-gradient(circle at 15% 20%, rgba(105, 224, 211, .7) 0 1px, transparent 2px), radial-gradient(circle at 76% 12%, rgba(161, 237, 255, .65) 0 1px, transparent 2px), radial-gradient(circle at 45% 74%, rgba(117, 189, 255, .7) 0 1px, transparent 2px), radial-gradient(ellipse at 50% 30%, rgba(14, 104, 133, .55), transparent 55%); background-size: 180px 180px, 230px 230px, 270px 270px, auto; }
+  .dark[data-theme="starlight"] .noise::before { opacity: .4; background: radial-gradient(ellipse at 20% 50%, transparent 0 20%, rgba(51, 182, 215, .35) 25% 28%, transparent 34%), radial-gradient(ellipse at 80% 65%, transparent 0 22%, rgba(108, 101, 255, .3) 26% 29%, transparent 35%); }
+  .dark[data-theme="neon"] .noise { background-color: #101b38; background-image: radial-gradient(circle, rgba(226, 238, 255, .28) 0 1px, transparent 1.35px), radial-gradient(ellipse at 50% -8%, rgba(176, 239, 255, .92), transparent 43%), radial-gradient(ellipse at 6% 30%, rgba(191, 255, 239, .68), transparent 24%), radial-gradient(ellipse at 34% 44%, rgba(201, 128, 255, .82), transparent 28%), radial-gradient(ellipse at 70% 43%, rgba(53, 143, 255, .8), transparent 30%), radial-gradient(ellipse at 38% 76%, rgba(154, 112, 255, .7), transparent 28%), radial-gradient(ellipse at 88% 78%, rgba(197, 63, 228, .65), transparent 25%), linear-gradient(155deg, #17264a, #101532 54%, #081a2c); background-size: 8px 8px, auto, auto, auto, auto, auto, auto, auto; background-blend-mode: screen, screen, screen, screen, screen, screen, screen, normal; }
+  .dark[data-theme="neon"] .noise::before { opacity: .28; background: radial-gradient(ellipse at 20% 18%, transparent 0 18%, rgba(210, 247, 255, .5) 19% 20%, transparent 21%), radial-gradient(ellipse at 80% 64%, transparent 0 22%, rgba(74, 164, 255, .45) 23% 24%, transparent 25%); filter: blur(12px); }
   .noise::after {
     content: '';
     position: fixed;
