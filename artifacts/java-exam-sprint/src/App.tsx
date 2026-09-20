@@ -31,7 +31,6 @@ import {
   Play,
   RotateCcw,
   Sparkles,
-  Sun,
   Target,
   Trophy,
   X,
@@ -2661,7 +2660,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">{countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m to exam</span></div>
-            <div className="relative"><button type="button" onClick={() => setTheme((current) => current === 'aurora' ? 'grid' : current === 'grid' ? 'starlight' : current === 'starlight' ? 'neon' : 'aurora')} data-testid="button-theme-toggle" className="grid size-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground" aria-label={`Theme: ${theme}. Click to change`} title="Change background theme">{theme === 'aurora' ? <Sun size={17} /> : theme === 'grid' ? <Moon size={17} /> : theme === 'starlight' ? <Sparkles size={17} /> : <Zap size={17} />}</button><div className="pointer-events-none absolute right-0 top-11 z-30 whitespace-nowrap rounded-xl border border-border bg-card/95 px-3 py-2 opacity-0 shadow-lg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100"><span className="mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{theme} theme · click to cycle</span></div></div>
+            <label className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-muted-foreground" title="Choose background theme"><span className="mono text-[9px] uppercase tracking-[0.1em]">Theme</span><select value={theme} onChange={(event) => setTheme(event.target.value as typeof theme)} data-testid="select-theme" aria-label="Choose background theme" className="bg-transparent mono text-[10px] uppercase tracking-[0.08em] text-foreground outline-none"><option value="aurora">Aurora</option><option value="grid">Grid</option><option value="starlight">Starlight</option><option value="neon">Neon</option></select></label>
           </div>
         </header>
         <div className="mx-auto max-w-[1440px] px-5 py-7 sm:px-8 lg:px-10 lg:py-9">{children}</div>
