@@ -2527,6 +2527,59 @@ const nextSemesterCourses = [
   { code: 'SWE 4304', title: 'Software Project Lab I · individual', credits: '1.0' },
 ];
 
+const motivationQuotes = [
+  { quote: 'Small progress is still progress. Protect the next focused hour.', source: 'Sprintroom principle' },
+  { quote: 'You do not need to master the whole semester today. You only need to finish today well.', source: 'For the six-week sprint' },
+  { quote: 'Confusion is often the first visible edge of understanding.', source: 'Study note' },
+  { quote: 'Build the proof, run the test, write down what changed.', source: 'Project rule' },
+  { quote: 'Consistency compounds faster than intensity you cannot repeat.', source: 'Weekly rhythm' },
+  { quote: 'One solved problem is evidence that the next one is possible.', source: 'Problem-solving note' },
+  { quote: 'Start with the smallest honest version, then improve it.', source: 'Project rule' },
+  { quote: 'A difficult topic becomes familiar after enough patient contact.', source: 'Study note' },
+  { quote: 'Your future GPA is built in ordinary sessions no one applauds.', source: 'GPA 4.0 mission' },
+  { quote: 'Do not confuse slow progress with no progress.', source: 'Sprintroom principle' },
+  { quote: 'The first draft of a solution is allowed to be awkward.', source: 'Build note' },
+  { quote: 'Learn the pattern, test the edge case, explain the result.', source: 'Study loop' },
+  { quote: 'Rest is part of the plan when the plan is meant to last.', source: 'Recovery rule' },
+  { quote: 'You can lower the pace without lowering the standard.', source: 'Weekly rhythm' },
+  { quote: 'Every clean abstraction saves you effort later.', source: 'Design note' },
+  { quote: 'Make the next action so clear that starting feels easy.', source: 'Focus note' },
+  { quote: 'A blank page becomes a project one deliberate decision at a time.', source: 'Project rule' },
+  { quote: 'If you can trace it, you can debug it.', source: 'Engineering note' },
+  { quote: 'The goal is not to feel ready. The goal is to keep preparing.', source: 'Exam mindset' },
+  { quote: 'Protect your attention like it is one of your core resources.', source: 'Focus note' },
+  { quote: 'The hard part gets smaller when you give it a name.', source: 'Study note' },
+  { quote: 'Do the version that teaches you something.', source: 'Build note' },
+  { quote: 'A good question can move a whole study session forward.', source: 'Learning note' },
+  { quote: 'Keep the loop short: study, apply, test, reflect.', source: 'Daily rhythm' },
+  { quote: 'You are not behind while you are actively moving forward.', source: 'Sprintroom principle' },
+  { quote: 'The quality of your review matters more than the drama of your schedule.', source: 'Review rule' },
+  { quote: 'Write the invariant before you write the implementation.', source: 'Data structures note' },
+  { quote: 'A clear diagram is often the beginning of a clear system.', source: 'Systems note' },
+  { quote: 'A small tested feature beats a large imagined one.', source: 'Project rule' },
+  { quote: 'When the answer feels distant, return to the definitions.', source: 'Study note' },
+  { quote: 'The next hour does not need to fix the whole semester.', source: 'Focus note' },
+  { quote: 'Let mistakes become measurements, not verdicts.', source: 'Practice note' },
+  { quote: 'Finish the useful part before polishing the visible part.', source: 'Build note' },
+  { quote: 'The best time to make a plan sustainable is before it breaks you.', source: 'Recovery rule' },
+  { quote: 'Deep work begins with one decision to stay with the problem.', source: 'Focus note' },
+  { quote: 'A free variable is not a failure; it is information about the system.', source: 'Linear Algebra I' },
+  { quote: 'Every data structure earns trust through its edge cases.', source: 'Data Structures Library' },
+  { quote: 'A project becomes real when it can survive a test you did not expect.', source: 'Engineering note' },
+  { quote: 'Do not skip the basics because the advanced topic looks more impressive.', source: 'Study note' },
+  { quote: 'You can be ambitious and still leave room to breathe.', source: 'Daily rhythm' },
+  { quote: 'The work gets lighter when the next step is written down.', source: 'Focus note' },
+  { quote: 'A normalized schema is a conversation about what belongs together.', source: 'DBMS note' },
+  { quote: 'The processor only knows the sequence you design for it.', source: 'Computer Organization' },
+  { quote: 'Strong design is often the quiet removal of unnecessary decisions.', source: 'OOP II note' },
+  { quote: 'Review weak spots first; confidence can wait.', source: 'Final review rule' },
+  { quote: 'You do not need perfect conditions to make a meaningful start.', source: 'Sprintroom principle' },
+  { quote: 'One focused block is a vote for the person you are becoming.', source: 'Focus note' },
+  { quote: 'Keep showing up with curiosity and the map will get clearer.', source: 'Learning note' },
+  { quote: 'The semester is six weeks of choices, not one giant test.', source: 'GPA 4.0 mission' },
+  { quote: 'Close the day by noticing what you now understand that you did not before.', source: 'Evening review' },
+];
+
 const suggestedTimeAllocation = [
   { id: 'linear-algebra', label: 'Linear Algebra', hours: 6, color: '#5e8fcb' },
   { id: 'data-structures', label: 'Data Structures', hours: 6, color: '#4f9c7a' },
@@ -2837,6 +2890,7 @@ function Dashboard() {
   const [completedLecture15, setCompletedLecture15] = usePersisted<string[]>('java-sprint-lecture15-sections', []);
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [pomodoroTopic, setPomodoroTopic] = usePersisted('java-pomodoro-topic', 'OOP focus');
+  const [quoteIndex, setQuoteIndex] = usePersisted('java-motivation-quote-index', 0);
   const [scheduleNow, setScheduleNow] = useState(() => new Date());
   const [, setLocation] = useLocation();
   useEffect(() => {
@@ -2865,6 +2919,8 @@ function Dashboard() {
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
   const toggleModule = (id: string) => setCompletedModules((current) => current.includes(id) ? current.filter((module) => module !== id) : [...current, id]);
+  const currentQuote = motivationQuotes[quoteIndex % motivationQuotes.length];
+  const nextQuote = () => setQuoteIndex((current) => (current + 1) % motivationQuotes.length);
   const toggleLecture09Section = (id: string) => setCompletedLecture09((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture10Section = (id: string) => setCompletedLecture10((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture11Section = (id: string) => setCompletedLecture11((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
@@ -2939,15 +2995,16 @@ function Dashboard() {
           <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} onAccent /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-accent-foreground/65">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-accent-foreground/70">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground/70">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
         </section>
         <section className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-muted-foreground"><Zap size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Quick start</span></div><span className="rounded-full bg-[#e66b5d]/15 px-2.5 py-1 mono text-[9px] text-[#b94a40]">25 min</span></div>
-          <h2 className="mt-4 display text-[23px] font-bold">Exceptions, first principles</h2><p className="mt-2 text-[13px] leading-5 text-muted-foreground">Map the hierarchy, then predict a try / catch / finally flow.</p>
-          <button onClick={() => setLocation('/focus')} data-testid="button-quick-start" className="mt-5 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-[13px] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Open focus room <ArrowRight size={16} /></button>
+          <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-muted-foreground"><Zap size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Quick start · Week 1</span></div><span className="rounded-full bg-accent/15 px-2.5 py-1 mono text-[9px] text-accent-foreground">3h focus</span></div>
+          <h2 className="mt-4 display text-[23px] font-bold">Solve Ax = B, then build.</h2><p className="mt-2 text-[13px] leading-5 text-muted-foreground">Start with elimination, pivots, and LU factorization. Use the afternoon to turn that discipline into linked-list code.</p>
+          <button onClick={() => setLocation('/focus')} data-testid="button-quick-start" className="mt-5 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-[13px] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Start Week 1 focus <ArrowRight size={16} /></button>
         </section>
         <section className="rounded-[24px] border border-border bg-[#e3eee5] p-6 dark:bg-card">
           <div className="flex items-center gap-2 text-[#3f7559] dark:text-accent"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Tutor note</span></div>
-          <p className="mt-4 display text-[19px] font-semibold leading-snug text-[#234b38] dark:text-foreground">“When in doubt, ask: what is the reference type, and what is the runtime type?”</p>
-          <Link href="/learn/casting" data-testid="link-tutor-casting" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#3f7559] dark:text-accent">Review casting <ArrowRight size={14} /></Link>
+          <p className="mt-4 display text-[19px] font-semibold leading-snug text-[#234b38] dark:text-foreground">“Before solving Ax = B, mark the pivots. They reveal the rank, the free variables, and the shape of every solution.”</p>
+          <Link href="/learn/linear-algebra-i" data-testid="link-tutor-linear-algebra" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#3f7559] dark:text-accent">Review Linear Algebra I <ArrowRight size={14} /></Link>
         </section>
+        <section className="relative overflow-hidden rounded-[24px] border border-accent/30 bg-accent/10 p-6 shadow-sm"><div className="absolute -right-10 -top-12 size-32 rounded-full border-[14px] border-accent/15" /><div className="relative"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2 text-accent-foreground"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Keep going</span></div><button type="button" onClick={nextQuote} data-testid="button-next-quote" aria-label="Show another motivation quote" className="grid size-8 place-items-center rounded-lg border border-accent/30 bg-background/35 text-accent-foreground transition-colors hover:bg-accent/20"><RotateCcw size={14} /></button></div><p className="mt-5 display text-[19px] font-semibold leading-snug text-foreground">“{currentQuote.quote}”</p><div className="mt-4 flex items-center justify-between gap-3"><span className="mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{currentQuote.source}</span><span className="mono text-[10px] text-muted-foreground">{(quoteIndex % motivationQuotes.length) + 1}/{motivationQuotes.length}</span></div></div></section>
       </div>
     </div>
   </div>;
