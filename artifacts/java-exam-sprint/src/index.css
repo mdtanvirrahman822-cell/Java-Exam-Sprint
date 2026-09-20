@@ -167,10 +167,37 @@
   .bg-card\/95 { background-color: color-mix(in srgb, hsl(var(--card)) 82%, transparent); }
   .bg-sidebar-accent\/70 { background-color: color-mix(in srgb, hsl(var(--sidebar-accent)) 72%, transparent); }
   .bg-card:hover, .bg-background\/40:hover, .bg-background\/45:hover { box-shadow: 0 14px 34px hsl(var(--foreground) / 0.1), inset 0 1px 0 hsl(var(--primary-foreground) / 0.1); }
+  .dark .bg-background\/40 .text-accent-foreground,
+  .dark .bg-background\/45 .text-accent-foreground,
+  .dark .bg-accent\/10 .text-accent-foreground,
+  .dark .bg-accent\/15 .text-accent-foreground { color: hsl(var(--foreground)); }
   .noise {
     position: relative;
     isolation: isolate;
+    background-color: #f4f1e9;
+    background-image: radial-gradient(ellipse at 8% 8%, rgba(20, 208, 171, .2), transparent 34%), radial-gradient(ellipse at 92% 88%, rgba(0, 180, 150, .12), transparent 32%), radial-gradient(ellipse at 65% 45%, rgba(211, 239, 226, .5), transparent 54%);
+    background-attachment: fixed;
   }
+  .noise.bg-background {
+    background-color: #f4f1e9;
+  }
+  .noise::before {
+    content: '';
+    position: fixed;
+    inset: -15%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: .16;
+    background: radial-gradient(ellipse at 14% 20%, transparent 0 22%, rgba(43, 190, 160, .3) 23% 25%, transparent 26%), radial-gradient(ellipse at 78% 72%, transparent 0 25%, rgba(27, 180, 160, .25) 26% 28%, transparent 29%);
+    filter: blur(16px);
+    transform: rotate(-8deg) scale(1.08);
+  }
+  .dark .noise,
+  .dark .noise.bg-background {
+    background-color: #062e32;
+    background-image: radial-gradient(ellipse at 8% 8%, rgba(20, 208, 171, .72), transparent 34%), radial-gradient(ellipse at 92% 88%, rgba(0, 228, 178, .42), transparent 32%), radial-gradient(ellipse at 65% 45%, rgba(7, 87, 91, .9), transparent 54%);
+  }
+  .dark .noise::before { opacity: .65; background: radial-gradient(ellipse at 14% 20%, transparent 0 22%, rgba(43, 245, 198, .34) 23% 25%, transparent 26%), radial-gradient(ellipse at 78% 72%, transparent 0 25%, rgba(27, 226, 188, .3) 26% 28%, transparent 29%); }
   .noise::after {
     content: '';
     position: fixed;

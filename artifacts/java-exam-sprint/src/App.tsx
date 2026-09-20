@@ -64,7 +64,7 @@ const gpaGradeScale = [
 ];
 type GpaCourse = { id: number; name: string; credits: number; grade: string };
 
-const topics: Topic[] = [
+const legacyTopics: Topic[] = [
   {
     id: 'exceptions',
     week: 'Week 9',
@@ -202,6 +202,15 @@ class Circle extends Shape {
 }`,
     check: 'A solid line with a hollow triangle points from subclass to superclass. A dashed line with a hollow triangle means realization (implements). Diamonds belong at the whole side: hollow for aggregation, filled for composition.',
   },
+];
+
+const topics: Topic[] = [
+  { id: 'linear-algebra-i', week: 'Week 1', title: 'Linear Algebra I', eyebrow: 'Foundations', blurb: 'Build the algebraic intuition behind systems, factorization, and vector spaces.', accent: '#5e8fcb', concepts: ['Solving Ax = B', 'Pivots and elimination', 'LU factorization', 'Vector spaces'], summary: 'Start with elimination, pivots, multipliers, back substitution, and LU factorization. Then connect the mechanics to column space, rank, nullspace, and the special solutions of Ax = 0.', example: `Ax = B\nA = LU\n\ncolumn space · rank · nullspace`, check: 'Track the pivots first. They reveal the rank, the free variables, and the structure of every solution.' },
+  { id: 'linear-algebra-ii', week: 'Week 2', title: 'Linear Algebra II', eyebrow: 'Structure and approximation', blurb: 'Move from subspaces to projections, eigenvalues, and the geometry of approximation.', accent: '#3e93a8', concepts: ['Basis and dimension', 'Least squares', 'Gram-Schmidt and QR', 'Determinants and eigenvalues'], summary: 'Study the four fundamental subspaces, projections, Gram-Schmidt, QR factorization, determinants, eigenvalues, eigenvectors, and the behavior of Aᵏ.', example: `Aq = λq\n\nprojection + orthogonalization\n→ least-squares solution`, check: 'A basis describes a space without redundancy. Eigenvectors reveal directions that a transformation scales rather than turns.' },
+  { id: 'data-structures', week: 'Weeks 1–2', title: 'Data Structures Library', eyebrow: 'Build from scratch', blurb: 'Turn core data-structure ideas into a tested library that grows across the first two weeks.', accent: '#4f9c7a', concepts: ['Linked lists', 'Stacks and queues', 'Trees and BST traversal', 'Hashing basics'], summary: 'Implement linked lists with arrays, records, pointers, and variable-length strings. Add sequential and circular stacks and queues, then build trees, traversal, copying, printing, and introductory collision resolution.', example: `push(value)\npop()\nenqueue(value)\n\nBST → traverse → hash`, check: 'A data structure is only useful when its invariants survive real operations. Test empty, full, duplicate, and boundary cases.' },
+  { id: 'theory-regex', week: 'Week 3', title: 'Theory of Computing + Regex Engine', eyebrow: 'Languages and machines', blurb: 'Connect discrete mathematics to automata theory, regular sets, and a working matcher.', accent: '#8472c8', concepts: ['Discrete math and proofs', 'Finite automata', 'Regular expressions', 'DFA simulator and matching'], summary: 'Review relations, digraphs, strings, proofs, and inductive definitions. Study deterministic and non-deterministic automata, closure properties, then implement and test the DFA simulator and regex matching logic.', example: `pattern → automaton →\nDFA state transitions → match`, check: 'A regex describes a language; the engine accepts or rejects strings by moving through a machine that recognizes that language.' },
+  { id: 'dbms-organization', week: 'Weeks 4–5', title: 'DBMS + Computer Organization', eyebrow: 'Systems in layers', blurb: 'Design a normalized library system while learning how processors fetch, decode, and execute instructions.', accent: '#d19a39', concepts: ['CFGs and Turing machines', 'Relational design and SQL', 'Transactions and recovery', 'CPU and control unit'], summary: 'Cover context-free grammars, push-down automata, Turing machines, decidability, and the Chomsky hierarchy. Then move through ER modeling, normalization, SQL, transactions, processors, ALUs, caches, DMA, and RISC/CISC while building the LMS and CPU simulator.', example: `ER model → normalized schema\nSQL transaction → recovery\nfetch → decode → execute`, check: 'Good systems thinking moves between abstractions: language models, data models, queries, hardware components, and the contracts between them.' },
+  { id: 'oop-integration', week: 'Week 6', title: 'OOP II + Integration', eyebrow: 'Ship the system', blurb: 'Use design principles and web architecture to bring the Library Management System together.', accent: '#d56e9a', concepts: ['UML and multithreading', 'Client-server and web services', 'SOLID principles', 'MVC integration and cleanup'], summary: 'Review UML, synchronization, client-server programming, RPC, XML, JSON, and web services. Apply SOLID principles, wrap the LMS in MVC, finish the CPU simulator, and use the final two days for weak spots only.', example: `Controller → Service → Model\n\nDependency Inversion\n+ final integration tests`, check: 'Integration is where design choices meet reality. Keep responsibilities focused, dependencies replaceable, and the last review aimed at known weak spots.' },
 ];
 
 type LectureSection = { id: string; title: string; points: string[] };
@@ -1374,9 +1383,7 @@ const lecture09Scenarios: Scenario[] = [
 int[] data = {10, 20, 30};
 divideElement(data, 1, 0);
 divideElement(data, 5, 2);`,
-    options: [
-      'The first call reports division by zero; the second reports an invalid index.',
-      'The first prints 20; the second stops the whole application.',
+  options: [
       'Both calls are handled by ArithmeticException.',
       'The array-index catch must come before the arithmetic catch.',
     ],
@@ -2953,7 +2960,7 @@ function Learn() {
   const active = topics.find((topic) => topic.id === selected) ?? topics[0];
   const filtered = topics.filter((topic) => `${topic.title} ${topic.concepts.join(' ')}`.toLowerCase().includes(query.toLowerCase()));
   return <div className="rise">
-    <SectionIntro kicker="Learn · Weeks 9—15" title="A compact map of the syllabus." detail="Seven high-yield rooms. Read the explanation, trace the example, then test the idea in Practice or the Coding Lab." action={<div className="relative"><BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} data-testid="input-search-topics" placeholder="Search a concept" className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-[13px] shadow-sm outline-none placeholder:text-muted-foreground/70 focus:border-accent sm:w-56" /></div>} />
+    <SectionIntro kicker="Learn · Weeks 1—6" title="A compact map of the next semester." detail="Six high-yield rooms. Read the explanation, trace the example, then test the idea in Practice or the Coding Lab." action={<div className="relative"><BookOpen className="absolute left-3 top-3 text-muted-foreground" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} data-testid="input-search-topics" placeholder="Search a concept" className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-[13px] shadow-sm outline-none placeholder:text-muted-foreground/70 focus:border-accent sm:w-56" /></div>} />
     <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
       <div className="space-y-2">{filtered.map((topic, index) => <button onClick={() => setSelected(topic.id)} key={topic.id} data-testid={`button-topic-${topic.id}`} className={`rise-${Math.min(index + 1, 4)} group w-full rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${active.id === topic.id ? 'border-foreground bg-primary text-primary-foreground shadow-md' : 'border-border bg-card shadow-sm hover:border-accent/60'}`}><div className="flex items-start justify-between gap-3"><div><div className={`mono text-[10px] uppercase tracking-[0.14em] ${active.id === topic.id ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>{topic.week}</div><h2 className="mt-1 display text-[19px] font-bold">{topic.title}</h2></div><span className="mt-1 size-3 rounded-full" style={{ backgroundColor: topic.accent }} /></div><p className={`mt-2 text-[12px] leading-5 ${active.id === topic.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{topic.blurb}</p><div className="mt-3 flex flex-wrap gap-1.5">{topic.concepts.slice(0, 3).map((concept) => <span key={concept} className={`rounded-md px-2 py-1 mono text-[9px] ${active.id === topic.id ? 'bg-primary-foreground/10 text-primary-foreground/75' : 'bg-secondary text-secondary-foreground'}`}>{concept}</span>)}</div></button>)}</div>
       <article className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
