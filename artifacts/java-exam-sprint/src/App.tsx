@@ -19,6 +19,7 @@ import {
   Coffee,
   FileText,
   Flame,
+  FolderKanban,
   Gauge,
   GraduationCap,
   Menu,
@@ -2511,6 +2512,7 @@ const navItems = [
   { href: '/', label: 'Cockpit', icon: PanelsTopLeft },
   { href: '/learn', label: 'Learn', icon: BookOpenText },
   { href: '/gpa', label: 'GPA', icon: Calculator },
+  { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/practice', label: 'Practice', icon: BrainCircuit },
   { href: '/lab', label: 'Coding lab', icon: SquareTerminal },
   { href: '/focus', label: 'Focus timer', icon: TimerReset },
@@ -2528,6 +2530,16 @@ const nextSemesterCourses = [
   { code: 'SWE 4301', title: 'Object Oriented Concepts II', credits: '3.0' },
   { code: 'SWE 4302', title: 'Object Oriented Concepts II Lab', credits: '1.5' },
   { code: 'SWE 4304', title: 'Software Project Lab I · individual', credits: '1.0' },
+];
+
+const projects = [
+  { id: 'ds-library', week: 'Weeks 1–2', title: 'Data Structures Library', detail: 'Build linked lists, stacks, queues, trees, BST traversal, and hashing from scratch.', tag: 'Core library', accent: '#4f9c7a' },
+  { id: 'regex-engine', week: 'Week 3', title: 'Regex Engine', detail: 'Implement a DFA simulator and wire it to matching and edge-case tests.', tag: 'Theory applied', accent: '#8472c8' },
+  { id: 'library-system', week: 'Week 4', title: 'Library Management System', detail: 'Design a normalized schema from ER modeling, then carry it into the LMS backend.', tag: 'DBMS system', accent: '#d19a39' },
+  { id: 'bharakoto', week: 'Next idea', title: 'Bharakoto', detail: 'Build a web app that lists fare options for different vehicles between selected locations, helping users compare prices quickly and clearly.', tag: 'Travel fare app', accent: '#5aa9e6' },
+  { id: 'bunk-margin', week: 'Smart planner', title: 'Bunk Margin', detail: 'Create an attendance safety calculator that tells students how many classes they can skip while still staying above the minimum attendance threshold.', tag: 'Attendance safety', accent: '#f59e0b' },
+  { id: 'stadiumseat', week: 'Venue app', title: 'StadiumSEAT', detail: 'Create a stadium seating web app with an aerial top-down view of seats and ticket zones, helping users choose the best available seats in a stadium layout.', tag: 'Seat booking', accent: '#ef476f' },
+  { id: 'cpu-simulator', week: 'Weeks 5–6', title: 'CPU Simulator', detail: 'Model the fetch-decode-execute cycle and finish it alongside the MVC LMS integration.', tag: 'Systems build', accent: '#3e93a8' },
 ];
 
 const motivationQuotes = [
@@ -3139,8 +3151,14 @@ function Notes() {
   </div>;
 }
 
+function Projects() {
+  const [completedProjects, setCompletedProjects] = usePersisted<string[]>('java-semester-projects', []);
+  const toggleProject = (id: string) => setCompletedProjects((current) => current.includes(id) ? current.filter((project) => project !== id) : [...current, id]);
+  return <div className="rise"><SectionIntro kicker="Projects · four real builds" title="Turn the syllabus into evidence." detail="Each project is a checkpoint for the semester. Ship the smallest useful version, test it, and keep the build connected to the theory you studied." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><FolderKanban size={16} className="text-accent" /><span className="mono text-[12px]">{completedProjects.length}/{projects.length} shipped</span></div>} /><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{projects.map((project, index) => { const done = completedProjects.includes(project.id); return <article key={project.id} className={`group relative overflow-hidden rounded-[20px] border bg-card p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${done ? 'border-accent/60' : 'border-border'}`}><div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: project.accent }} /><div className="flex items-start justify-between gap-3"><div><span className="mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{project.week}</span><h2 className="mt-2 display text-[18px] font-bold leading-tight">{project.title}</h2></div><span className="rounded-full bg-secondary px-2 py-1 mono text-[8px] uppercase tracking-[0.08em] text-secondary-foreground">{project.tag}</span></div><p className="mt-3 min-h-[72px] text-[12px] leading-5 text-muted-foreground">{project.detail}</p><div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4"><span className={`mono text-[10px] uppercase tracking-[0.1em] ${done ? 'text-accent-foreground' : 'text-muted-foreground'}`}>{done ? 'Marked shipped' : `Build ${index + 1} of ${projects.length}`}</span><button type="button" onClick={() => toggleProject(project.id)} aria-pressed={done} data-testid={`button-project-${project.id}`} className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-bold transition-colors ${done ? 'bg-accent text-accent-foreground' : 'border border-border bg-background hover:border-accent hover:bg-accent/10'}`}><Check size={14} />{done ? 'Shipped' : 'Mark shipped'}</button></div></article>; })}</div></div>;
+}
+
 function Router() {
-  return <Switch><Route path="/" component={Dashboard} /><Route path="/learn" component={Learn} /><Route path="/learn/:topic" component={Learn} /><Route path="/gpa" component={Gpa} /><Route path="/practice" component={Practice} /><Route path="/lab" component={CodingLab} /><Route path="/focus" component={Focus} /><Route path="/notes" component={Notes} /><Route component={NotFound} /></Switch>;
+  return <Switch><Route path="/" component={Dashboard} /><Route path="/learn" component={Learn} /><Route path="/learn/:topic" component={Learn} /><Route path="/gpa" component={Gpa} /><Route path="/projects" component={Projects} /><Route path="/practice" component={Practice} /><Route path="/lab" component={CodingLab} /><Route path="/focus" component={Focus} /><Route path="/notes" component={Notes} /><Route component={NotFound} /></Switch>;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
