@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -88,8 +88,8 @@
   --chart-3: 199 65% 43%;
   --chart-4: 34 80% 55%;
   --chart-5: 210 43% 15%;
-  --app-font-sans: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
-  --app-font-mono: 'DM Mono', ui-monospace, monospace;
+  --app-font-sans: 'Josefin Sans', ui-sans-serif, sans-serif;
+  --app-font-mono: 'Josefin Sans', ui-sans-serif, sans-serif;
   --radius: 0.85rem;
   --shadow-2xs: 0 1px 0 rgba(16, 35, 52, 0.04);
   --shadow-xs: 0 2px 6px rgba(16, 35, 52, 0.05);
@@ -155,7 +155,18 @@
 
 @layer utilities {
   .mono { font-family: var(--app-font-mono); }
-  .display { font-family: var(--app-font-sans); letter-spacing: -0.045em; }
+  .display { font-family: var(--app-font-sans); letter-spacing: 0; }
+  .bg-card, .bg-card\/95, .bg-background\/40, .bg-background\/45, .bg-sidebar-accent\/70 {
+    background-color: color-mix(in srgb, hsl(var(--card)) 72%, transparent);
+    background-image: linear-gradient(135deg, hsl(var(--foreground) / 0.045), transparent 42%);
+    border-color: color-mix(in srgb, hsl(var(--border)) 78%, transparent);
+    box-shadow: 0 10px 30px hsl(var(--foreground) / 0.06), inset 0 1px 0 hsl(var(--primary-foreground) / 0.08);
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
+  }
+  .bg-card\/95 { background-color: color-mix(in srgb, hsl(var(--card)) 82%, transparent); }
+  .bg-sidebar-accent\/70 { background-color: color-mix(in srgb, hsl(var(--sidebar-accent)) 72%, transparent); }
+  .bg-card:hover, .bg-background\/40:hover, .bg-background\/45:hover { box-shadow: 0 14px 34px hsl(var(--foreground) / 0.1), inset 0 1px 0 hsl(var(--primary-foreground) / 0.1); }
   .noise {
     position: relative;
     isolation: isolate;
