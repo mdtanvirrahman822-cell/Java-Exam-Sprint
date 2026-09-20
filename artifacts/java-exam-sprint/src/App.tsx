@@ -2653,11 +2653,11 @@ function Shell({ children }: { children: ReactNode }) {
       </aside>
       {mobileOpen && <button aria-label="Close menu" data-testid="button-close-menu" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-foreground/25 lg:hidden" />}
       <main className="min-h-[100dvh] lg:pl-[248px]">
-        <header className="sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-border/80 bg-background/90 px-5 backdrop-blur-md sm:px-8 lg:px-10">
+        <header className="app-header sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-border/80 bg-background/90 px-5 backdrop-blur-md sm:px-8 lg:px-10">
           <div className="flex items-center gap-3">
             <button className="grid size-9 place-items-center rounded-lg border border-border bg-card lg:hidden" aria-label="Open menu" data-testid="button-open-menu" onClick={() => setMobileOpen(true)}><Menu size={18} /></button>
             <div className="lg:hidden display text-[17px] font-bold">{currentLabel}</div>
-            <div className="hidden items-center gap-2 text-[12px] text-muted-foreground lg:flex"><span className="mono uppercase tracking-[0.13em]">Sprintroom</span><ChevronRight size={13} /><span>{currentLabel}</span></div>
+            <div className="hidden items-center gap-2 text-[12px] text-muted-foreground lg:flex"><span className="header-crumb mono uppercase tracking-[0.13em]">Sprintroom</span><ChevronRight size={13} className="text-accent" /><span className="header-current rounded-md px-2 py-1 font-semibold text-foreground">{currentLabel}</span></div>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">{countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m to exam</span></div>
