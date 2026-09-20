@@ -628,13 +628,56 @@ const lecture15Sections: LectureSection[] = [
 ];
 
 type ScheduleTask = { id: string; day: string; time: string; duration: string; practice?: string; breakAfter?: string; title: string; detail: string; topic: string; lecture: string; lectureSections?: LectureSection[] };
+const makeWeekModules = (week: number, modules: [string, string[]][]): LectureSection[] => modules.map(([title, points], index) => ({ id: `week${week}-module${index + 1}`, title, points }));
+const week1Modules = makeWeekModules(1, [
+  ['Module 1: Solving Ax = B', ['Elimination, pivots, multipliers, back substitution, and LU factorization.']],
+  ['Module 2: Vector Spaces', ['Column space, rank of A, nullspace, and special solutions to Ax = 0.']],
+  ['Module 3: Linked List Foundations', ['Arrays, records, pointers, variable-length strings, and linked list implementation.']],
+  ['Module 4: Stacks & Queues', ['Sequential and circular implementation plus real-world applications.']],
+  ['Module 5: Practice & Code Review', ['Problem sets on elimination/LU; test and debug the linked list and stack/queue code.']],
+]);
+const week2Modules = makeWeekModules(2, [
+  ['Module 1: Basis & Dimension', ['The four fundamental subspaces.']],
+  ['Module 2: Least Squares & Orthogonalization', ['Projections, Gram-Schmidt, and QR factorization.']],
+  ['Module 3: Determinants & Eigenvalues', ['Cofactor formula, eigenvalues/eigenvectors, and computing Aᵏ.']],
+  ['Module 4: Trees', ['Creation, representation, traversal, copying, and printing.']],
+  ['Module 5: Hashing Basics', ['Extraction, compression, division/multiplication, and an introduction to collision resolution.']],
+]);
+const week3Modules = makeWeekModules(3, [
+  ['Module 1: Discrete Math Review', ['Binary relations, digraphs, strings, proofs, and inductive definitions.']],
+  ['Module 2: Finite Automata', ['Deterministic and non-deterministic automata plus regular expressions.']],
+  ['Module 3: Properties of Regular Sets', ['Closure properties and pattern matching foundations.']],
+  ['Module 4: Regex Engine — Core Build', ['Implement the DFA simulator logic.']],
+  ['Module 5: Regex Engine — Matching & Testing', ['Wire up matching logic and test against sample patterns.']],
+]);
+const week4Modules = makeWeekModules(4, [
+  ['Module 1: Context-Free Grammars & Push-Down Automata', ['Properties of context-free languages.']],
+  ['Module 2: Turing Machines & Decidability', ['The halting problem, computability, and recursion function theory.']],
+  ['Module 3: Chomsky Hierarchy & Complexity', ['Deterministic CFLs, closure properties, and computational complexity.']],
+  ['Module 4: DBMS Foundations', ['Relational model, relational algebra, ER modeling, and normalization.']],
+  ['Module 5: LMS Schema Design', ['Apply ER modeling and normalization to design the Library Management System schema.']],
+]);
+const week5Modules = makeWeekModules(5, [
+  ['Module 1: SQL Practice', ['Joins, subqueries, aggregation, and embedded SQL.']],
+  ['Module 2: Transactions & Concurrency', ['Transaction management, concurrency control, and database recovery.']],
+  ['Module 3: Processor Organization', ['Registers, buses, multiplexers, decoders, ALUs, and caches.']],
+  ['Module 4: Control Unit & I/O Systems', ['Hardwired vs. microprogrammed control, DMA, and RISC vs. CISC.']],
+  ['Module 5: LMS Backend + CPU Simulator Kickoff', ['Build SQL-backed LMS logic and start the fetch-decode-execute cycle.']],
+]);
+const week6Modules = makeWeekModules(6, [
+  ['Module 1: OOP Review & Multithreading', ['UML diagrams, synchronization, and class/object relationships.']],
+  ['Module 2: Client-Server & Web Programming', ['RPC, distributed objects, XML, JSON, and web services.']],
+  ['Module 3: SOLID Design Principles', ['Single Responsibility, Open/Close, Liskov Substitution, Interface Segregation, and Dependency Inversion.']],
+  ['Module 4: MVC Integration', ['Wrap the Library Management System in an MVC structure.']],
+  ['Module 5: Final Review & Cleanup', ['Finish the CPU simulator; revisit weak spots only, with no new material.']],
+]);
 const schedule: ScheduleTask[] = [
-  { id: 'week1', day: 'Week 1', time: 'Study + build', duration: '7 days', practice: 'Data Structures Library', breakAfter: 'Keep one recovery block each day', title: 'Linear Algebra I + DS Library', detail: 'Study Ax=B, LU factorization, and vector spaces from Strang Chapters 1–3. Build linked lists, stacks, and queues from scratch.', topic: 'Linear Algebra · Data Structures', lecture: 'Data Structures Library' },
-  { id: 'week2', day: 'Week 2', time: 'Study + build', duration: '7 days', practice: 'Data Structures Library', breakAfter: 'Review Week 1 code before extending it', title: 'Linear Algebra II + DS Library', detail: 'Study eigenvalues, eigenvectors, and determinants. Build trees with BST traversal, then begin hashing.', topic: 'Linear Algebra · Data Structures', lecture: 'Data Structures Library' },
-  { id: 'week3', day: 'Week 3', time: 'Study + build', duration: '7 days', practice: 'Regex Engine', breakAfter: 'Test the matcher against edge cases', title: 'Theory of Computing + Regex Engine', detail: 'Move from discrete math to finite automata and regex. Build a DFA simulator or regex matcher.', topic: 'Theory of Computing', lecture: 'Regex Engine' },
-  { id: 'week4', day: 'Week 4', time: 'Study + build', duration: '7 days', practice: 'Library Mgmt System', breakAfter: 'Diagram the schema before writing tables', title: 'Theory of Computing II + DBMS', detail: 'Study CFGs, Turing machines, and the Chomsky hierarchy alongside relational models, ER diagrams, and normalization. Design the Library Management System schema.', topic: 'Theory of Computing · DBMS', lecture: 'Library Mgmt System' },
-  { id: 'week5', day: 'Week 5', time: 'Study + build', duration: '7 days', practice: 'LMS + CPU Simulator', breakAfter: 'Keep the backend and simulator milestones separate', title: 'DBMS Practice + Computer Organization', detail: 'Practice joins, subqueries, and transactions. Study processor components, instruction cycles, and RISC/CISC. Build the LMS backend and start the CPU simulator.', topic: 'DBMS · Computer Organization', lecture: 'LMS + CPU Simulator' },
-  { id: 'week6', day: 'Week 6', time: 'Integrate + review', duration: '7 days', practice: 'LMS + CPU Simulator', breakAfter: 'Last 2 days · review weak spots only', title: 'OOP II + Integration', detail: 'Study SOLID principles, MVC, and web services. Wrap the LMS in MVC, finish the CPU simulator, then spend the final two days on weak spots only.', topic: 'OOP II · Integration', lecture: 'LMS + CPU Simulator' },
+  { id: 'week1', day: 'Week 1', time: 'Study + build', duration: '7 days', practice: 'Data Structures Library', breakAfter: 'Keep one recovery block each day', title: 'Linear Algebra I + DS Library', detail: 'Study Ax=B, LU factorization, and vector spaces from Strang Chapters 1–3. Build linked lists, stacks, and queues from scratch.', topic: 'Linear Algebra · Data Structures', lecture: 'Data Structures Library', lectureSections: week1Modules },
+  { id: 'week2', day: 'Week 2', time: 'Study + build', duration: '7 days', practice: 'Data Structures Library', breakAfter: 'Review Week 1 code before extending it', title: 'Linear Algebra II + DS Library', detail: 'Study eigenvalues, eigenvectors, and determinants. Build trees with BST traversal, then begin hashing.', topic: 'Linear Algebra · Data Structures', lecture: 'Data Structures Library', lectureSections: week2Modules },
+  { id: 'week3', day: 'Week 3', time: 'Study + build', duration: '7 days', practice: 'Regex Engine', breakAfter: 'Test the matcher against edge cases', title: 'Theory of Computing + Regex Engine', detail: 'Move from discrete math to finite automata and regex. Build a DFA simulator or regex matcher.', topic: 'Theory of Computing', lecture: 'Regex Engine', lectureSections: week3Modules },
+  { id: 'week4', day: 'Week 4', time: 'Study + build', duration: '7 days', practice: 'Library Mgmt System', breakAfter: 'Diagram the schema before writing tables', title: 'Theory of Computing II + DBMS', detail: 'Study CFGs, Turing machines, and the Chomsky hierarchy alongside relational models, ER diagrams, and normalization. Design the Library Management System schema.', topic: 'Theory of Computing · DBMS', lecture: 'Library Mgmt System', lectureSections: week4Modules },
+  { id: 'week5', day: 'Week 5', time: 'Study + build', duration: '7 days', practice: 'LMS + CPU Simulator', breakAfter: 'Keep the backend and simulator milestones separate', title: 'DBMS Practice + Computer Organization', detail: 'Practice joins, subqueries, and transactions. Study processor components, instruction cycles, and RISC/CISC. Build the LMS backend and start the CPU simulator.', topic: 'DBMS · Computer Organization', lecture: 'LMS + CPU Simulator', lectureSections: week5Modules },
+  { id: 'week6', day: 'Week 6', time: 'Integrate + review', duration: '7 days', practice: 'LMS + CPU Simulator', breakAfter: 'Last 2 days · review weak spots only', title: 'OOP II + Integration', detail: 'Study SOLID principles, MVC, and web services. Wrap the LMS in MVC, finish the CPU simulator, then spend the final two days on weak spots only.', topic: 'OOP II · Integration', lecture: 'LMS + CPU Simulator', lectureSections: week6Modules },
 ];
 
 function isScheduleTaskRunning(task: ScheduleTask, reference: Date) {
@@ -2478,6 +2521,17 @@ const nextSemesterCourses = [
   { code: 'SWE 4304', title: 'Software Project Lab I · individual', credits: '1.0' },
 ];
 
+const suggestedTimeAllocation = [
+  { id: 'linear-algebra', label: 'Linear Algebra', hours: 6, color: '#5e8fcb' },
+  { id: 'data-structures', label: 'Data Structures', hours: 6, color: '#4f9c7a' },
+  { id: 'computer-organization', label: 'Computer Organization', hours: 5, color: '#d19a39' },
+  { id: 'dbms', label: 'DBMS', hours: 6, color: '#3e93a8' },
+  { id: 'theory', label: 'Theory of Computing', hours: 6, color: '#8472c8' },
+  { id: 'oop', label: 'OOP Concepts II', hours: 5, color: '#d56e9a' },
+  { id: 'projects', label: 'Projects · all 4 combined', hours: 10, color: '#e66b5d' },
+  { id: 'buffer', label: 'Buffer / Rest', hours: 4, color: '#8793a1' },
+];
+
 function usePersisted<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
     try {
@@ -2712,6 +2766,17 @@ function DashboardPomodoro({ selectedTopic }: { selectedTopic: string }) {
   </section>;
 }
 
+function TimeAllocationPlanner() {
+  const [budget, setBudget] = usePersisted('java-time-budget', 42);
+  const [allocation, setAllocation] = usePersisted<Record<string, number>>('java-time-allocation', Object.fromEntries(suggestedTimeAllocation.map((item) => [item.id, item.hours])));
+  const totalHours = suggestedTimeAllocation.reduce((total, item) => total + (allocation[item.id] ?? 0), 0);
+  const difference = totalHours - budget;
+  const status = difference === 0 ? 'On budget' : difference > 0 ? `Over budget by ${difference}h` : `Under budget by ${Math.abs(difference)}h`;
+  const updateHours = (id: string, hours: number) => setAllocation((current) => ({ ...current, [id]: hours }));
+  const reset = () => { setBudget(42); setAllocation(Object.fromEntries(suggestedTimeAllocation.map((item) => [item.id, item.hours]))); };
+  return <section className="mt-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Time allocation planner</span></div><h2 className="mt-2 display text-[23px] font-bold">Shape the week before it shapes you.</h2><p className="mt-2 max-w-2xl text-[13px] leading-6 text-muted-foreground">Adjust the sliders to split your weekly study hours across courses, projects, and recovery. Your plan stays saved in this browser.</p></div><button type="button" onClick={reset} data-testid="button-reset-time-allocation" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-[12px] font-bold transition-colors hover:border-accent hover:bg-accent/10">Reset to suggested split</button></div><div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_.85fr]"><div><div className="flex items-center justify-between gap-3"><label htmlFor="weekly-hour-budget" className="text-[13px] font-bold">Weekly hour budget</label><span className="mono text-[13px] font-bold text-accent-foreground">{budget}h</span></div><input id="weekly-hour-budget" type="range" min="0" max="80" step="1" value={budget} onChange={(event) => setBudget(Number(event.target.value))} data-testid="input-weekly-hour-budget" className="mt-3 w-full accent-[hsl(var(--accent))]" /><div className="mt-1 flex justify-between mono text-[9px] text-muted-foreground"><span>0h</span><span>80h</span></div><div className="mt-6 space-y-3">{suggestedTimeAllocation.map((item) => { const hours = allocation[item.id] ?? 0; return <div key={item.id}><div className="flex items-center justify-between gap-3"><label htmlFor={`allocation-${item.id}`} className="min-w-0 truncate text-[12px] font-semibold">{item.label}</label><span className="shrink-0 mono text-[11px] text-muted-foreground">{hours}h</span></div><input id={`allocation-${item.id}`} type="range" min="0" max="20" step="1" value={hours} onChange={(event) => updateHours(item.id, Number(event.target.value))} data-testid={`input-allocation-${item.id}`} aria-label={`${item.label} hours per week`} className="mt-1.5 w-full accent-[hsl(var(--accent))]" /></div>; })}</div></div><div className="rounded-2xl border border-border bg-background/45 p-4"><div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Live split</div><div className="mt-1 display text-[25px] font-bold">{totalHours}h <span className="text-[13px] font-medium text-muted-foreground">planned</span></div></div><span className={`rounded-full px-3 py-1 mono text-[10px] font-bold ${difference === 0 ? 'bg-[#4f9c7a]/15 text-[#3f7559]' : difference > 0 ? 'bg-[#e66b5d]/15 text-[#b94a40]' : 'bg-accent/20 text-accent-foreground'}`}>{status}</span></div><div className="mt-5 flex h-8 w-full overflow-hidden rounded-lg bg-secondary" aria-label="Proportional weekly time allocation chart" role="img">{suggestedTimeAllocation.map((item) => { const hours = allocation[item.id] ?? 0; return hours > 0 ? <div key={item.id} title={`${item.label}: ${hours}h`} style={{ width: `${totalHours ? (hours / totalHours) * 100 : 0}%`, backgroundColor: item.color }} /> : null; })}</div><div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">{suggestedTimeAllocation.map((item) => <div key={item.id} className="flex min-w-0 items-center gap-2 text-[11px]"><span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: item.color }} /><span className="truncate text-muted-foreground">{item.label}</span><span className="ml-auto mono text-[10px]">{allocation[item.id] ?? 0}h</span></div>)}</div><div className="mt-5 border-t border-border pt-4 text-[12px] leading-5 text-muted-foreground">{difference > 0 ? 'Trim the plan or raise the budget before the week begins.' : difference < 0 ? 'You have room for more study, project depth, or recovery.' : 'The split matches your weekly budget.'}</div></div></div></section>;
+}
+
 function ProgressRing({ value, onAccent = false }: { value: number; onAccent?: boolean }) {
   const [animatedValue, setAnimatedValue] = useState(value);
   const progress = Math.min(100, Math.max(0, value));
@@ -2749,6 +2814,7 @@ function ProgressRing({ value, onAccent = false }: { value: number; onAccent?: b
 
 function Dashboard() {
   const [completed, setCompleted] = usePersisted<string[]>('java-next-semester-weeks', []);
+  const [completedModules, setCompletedModules] = usePersisted<string[]>('java-next-semester-modules', []);
   const [completedLecture09, setCompletedLecture09] = usePersisted<string[]>('java-sprint-lecture09-sections', []);
   const [completedLecture10, setCompletedLecture10] = usePersisted<string[]>('java-sprint-lecture10-sections', []);
   const [completedLecture11, setCompletedLecture11] = usePersisted<string[]>('java-sprint-lecture11-sections', []);
@@ -2773,17 +2839,20 @@ function Dashboard() {
   const lecture13Ready = lecture13Sections.every((section) => completedLecture13.includes(section.id));
   const lecture14Ready = lecture14Sections.every((section) => completedLecture14.includes(section.id));
   const lecture15Ready = lecture15Sections.every((section) => completedLecture15.includes(section.id));
-  const isTaskComplete = (task: ScheduleTask) => completed.includes(task.id);
+  const isTaskComplete = (task: ScheduleTask) => completed.includes(task.id) && (!task.lectureSections || task.lectureSections.every((section) => completedModules.includes(section.id)));
   const completedCount = schedule.filter(isTaskComplete).length;
-  const sectionProgressPairs: readonly (readonly [LectureSection[], string[]])[] = [];
+  const sectionProgressPairs: readonly (readonly [LectureSection[], string[]])[] = schedule.filter((task) => task.lectureSections).map((task) => [task.lectureSections!, completedModules] as const);
   const completedSectionCount = sectionProgressPairs.reduce((total, [sections, completedSections]) => total + sections.filter((section) => completedSections.includes(section.id)).length, 0);
   const totalSectionCount = sectionProgressPairs.reduce((total, [sections]) => total + sections.length, 0);
   const standaloneBlockCount = schedule.filter((task) => !task.lectureSections).length;
   const completedStandaloneBlockCount = schedule.filter((task) => !task.lectureSections && completed.includes(task.id)).length;
   const progress = Math.round(((completedSectionCount + completedStandaloneBlockCount) / (totalSectionCount + standaloneBlockCount)) * 100);
   const toggleTask = (id: string) => {
+    const task = schedule.find((item) => item.id === id);
+    if (task?.lectureSections && !task.lectureSections.every((section) => completedModules.includes(section.id))) return;
     setCompleted((current) => current.includes(id) ? current.filter((task) => task !== id) : [...current, id]);
   };
+  const toggleModule = (id: string) => setCompletedModules((current) => current.includes(id) ? current.filter((module) => module !== id) : [...current, id]);
   const toggleLecture09Section = (id: string) => setCompletedLecture09((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture10Section = (id: string) => setCompletedLecture10((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture11Section = (id: string) => setCompletedLecture11((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
@@ -2803,30 +2872,15 @@ function Dashboard() {
       <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.2fr_.8fr]"><div><div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course load overview</div><h3 className="mt-2 display text-[21px] font-bold">18.00 theory · 5.50 lab · 10 courses</h3></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">Next sem</span></div><div className="mt-4 grid gap-2 sm:grid-cols-2">{nextSemesterCourses.map((course) => <div key={course.code} className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5"><div className="min-w-0"><div className="mono text-[10px] font-bold text-accent-foreground">{course.code}</div><div className="mt-1 text-[12px] leading-5 text-muted-foreground">{course.title}</div></div><span className="shrink-0 mono text-[11px] font-bold">{course.credits}</span></div>)}</div></div><aside className="rounded-2xl border border-accent/35 bg-accent/10 p-5"><div className="flex items-center gap-2 text-accent-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Protect the 4.0</span></div><h3 className="mt-3 display text-[20px] font-bold">Every course starts at 100%.</h3><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Quizzes & Assignments <strong className="text-foreground">20%</strong> · Mid Semester <strong className="text-foreground">40%</strong> · Semester Final <strong className="text-foreground">40%</strong></p><div className="mt-4 rounded-xl border border-accent/30 bg-background/45 p-3 text-[12px] font-semibold leading-5">A+ needs 80%+. Quizzes + mid are 60% of your grade before the final even happens — do not let small early assignments slip.</div></aside></div>
     </section>
     <section className="mt-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-muted-foreground"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Daily rhythm</span></div><h2 className="mt-2 display text-[23px] font-bold">A repeatable day beats a heroic one.</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">6–7h focused</span></div><div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Morning · 3h</div><h3 className="mt-2 text-[15px] font-bold">Theory / concept study</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Focus on that week’s course material and build the mental model before coding.</p></div><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Afternoon · 2–3h</div><h3 className="mt-2 text-[15px] font-bold">Project work</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Apply what you just studied to the week’s tagged project.</p></div><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Evening · 1h</div><h3 className="mt-2 text-[15px] font-bold">Practice and recall</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Solve practice problems, write SQL queries, or review flashcards.</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-[.8fr_1.2fr]"><div className="rounded-2xl border border-border bg-secondary/60 p-4"><div className="flex items-center gap-2 text-secondary-foreground"><Moon size={15} /><span className="mono text-[10px] font-bold uppercase tracking-[0.12em]">Weekly recovery</span></div><p className="mt-2 text-[13px] font-semibold leading-5">1 full rest day per week. No exceptions.</p><p className="mt-1 text-[12px] leading-5 text-muted-foreground">A six-week sprint needs recovery to stay sustainable.</p></div><div className="rounded-2xl border border-accent/35 bg-accent/10 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Compression rule</div><p className="mt-2 text-[13px] font-semibold leading-5">Less than 6–7 focused hours a day? Compress the plan, but cut Week 6 integration time first — never the core study weeks.</p></div></div></section>
+    <TimeAllocationPlanner />
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Finish line + exam rehearsal</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
-            const isLocked = (task.id === 's1' && !lecture09Ready) || (task.id === 's2' && !lecture10Ready) || (task.id === 's3' && !lecture11Ready) || (task.id === 's4a' && !lecture12Part1Ready) || (task.id === 's4b' && !lecture12Part2Ready) || (task.id === 's5' && !lecture13Ready) || (task.id === 's6' && !lecture14Ready) || (task.id === 's7' && !lecture15Ready);
-           const sectionState = task.id === 's1'
-             ? { completed: completedLecture09, ready: lecture09Ready, toggle: toggleLecture09Section }
-             : task.id === 's2'
-               ? { completed: completedLecture10, ready: lecture10Ready, toggle: toggleLecture10Section }
-               : task.id === 's3'
-                 ? { completed: completedLecture11, ready: lecture11Ready, toggle: toggleLecture11Section }
-                  : task.id === 's4a'
-                    ? { completed: completedLecture12Part1, ready: lecture12Part1Ready, toggle: toggleLecture12Part1Section }
-                    : task.id === 's4b'
-                      ? { completed: completedLecture12Part2, ready: lecture12Part2Ready, toggle: toggleLecture12Part2Section }
-                      : task.id === 's5'
-                        ? { completed: completedLecture13, ready: lecture13Ready, toggle: toggleLecture13Section }
-                        : task.id === 's6'
-                          ? { completed: completedLecture14, ready: lecture14Ready, toggle: toggleLecture14Section }
-                          : task.id === 's7'
-                            ? { completed: completedLecture15, ready: lecture15Ready, toggle: toggleLecture15Section }
-               : null;
+          const sectionState = task.lectureSections ? { completed: completedModules, ready: task.lectureSections.every((section) => completedModules.includes(section.id)), toggle: toggleModule } : null;
+          const isLocked = Boolean(sectionState && !sectionState.ready);
           const isRunning = isScheduleTaskRunning(task, scheduleNow);
           return <Fragment key={task.id}><div className={`rounded-xl border transition-all ${isRunning ? 'border-accent bg-accent/20 shadow-md ring-2 ring-accent/30' : done ? 'border-accent/50 bg-accent/10' : 'border-border bg-background/40 hover:border-accent/45'}`}>
              <button onClick={() => toggleTask(task.id)} disabled={isLocked} data-testid={`button-task-${task.id}`} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isLocked ? 'cursor-not-allowed opacity-75' : ''}`}>
