@@ -238,6 +238,11 @@
   .planner-range:focus-visible { outline: none; }
   .planner-control-row:hover { background: hsl(var(--accent) / .08); }
   .planner-chart-segment { transition: width .45s cubic-bezier(.22, 1, .36, 1); }
+  .theme-swatch { display: inline-block; width: 24px; height: 24px; flex: 0 0 auto; border: 2px solid hsl(var(--primary-foreground) / .22); border-radius: 7px; box-shadow: inset 0 1px 2px rgba(255,255,255,.22), 0 2px 5px rgba(0,0,0,.18); }
+  .theme-aurora { background: radial-gradient(circle at 30% 25%, #30e0bd, transparent 38%), linear-gradient(135deg, #07515a, #071d31); }
+  .theme-grid { background-color: #08191e; background-image: linear-gradient(rgba(125, 213, 207, .35) 1px, transparent 1px), linear-gradient(90deg, rgba(125, 213, 207, .35) 1px, transparent 1px); background-size: 7px 7px; }
+  .theme-starlight { background-color: #071a28; background-image: radial-gradient(circle, #a1edff 0 1px, transparent 1.5px), linear-gradient(135deg, #124f68, #081326); background-size: 8px 8px, auto; }
+  .theme-neon { background-color: #162246; background-image: radial-gradient(circle at 30% 30%, #d689ff, transparent 30%), radial-gradient(circle at 75% 60%, #4f9cff, transparent 32%), radial-gradient(circle at 15% 80%, #9dffdf, transparent 25%); }
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-none { scrollbar-width: none; }
 }
