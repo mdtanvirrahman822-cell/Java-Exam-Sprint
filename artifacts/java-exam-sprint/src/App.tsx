@@ -2773,7 +2773,7 @@ function CountdownCard() {
   return <section className="group relative overflow-hidden rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-8">
     <div className="absolute -right-16 -top-20 size-64 rounded-full border-[22px] border-accent/20 transition-transform duration-700 group-hover:rotate-12 group-hover:scale-105" /><div className="absolute -bottom-24 right-24 size-48 rounded-full border-[14px] border-primary-foreground/5 transition-transform duration-700 group-hover:-translate-y-3" />
     <div className="relative flex min-h-[276px] flex-col items-center text-center">
-      <div className="flex items-center justify-center gap-2 text-primary-foreground/65"><Clock3 size={15} /><span className="mono text-[10px] uppercase tracking-[0.18em]">Time until the exam</span></div>
+      <div className="flex items-center justify-center gap-2 text-primary-foreground/65"><Clock3 size={15} /><span className="mono text-[10px] uppercase tracking-[0.18em]">Time until the deadline</span></div>
       <div className="mt-6 grid w-full max-w-[720px] grid-cols-2 items-start justify-items-center gap-y-4 sm:flex sm:justify-center sm:gap-5">
         {countdownParts.map(({ value, label, hint }, index) => <Fragment key={label}>
           <button
