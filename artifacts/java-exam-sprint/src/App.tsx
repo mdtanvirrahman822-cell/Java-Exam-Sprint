@@ -36,6 +36,7 @@ import {
   Sparkles,
   Target,
   TimerReset,
+  TrendingUp,
   Trophy,
   X,
   Zap,
@@ -2614,6 +2615,26 @@ const suggestedTimeAllocation = [
   { id: 'buffer', label: 'Buffer / Rest', hours: 4, color: '#8793a1' },
 ];
 
+type GradeCourse = { id: string; name: string; target: number; defaultScore: number; accent: string };
+const courseTrackers: GradeCourse[] = [
+  { id: 'linear-algebra', name: 'Linear Algebra', target: 82, defaultScore: 78, accent: '#5e8fcb' },
+  { id: 'data-structures', name: 'Data Structures', target: 80, defaultScore: 74, accent: '#4f9c7a' },
+  { id: 'computer-organization', name: 'Computer Organization', target: 85, defaultScore: 80, accent: '#d19a39' },
+  { id: 'dbms', name: 'DBMS', target: 84, defaultScore: 79, accent: '#3e93a8' },
+  { id: 'theory', name: 'Theory of Computing', target: 83, defaultScore: 76, accent: '#8472c8' },
+  { id: 'oop', name: 'OOP Concepts II', target: 88, defaultScore: 82, accent: '#d56e9a' },
+];
+
+type WeeklyTrendPoint = { week: string; focus: number; topics: number; hours: number };
+const defaultWeeklyTrend: WeeklyTrendPoint[] = [
+  { week: 'W1', focus: 3.5, topics: 4, hours: 12 },
+  { week: 'W2', focus: 4.4, topics: 5, hours: 13 },
+  { week: 'W3', focus: 5.2, topics: 7, hours: 15 },
+  { week: 'W4', focus: 5.8, topics: 9, hours: 17 },
+  { week: 'W5', focus: 6.5, topics: 11, hours: 20 },
+  { week: 'W6', focus: 7.1, topics: 13, hours: 22 },
+];
+
 function usePersisted<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
     try {
@@ -2651,6 +2672,39 @@ function useCountdown() {
 function formatTime(totalSeconds: number) {
   const safe = Math.max(0, totalSeconds);
   return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
+}
+
+function getCurrentStudyStreak(studyDays: string[]) {
+  if (!studyDays.length) return 0;
+  const uniqueDays = [...new Set(studyDays)].sort().reverse();
+  let streak = 1;
+  const now = new Date();
+  let cursor = new Date(uniqueDays[0]);
+
+  for (let index = 1; index < uniqueDays.length; index += 1) {
+    const previous = new Date(uniqueDays[index]);
+    const delta = Math.round((cursor.getTime() - previous.getTime()) / 86400000);
+    if (delta === 1) {
+      streak += 1;
+      cursor = previous;
+    } else if (delta === 0) {
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const lastDate = new Date(uniqueDays[0]);
+  if (lastDate.getTime() < today.getTime() - 86400000 * 1) {
+    return 0;
+  }
+
+  return streak;
+}
+
+function getWeakTopics(questions: Question[], results: Record<string, number>) {
+  return [...new Set(questions.filter((question) => results[question.id] === 0).map((question) => question.topic))];
 }
 
 function usePomodoroTimer() {
@@ -2943,12 +2997,21 @@ function Dashboard() {
   const [expandedLecture, setExpandedLecture] = useState<string | null>(null);
   const [pomodoroTopic, setPomodoroTopic] = usePersisted('java-pomodoro-topic', 'OOP focus');
   const [quoteIndex, setQuoteIndex] = usePersisted('java-motivation-quote-index', 0);
+  const [courseScores, setCourseScores] = usePersisted<Record<string, number>>('java-course-scores', Object.fromEntries(courseTrackers.map((course) => [course.id, course.defaultScore])));
+  const [studyDays, setStudyDays] = usePersisted<string[]>('java-study-days', []);
+  const [weeklyTrend, setWeeklyTrend] = usePersisted<WeeklyTrendPoint[]>('java-weekly-trend', defaultWeeklyTrend);
+  const [practiceResults] = usePersisted<Record<string, number>>('java-practice-results', {});
+  const [allocation] = usePersisted<Record<string, number>>('java-time-allocation', Object.fromEntries(suggestedTimeAllocation.map((item) => [item.id, item.hours])));
   const [scheduleNow, setScheduleNow] = useState(() => new Date());
   const [, setLocation] = useLocation();
-  useEffect(() => {
-    const timer = window.setInterval(() => setScheduleNow(new Date()), 30_000);
-    return () => window.clearInterval(timer);
-  }, []);
+  const { sessions } = usePomodoroTimer();
+  const plannedHours = suggestedTimeAllocation.reduce((sum, item) => sum + (allocation[item.id] ?? item.hours), 0);
+  const updateCourseScore = (courseId: string, delta: number) => {
+    setCourseScores((current) => {
+      const nextValue = (current[courseId] ?? courseTrackers.find((course) => course.id === courseId)?.defaultScore ?? 0) + delta;
+      return { ...current, [courseId]: Math.min(100, Math.max(0, nextValue)) };
+    });
+  };
   const lecture09Ready = lecture09Sections.every((section) => completedLecture09.includes(section.id));
   const lecture10Ready = lecture10Sections.every((section) => completedLecture10.includes(section.id));
   const lecture11Ready = lecture11Sections.every((section) => completedLecture11.includes(section.id));
@@ -2965,6 +3028,44 @@ function Dashboard() {
   const standaloneBlockCount = schedule.filter((task) => !task.lectureSections).length;
   const completedStandaloneBlockCount = schedule.filter((task) => !task.lectureSections && completed.includes(task.id)).length;
   const progress = Math.round(((completedSectionCount + completedStandaloneBlockCount) / (totalSectionCount + standaloneBlockCount)) * 100);
+  const totalHours = Number(plannedHours.toFixed(1));
+  useEffect(() => {
+    const timer = window.setInterval(() => setScheduleNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (completedModules.length > 0 || completedCount > 0) {
+      setStudyDays((current) => current.includes(today) ? current : [...current, today]);
+    }
+  }, [completedCount, completedModules.length, setStudyDays]);
+  useEffect(() => {
+    setWeeklyTrend((current) => {
+      const base = current.length ? current : defaultWeeklyTrend;
+      const next = [...base];
+      const actualFocus = Number(((sessions * 25) / 60).toFixed(1));
+      const nextPoint = { week: 'W6', focus: Math.max(actualFocus, 1), topics: completedModules.length, hours: Number((plannedHours || 0).toFixed(1)) };
+      if (next.length >= 6) next[next.length - 1] = nextPoint;
+      return JSON.stringify(current.length ? current[current.length - 1] : null) === JSON.stringify(nextPoint) ? current : next;
+    });
+  }, [completedModules.length, plannedHours, sessions, setWeeklyTrend]);
+  const monthAverage = courseTrackers.reduce((sum, course) => sum + (courseScores[course.id] ?? course.defaultScore), 0) / courseTrackers.length;
+  const courseSummary = courseTrackers.map((course) => {
+    const score = Math.min(100, Math.max(0, courseScores[course.id] ?? course.defaultScore));
+    return {
+      ...course,
+      score,
+      gap: score - course.target,
+      status: score >= course.target ? 'Ahead' : score >= course.target - 8 ? 'Close' : 'Needs attention',
+    };
+  });
+  const weakTopics = getWeakTopics(questions, practiceResults).slice(0, 3);
+  const streak = getCurrentStudyStreak(studyDays);
+  const retrospective = `Planned ${Math.round((totalHours || 0) * 10) / 10}h this week. Logged ${Number(((sessions * 25) / 60).toFixed(1))}h with ${completedCount} blocks and ${completedModules.length} topic checks complete.`;
+  const trendSeries = weeklyTrend.length ? weeklyTrend : defaultWeeklyTrend;
+  const trendMax = Math.max(1, ...trendSeries.flatMap((point) => [point.focus, point.topics]));
+  const trendLine = trendSeries.map((point, index) => `${index * 48},${140 - (point.focus / trendMax) * 100}`).join(' ');
+  const topicLine = trendSeries.map((point, index) => `${index * 48},${140 - (point.topics / trendMax) * 100}`).join(' ');
   const toggleTask = (id: string) => {
     const task = schedule.find((item) => item.id === id);
     if (task?.lectureSections && !task.lectureSections.every((section) => completedModules.includes(section.id))) return;
@@ -2979,7 +3080,7 @@ function Dashboard() {
   const toggleLecture12Part1Section = (id: string) => setCompletedLecture12Part1((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture12Part2Section = (id: string) => setCompletedLecture12Part2((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   const toggleLecture13Section = (id: string) => setCompletedLecture13((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
-  const toggleLecture14Section = (id: string) => setCompletedLecture14((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
+  const toggleLecture14Section = (id: string) => setCompletedLecture14((current) => current.filter((section) => section !== id).concat(current.includes(id) ? [] : [id]));
   const toggleLecture15Section = (id: string) => setCompletedLecture15((current) => current.includes(id) ? current.filter((section) => section !== id) : [...current, id]);
   return <div className="rise">
     <SectionIntro kicker="Six-week runway · next semester" title="Make the last miles count." detail="Your study cockpit for a 4.0 target. Move one week forward, ship the tagged project, and keep the weak spots visible." action={<button onClick={() => setLocation('/focus')} data-testid="button-dashboard-start" className="press inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-[13px] font-bold text-accent-foreground shadow-sm transition-transform hover:-translate-y-0.5"><Play size={15} fill="currentColor" /> Start next block</button>} />
@@ -2993,6 +3094,74 @@ function Dashboard() {
     </section>
     <section className="mt-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-muted-foreground"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Daily rhythm</span></div><h2 className="mt-2 display text-[23px] font-bold">A repeatable day beats a heroic one.</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">6–7h focused</span></div><div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Morning · 3h</div><h3 className="mt-2 text-[15px] font-bold">Theory / concept study</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Focus on that week’s course material and build the mental model before coding.</p></div><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Afternoon · 2–3h</div><h3 className="mt-2 text-[15px] font-bold">Project work</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Apply what you just studied to the week’s tagged project.</p></div><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Evening · 1h</div><h3 className="mt-2 text-[15px] font-bold">Practice and recall</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Solve practice problems, write SQL queries, or review flashcards.</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-[.8fr_1.2fr]"><div className="rounded-2xl border border-border bg-secondary/60 p-4"><div className="flex items-center gap-2 text-secondary-foreground"><Moon size={15} /><span className="mono text-[10px] font-bold uppercase tracking-[0.12em]">Weekly recovery</span></div><p className="mt-2 text-[13px] font-semibold leading-5">1 full rest day per week. No exceptions.</p><p className="mt-1 text-[12px] leading-5 text-muted-foreground">A six-week sprint needs recovery to stay sustainable.</p></div><div className="rounded-2xl border border-accent/35 bg-accent/10 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Compression rule</div><p className="mt-2 text-[13px] font-semibold leading-5">Less than 6–7 focused hours a day? Compress the plan, but cut Week 6 integration time first — never the core study weeks.</p></div></div></section>
     <TimeAllocationPlanner />
+    <section className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+      <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Grade tracking</span></div>
+          <span className="rounded-full bg-accent/15 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">{monthAverage.toFixed(1)} avg</span>
+        </div>
+        <h2 className="mt-3 display text-[23px] font-bold">Actual performance, not just the plan.</h2>
+        <div className="mt-5 space-y-3">
+          {courseSummary.map((course) => (
+            <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[13px] font-semibold">{course.name}</div>
+                  <div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Target {course.target}%</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => updateCourseScore(course.id, -1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">−</button>
+                  <div className="display text-[20px] font-bold text-foreground">{course.score.toFixed(0)}%</div>
+                  <button type="button" onClick={() => updateCourseScore(course.id, 1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">+</button>
+                </div>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+                <span className="block h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, course.score))}%`, backgroundColor: course.accent }} />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{course.status}</span>
+                <span className={course.gap >= 0 ? 'text-[#4f9c7a]' : 'text-[#e66b5d]'}>{course.gap >= 0 ? '+' : ''}{course.gap.toFixed(0)} pts</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-5">
+        <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Weekly retrospective</span></div>
+            <span className="rounded-full bg-secondary px-2.5 py-1 mono text-[9px] text-secondary-foreground">{streak} day streak</span>
+          </div>
+          <p className="mt-4 text-[13px] leading-6 text-muted-foreground">{retrospective}</p>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{plannedHours.toFixed(1)}h</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">planned</div></div>
+            <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{Number(((sessions * 25) / 60).toFixed(1))}h</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">logged</div></div>
+            <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{completedModules.length}</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">topics</div></div>
+          </div>
+        </div>
+        <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground"><TrendingUp size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Trend view</span></div>
+            <span className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Focus vs topics</span>
+          </div>
+          <svg viewBox="0 0 240 140" className="mt-4 h-32 w-full overflow-visible">
+            <path d={`M0 120 L${trendSeries.map((_, index) => `${index * 48},${140 - (trendSeries[index].focus / trendMax) * 100}`).join(' L')} L240 120`} fill="none" stroke="rgba(148,163,184,0.25)" strokeWidth="1" />
+            <polyline fill="none" stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={trendLine} />
+            <polyline fill="none" stroke="hsl(var(--secondary-foreground))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={topicLine} />
+            {trendSeries.map((point, index) => <g key={point.week}><circle cx={index * 48} cy={140 - (point.focus / trendMax) * 100} r="3" fill="hsl(var(--accent))" /><text x={index * 48} y="136" textAnchor="middle" fontSize="9" fill="hsl(var(--muted-foreground))">{point.week}</text></g>)}
+          </svg>
+        </div>
+        <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Weak topics</span></div>
+            <span className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{weakTopics.length} flagged</span>
+          </div>
+          <div className="mt-4 space-y-2">
+            {weakTopics.length ? weakTopics.map((topic) => <div key={topic} className="rounded-xl border border-border bg-background/40 px-3 py-2 text-[12px] font-medium text-foreground">{topic}</div>) : <div className="rounded-xl border border-dashed border-border bg-background/30 px-3 py-3 text-[12px] text-muted-foreground">No weak topic yet. Keep the next practice set focused and the list will update.</div>}
+          </div>
+        </div>
+      </div>
+    </section>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Finish line + exam rehearsal</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
