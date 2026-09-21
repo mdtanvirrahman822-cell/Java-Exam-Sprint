@@ -2721,9 +2721,8 @@ function Shell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="mt-auto rounded-2xl border border-sidebar-border bg-sidebar-accent/70 p-4">
-          <div className="flex items-center gap-2 text-sidebar-foreground/70"><Target size={15} /><span className="mono text-[10px] uppercase tracking-[0.13em]">Exam window</span></div>
-          <div className="mt-3 display text-[25px] font-bold tracking-tight">{countdown.days}d</div>
-          <p className="mt-1 text-[12px] leading-5 text-sidebar-foreground/55">Nov 2 · 00:00<br />You are still early enough.</p>
+          <div className="flex items-center justify-between gap-2 text-sidebar-foreground/70"><div className="flex items-center gap-2"><Target size={15} /><span className="mono text-[10px] uppercase tracking-[0.13em]">Exam window</span></div><span className="mono text-[9px] uppercase tracking-[0.12em] text-sidebar-foreground/60">{countdown.days}d</span></div>
+          <p className="mt-3 text-[12px] leading-5 text-sidebar-foreground/55">Nov 2 · 00:00<br />Keep the next sprint honest.</p>
           <Link href="/focus" data-testid="link-sidebar-focus" className="mt-4 flex items-center justify-between rounded-lg bg-sidebar-primary px-3 py-2 text-[12px] font-bold text-sidebar-primary-foreground transition-transform hover:-translate-y-0.5">Start a focus block <ArrowRight size={14} /></Link>
         </div>
       </aside>
@@ -2736,7 +2735,7 @@ function Shell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-2 text-[12px] text-muted-foreground lg:flex"><span className="header-crumb mono uppercase tracking-[0.13em]">Sprintroom</span><ChevronRight size={13} className="text-accent" /><span className="header-current rounded-md px-2 py-1 font-semibold text-foreground">{currentLabel}</span></div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">{countdown.days}d to exam</span></div>
+            <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">Study rhythm</span></div>
             <div className="relative"><button type="button" onClick={() => setThemeMenuOpen((open) => !open)} aria-expanded={themeMenuOpen} aria-haspopup="menu" data-testid="button-theme-picker" className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-muted-foreground transition-colors hover:border-accent hover:text-foreground"><span className={`theme-swatch theme-${theme}`} /><span className="mono text-[9px] uppercase tracking-[0.1em]">{theme}</span><ChevronDown size={13} className={`transition-transform ${themeMenuOpen ? 'rotate-180' : ''}`} /></button>{themeMenuOpen && <div role="menu" aria-label="Background themes" className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur-xl"><div className="px-2 py-1.5 mono text-[9px] uppercase tracking-[0.13em] text-muted-foreground">Choose atmosphere</div>{(['aurora', 'grid', 'starlight', 'neon', 'forest'] as const).map((option) => <button key={option} type="button" role="menuitemradio" aria-checked={theme === option} onClick={() => { setTheme(option); setThemeMenuOpen(false); }} data-testid={`button-theme-${option}`} className={`flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors ${theme === option ? 'bg-accent/15 text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}><span className={`theme-swatch theme-${option}`} /><span className="flex-1"><span className="block text-[12px] font-bold capitalize">{option === 'forest' ? 'Forest beams' : option}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{option === 'aurora' ? 'Teal glow' : option === 'grid' ? 'Technical grid' : option === 'starlight' ? 'Deep starfield' : option === 'neon' ? 'Neon bloom' : 'Soft green light'}</span></span>{theme === option && <Check size={14} className="text-accent-foreground" />}</button>)}</div>}</div>
           </div>
         </header>
@@ -3041,9 +3040,22 @@ function Dashboard() {
           <button onClick={() => setLocation('/focus')} data-testid="button-quick-start" className="mt-5 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-[13px] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Start Week 1 focus <ArrowRight size={16} /></button>
         </section>
         <section className="rounded-[24px] border border-border bg-[#e3eee5] p-6 dark:bg-card">
-          <div className="flex items-center gap-2 text-[#3f7559] dark:text-accent"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Tutor note</span></div>
-          <p className="mt-4 display text-[19px] font-semibold leading-snug text-[#234b38] dark:text-foreground">“Before solving Ax = B, mark the pivots. They reveal the rank, the free variables, and the shape of every solution.”</p>
-          <Link href="/learn/linear-algebra-i" data-testid="link-tutor-linear-algebra" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#3f7559] dark:text-accent">Review Linear Algebra I <ArrowRight size={14} /></Link>
+          <div className="flex items-center justify-between gap-4"><div className="flex items-center gap-2 text-[#3f7559] dark:text-accent"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Tutor note</span></div><span className="rounded-full bg-[#234b38]/10 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-[#234b38] dark:text-accent">Coach mode</span></div>
+          {(() => {
+            const weakTask = getWeakestTask(schedule, completedModules);
+            const focusTip = weakTask
+              ? `Your biggest drag is ${weakTask.task.title}. Start with ${weakTask.task.lectureSections?.[0]?.title ?? weakTask.task.detail} and finish just one locked step before moving on.`
+              : 'Your study plan is balanced. Protect the next focus block and keep practice close to the concept you just learned.';
+            const cue = weakTask?.task.lecture ?? 'Next sprint';
+            return <>
+              <p className="mt-4 display text-[19px] font-semibold leading-snug text-[#234b38] dark:text-foreground">“{focusTip}”</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#234b38]/10 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-[#234b38] dark:text-accent">{cue}</span>
+                <span className="rounded-full bg-white/35 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-[#234b38] dark:text-accent">Next action: one small win</span>
+              </div>
+            </>;
+          })()}
+          <Link href="/learn" data-testid="link-tutor-linear-algebra" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#3f7559] dark:text-accent">Review the next concept <ArrowRight size={14} /></Link>
         </section>
         <section className="relative overflow-hidden rounded-[24px] border border-accent/30 bg-accent/10 p-6 shadow-sm"><div className="absolute -right-10 -top-12 size-32 rounded-full border-[14px] border-accent/15" /><div className="relative"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2 text-accent-foreground"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Keep going</span></div><button type="button" onClick={nextQuote} data-testid="button-next-quote" aria-label="Show another motivation quote" className="grid size-8 place-items-center rounded-lg border border-accent/30 bg-background/35 text-accent-foreground transition-colors hover:bg-accent/20"><RotateCcw size={14} /></button></div><p className="mt-5 display text-[19px] font-semibold leading-snug text-foreground">“{currentQuote.quote}”</p><div className="mt-4 flex items-center justify-between gap-3"><span className="mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{currentQuote.source}</span><span className="mono text-[10px] text-muted-foreground">{(quoteIndex % motivationQuotes.length) + 1}/{motivationQuotes.length}</span></div></div></section>
       </div>
