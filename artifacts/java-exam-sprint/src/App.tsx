@@ -67,24 +67,32 @@ const gpaGradeScale = [
   { grade: 'B+', points: 3.25, range: '65% to below 70%' },
   { grade: 'B', points: 3, range: '60% to below 65%' },
 ];
-type GpaCourse = { id: number; name: string; credits: number; quiz: number; mid: number; final: number };
+type GpaCourse = { id: number; name: string; credits: number; quiz: number | ''; mid: number | ''; final: number | '' };
 
 const GPA_WEIGHTS = { quiz: 0.2, mid: 0.4, final: 0.4 } as const;
+const COURSE_MAX_SCORES = { quiz: 60, mid: 120, final: 120 } as const;
 
-const clampCourseScore = (value: number | string | null | undefined) => {
+const clampCourseScore = (value: number | string | null | undefined, max = 100) => {
+  if (value === '' || value === null || value === undefined) return 0;
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return 0;
-  return Math.min(100, Math.max(0, parsed));
+  return Math.min(max, Math.max(0, parsed));
 };
 
-const formatCourseInput = (value: string) => value.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+const toPercentOfMax = (value: number | string | null | undefined, max: number) => {
+  const raw = clampCourseScore(value, max);
+  if (max <= 0) return 0;
+  return (raw / max) * 100;
+};
 
-const hasCourseInputs = (course: Partial<GpaCourse>) => [course.quiz, course.mid, course.final].some((value) => value !== undefined && value !== null && Number.isFinite(Number(value)) && Number(value) > 0);
+const formatCourseInput = (value: string) => value === '' ? '' : value.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+
+const hasCourseInputs = (course: Partial<GpaCourse>) => [course.quiz, course.mid, course.final].some((value) => value !== undefined && value !== null && value !== '' && Number.isFinite(Number(value)) && Number(value) > 0);
 
 const getWeightedCourseGrade = (course: Partial<GpaCourse>) => {
-  const quiz = clampCourseScore(course.quiz);
-  const mid = clampCourseScore(course.mid);
-  const final = clampCourseScore(course.final);
+  const quiz = toPercentOfMax(course.quiz, COURSE_MAX_SCORES.quiz);
+  const mid = toPercentOfMax(course.mid, COURSE_MAX_SCORES.mid);
+  const final = toPercentOfMax(course.final, COURSE_MAX_SCORES.final);
   return quiz * GPA_WEIGHTS.quiz + mid * GPA_WEIGHTS.mid + final * GPA_WEIGHTS.final;
 };
 
@@ -116,9 +124,8 @@ const getGradePoints = (value: number) => {
 };
 
 const getFinalNeededForTarget = (course: Partial<GpaCourse>, target = 80) => {
-  const quiz = clampCourseScore(course.quiz);
-  const mid = clampCourseScore(course.mid);
-  const final = clampCourseScore(course.final);
+  const quiz = toPercentOfMax(course.quiz, COURSE_MAX_SCORES.quiz);
+  const mid = toPercentOfMax(course.mid, COURSE_MAX_SCORES.mid);
   const currentWeighted = quiz * GPA_WEIGHTS.quiz + mid * GPA_WEIGHTS.mid;
   const needed = (target - currentWeighted) / GPA_WEIGHTS.final;
   if (!Number.isFinite(needed) || needed <= 0) return 0;
@@ -2695,9 +2702,9 @@ const defaultGpaCourses: GpaCourse[] = courseTrackers.map((course, index) => ({
   id: index + 1,
   name: course.name,
   credits: course.credits,
-  quiz: clampCourseScore(course.defaultScore * 0.9),
-  mid: clampCourseScore(course.defaultScore * 0.95),
-  final: 0,
+  quiz: '',
+  mid: '',
+  final: '',
 }));
 
 type WeeklyTrendPoint = { week: string; focus: number; topics: number; hours: number };
@@ -2927,7 +2934,7 @@ function Gpa() {
   const addCourse = () => {
     const trimmedName = newCourseName.trim();
     if (!trimmedName) return;
-    setCourses((current) => [...current, { id: Date.now(), name: trimmedName, credits: 3, quiz: 0, mid: 0, final: 0 }]);
+    setCourses((current) => [...current, { id: Date.now(), name: trimmedName, credits: 3, quiz: '', mid: '', final: '' }]);
     setNewCourseName('');
   };
   const removeCourse = (id: number) => {
@@ -2949,9 +2956,9 @@ function Gpa() {
   const courseSummary = courses.map((course) => {
     const normalizedCourse = {
       ...course,
-      quiz: clampCourseScore(course.quiz),
-      mid: clampCourseScore(course.mid),
-      final: clampCourseScore(course.final),
+      quiz: clampCourseScore(course.quiz, COURSE_MAX_SCORES.quiz),
+      mid: clampCourseScore(course.mid, COURSE_MAX_SCORES.mid),
+      final: clampCourseScore(course.final, COURSE_MAX_SCORES.final),
     };
     const score = clampCourseScore(getWeightedCourseGrade(normalizedCourse));
     const letter = getLetterGrade(score);
@@ -2990,7 +2997,7 @@ function Gpa() {
         <div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course inputs</div><h2 className="mt-2 display text-[23px] font-bold">Real course grade tracker</h2></div><button type="button" onClick={() => setNewCourseName('')} data-testid="button-add-gpa-course" className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-[12px] font-bold text-primary-foreground"><span className="text-base leading-none">+</span>Add course</button></div>
         {courseToDelete && <div className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-3 text-[12px] text-muted-foreground"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div>Remove <span className="font-semibold text-foreground">{courseToDelete.name}</span> and its entered scores?</div><div className="flex items-center gap-2"><button type="button" onClick={confirmDeleteCourse} className="rounded-lg bg-destructive px-3 py-1.5 font-semibold text-destructive-foreground">Delete</button><button type="button" onClick={() => setCourseToDelete(null)} className="rounded-lg border border-border bg-card px-3 py-1.5 font-semibold text-foreground">Cancel</button></div></div></div>}
         <div className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-background/40 p-2"><input aria-label="Course name" value={newCourseName} onChange={(event) => setNewCourseName(event.target.value)} placeholder="Enter course name" className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-[13px] text-foreground outline-none focus:border-accent" /><button type="button" onClick={addCourse} className="rounded-xl bg-primary px-3 py-2 text-[12px] font-bold text-primary-foreground">Add</button></div>
-        <div className="mt-5 space-y-3">{courseSummary.map((course) => <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="text-[13px] font-semibold">{course.name}</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{course.credits} credits</div></div><div className="flex items-center gap-2"><div className="display text-[22px] font-bold text-foreground">{course.score.toFixed(0)}%</div><button type="button" aria-label={`Remove ${course.name}`} onClick={() => removeCourse(course.id)} className="grid size-8 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-destructive hover:text-destructive" title="Remove course"><Trash2 size={14} /></button></div></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Quiz · 20%</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={course.quiz} onChange={(event) => updateCourse(course.id, { quiz: clampCourseScore(formatCourseInput(event.target.value)) })} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Mid · 40%</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={course.mid} onChange={(event) => updateCourse(course.id, { mid: clampCourseScore(formatCourseInput(event.target.value)) })} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Final · 40%</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={course.final} onChange={(event) => updateCourse(course.id, { final: clampCourseScore(formatCourseInput(event.target.value)) })} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label></div><div className="mt-3 flex flex-col gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">Current grade</div><div className="mt-1 text-[13px] font-bold text-foreground">{course.letter} · {course.score.toFixed(0)}%</div></div><div className="text-[12px] text-muted-foreground">{course.gradeMessage}</div></div></div>)}</div>
+        <div className="mt-5 space-y-3">{courseSummary.map((course) => <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="text-[13px] font-semibold">{course.name}</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{course.credits} credits</div></div><div className="flex items-center gap-2"><div className="display text-[22px] font-bold text-foreground">{course.score.toFixed(0)}%</div><button type="button" aria-label={`Remove ${course.name}`} onClick={() => removeCourse(course.id)} className="grid size-8 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-destructive hover:text-destructive" title="Remove course"><Trash2 size={14} /></button></div></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Quiz total · 60</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={typeof course.quiz === 'number' ? String(course.quiz) : ''} onChange={(event) => { const nextValue = formatCourseInput(event.target.value); updateCourse(course.id, { quiz: nextValue === '' ? '' : clampCourseScore(nextValue, COURSE_MAX_SCORES.quiz) }); }} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Mid · 120</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={typeof course.mid === 'number' ? String(course.mid) : ''} onChange={(event) => { const nextValue = formatCourseInput(event.target.value); updateCourse(course.id, { mid: nextValue === '' ? '' : clampCourseScore(nextValue, COURSE_MAX_SCORES.mid) }); }} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Final · 120</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={typeof course.final === 'number' ? String(course.final) : ''} onChange={(event) => { const nextValue = formatCourseInput(event.target.value); updateCourse(course.id, { final: nextValue === '' ? '' : clampCourseScore(nextValue, COURSE_MAX_SCORES.final) }); }} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label></div><div className="mt-3 flex flex-col gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">Current grade</div><div className="mt-1 text-[13px] font-bold text-foreground">{course.letter} · {course.score.toFixed(0)}%</div></div><div className="text-[12px] text-muted-foreground">{course.gradeMessage}</div></div></div>)}</div>
         <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-[12px] leading-5 text-muted-foreground"><strong className="text-foreground">Formula:</strong> Final course grade = Quiz × 20% + Midterm × 40% + Final × 40%. The final score needed for A+ is calculated from your current weighted subtotal.</div>
       </section>
       <section className="rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-7"><div className="flex items-center gap-2 text-primary-foreground/60"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Estimated GPA</span></div><div className="mt-5 display text-[64px] font-bold leading-none">{gpa.toFixed(2)}</div><p className="mt-3 text-[13px] text-primary-foreground/65">{qualityPoints.toFixed(2)} quality points across {totalCredits.toFixed(1)} credits.</p><div className="mt-7 border-t border-primary-foreground/15 pt-5"><div className="mono text-[10px] uppercase tracking-[0.15em] text-primary-foreground/55">Grade scale</div><div className="mt-3 space-y-2">{gpaGradeScale.map((item) => <div key={item.grade} className="flex items-center justify-between text-[12px]"><span className="font-bold">{item.grade}</span><span className="mono text-primary-foreground/70">{item.points.toFixed(2)} · {item.range}</span></div>)}</div></div></section>
@@ -3249,9 +3256,9 @@ function Dashboard() {
   const liveCourseSummary = gpaCourses.map((course) => {
     const normalizedCourse = {
       ...course,
-      quiz: clampCourseScore(course.quiz),
-      mid: clampCourseScore(course.mid),
-      final: clampCourseScore(course.final),
+      quiz: clampCourseScore(course.quiz, COURSE_MAX_SCORES.quiz),
+      mid: clampCourseScore(course.mid, COURSE_MAX_SCORES.mid),
+      final: clampCourseScore(course.final, COURSE_MAX_SCORES.final),
     };
     const score = clampCourseScore(getWeightedCourseGrade(normalizedCourse));
     const neededForAPlus = getFinalNeededForTarget(normalizedCourse, 80);
