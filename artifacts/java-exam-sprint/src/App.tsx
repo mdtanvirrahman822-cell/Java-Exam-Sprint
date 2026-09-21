@@ -2598,22 +2598,117 @@ const nextSemesterCourses = [
   { code: 'SWE 4304', title: 'Software Project Lab I · individual', credits: '1.0' },
 ];
 
-const projects = [
-  { id: 'ds-library', week: 'Weeks 1–2', title: 'Data Structures Library', detail: 'Build linked lists, stacks, queues, trees, BST traversal, and hashing from scratch.', tag: 'Core library', accent: '#4f9c7a' },
-  { id: 'regex-engine', week: 'Week 3', title: 'Regex Engine', detail: 'Implement a DFA simulator and wire it to matching and edge-case tests.', tag: 'Theory applied', accent: '#8472c8' },
-  { id: 'library-system', week: 'Week 4', title: 'Library Management System', detail: 'Design a normalized schema from ER modeling, then carry it into the LMS backend.', tag: 'DBMS system', accent: '#d19a39' },
-  { id: 'bharakoto', week: 'Next idea', title: 'Bharakoto', detail: 'Build a web app that lists fare options for different vehicles between selected locations, helping users compare prices quickly and clearly.', tag: 'Travel fare app', accent: '#5aa9e6' },
-  { id: 'bunk-margin', week: 'Smart planner', title: 'Bunk Margin', detail: 'Create an attendance safety calculator that tells students how many classes they can skip while still staying above the minimum attendance threshold.', tag: 'Attendance safety', accent: '#f59e0b' },
-  { id: 'stadiumseat', week: 'Venue app', title: 'StadiumSEAT', detail: 'Create a stadium seating web app with an aerial top-down view of seats and ticket zones, helping users choose the best available seats in a stadium layout.', tag: 'Seat booking', accent: '#ef476f' },
-  { id: 'browser-annoyance-fixer', week: 'Product build', title: 'Annoyance Blocker', detail: 'Build a Chrome extension that removes a real annoyance such as auto-playing video popups, noisy cookie prompts, or distracting UI clutter from everyday browsing.', tag: 'Browser extension', accent: '#8b5cf6' },
-  { id: 'tic-tac-toe', week: 'Game', title: 'Tic-Tac-Toe', detail: 'Build a classic game board with turn-based logic and a simple AI opponent as a stretch goal for practicing decision-making and UI state flows.', tag: 'Logic game', accent: '#22c55e' },
-  { id: 'snake-game', week: 'Game', title: 'Snake Game', detail: 'Create a smooth arcade-style snake game with keyboard movement, score tracking, and increasing difficulty as the player survives longer.', tag: 'Arcade', accent: '#06b6d4' },
-  { id: 'number-guessing', week: 'Game', title: 'Number Guessing Game', detail: 'Design a browser-based guessing game where players narrow down a random number using hints like higher, lower, and attempts left.', tag: 'Logic puzzle', accent: '#f97316' },
-  { id: 'hangman', week: 'Game', title: 'Hangman', detail: 'Implement a word-guessing game with a drawing mechanic, letter validation, and a win/lose counter to practice state and event handling.', tag: 'Word game', accent: '#ec4899' },
-  { id: 'quiz-app', week: 'Game', title: 'Quiz App', detail: 'Build a scoring-based quiz app with multiple-choice questions, timer logic, and a final result screen for practicing interactive UI design.', tag: 'Trivia', accent: '#facc15' },
-  { id: 'weather-app', week: 'App', title: 'Weather App', detail: 'Pull live data from a free weather API and show the current forecast for a selected city with a clean, readable interface.', tag: 'API app', accent: '#38bdf8' },
-  { id: 'expense-tracker', week: 'App', title: 'Expense Tracker', detail: 'Log income and expenses, track a running balance, and display a simple category breakdown to practice data handling and charts.', tag: 'Finance', accent: '#34d399' },
-  { id: 'cpu-simulator', week: 'Weeks 5–6', title: 'CPU Simulator', detail: 'Model the fetch-decode-execute cycle and finish it alongside the MVC LMS integration.', tag: 'Systems build', accent: '#3e93a8' },
+type ProjectStatus = 'Not started' | 'In progress' | 'Blocked' | 'Shipped';
+
+type ProjectChecklistItem = {
+  id: string;
+  label: string;
+  done: boolean;
+};
+
+type ProjectBuild = {
+  id: string;
+  group: 'Core' | 'Side';
+  week: string;
+  title: string;
+  detail: string;
+  tag: string;
+  accent: string;
+  status: ProjectStatus;
+  checklist: ProjectChecklistItem[];
+};
+
+const projectBlueprints: ProjectBuild[] = [
+  { id: 'ds-library', group: 'Core', week: 'Weeks 1–2', title: 'Data Structures Library', detail: 'Build linked lists, stacks, queues, trees, BST traversal, and hashing from scratch.', tag: 'Core library', accent: '#4f9c7a', status: 'In progress', checklist: [
+    { id: 'dsl-core', label: 'Core logic', done: true },
+    { id: 'dsl-tests', label: 'Tests', done: false },
+    { id: 'dsl-readme', label: 'README', done: false },
+    { id: 'dsl-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'regex-engine', group: 'Core', week: 'Week 3', title: 'Regex Engine', detail: 'Implement a DFA simulator and wire it to matching and edge-case tests.', tag: 'Theory applied', accent: '#8472c8', status: 'In progress', checklist: [
+    { id: 'regex-core', label: 'Core logic', done: true },
+    { id: 'regex-tests', label: 'Tests', done: true },
+    { id: 'regex-readme', label: 'README', done: false },
+    { id: 'regex-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'library-system', group: 'Core', week: 'Week 4', title: 'Library Management System', detail: 'Design a normalized schema from ER modeling, then carry it into the LMS backend.', tag: 'DBMS system', accent: '#d19a39', status: 'Not started', checklist: [
+    { id: 'lms-core', label: 'Core logic', done: false },
+    { id: 'lms-tests', label: 'Tests', done: false },
+    { id: 'lms-readme', label: 'README', done: false },
+    { id: 'lms-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'cpu-simulator', group: 'Core', week: 'Weeks 5–6', title: 'CPU Simulator', detail: 'Model the fetch-decode-execute cycle and finish it alongside the MVC LMS integration.', tag: 'Systems build', accent: '#3e93a8', status: 'Blocked', checklist: [
+    { id: 'cpu-core', label: 'Core logic', done: true },
+    { id: 'cpu-tests', label: 'Tests', done: false },
+    { id: 'cpu-readme', label: 'README', done: false },
+    { id: 'cpu-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'bharakoto', group: 'Side', week: 'Next idea', title: 'Bharakoto', detail: 'Build a web app that lists fare options for different vehicles between selected locations, helping users compare prices quickly and clearly.', tag: 'Travel fare app', accent: '#5aa9e6', status: 'Not started', checklist: [
+    { id: 'bharakoto-core', label: 'Core logic', done: false },
+    { id: 'bharakoto-tests', label: 'Tests', done: false },
+    { id: 'bharakoto-readme', label: 'README', done: false },
+    { id: 'bharakoto-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'bunk-margin', group: 'Side', week: 'Smart planner', title: 'Bunk Margin', detail: 'Create an attendance safety calculator that tells students how many classes they can skip while still staying above the minimum attendance threshold.', tag: 'Attendance safety', accent: '#f59e0b', status: 'Not started', checklist: [
+    { id: 'bunk-core', label: 'Core logic', done: false },
+    { id: 'bunk-tests', label: 'Tests', done: false },
+    { id: 'bunk-readme', label: 'README', done: false },
+    { id: 'bunk-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'stadiumseat', group: 'Side', week: 'Venue app', title: 'StadiumSEAT', detail: 'Create a stadium seating web app with an aerial top-down view of seats and ticket zones, helping users choose the best available seats in a stadium layout.', tag: 'Seat booking', accent: '#ef476f', status: 'Not started', checklist: [
+    { id: 'stadium-core', label: 'Core logic', done: false },
+    { id: 'stadium-tests', label: 'Tests', done: false },
+    { id: 'stadium-readme', label: 'README', done: false },
+    { id: 'stadium-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'browser-annoyance-fixer', group: 'Side', week: 'Product build', title: 'Annoyance Blocker', detail: 'Build a Chrome extension that removes a real annoyance such as auto-playing video popups, noisy cookie prompts, or distracting UI clutter from everyday browsing.', tag: 'Browser extension', accent: '#8b5cf6', status: 'Not started', checklist: [
+    { id: 'annoyance-core', label: 'Core logic', done: false },
+    { id: 'annoyance-tests', label: 'Tests', done: false },
+    { id: 'annoyance-readme', label: 'README', done: false },
+    { id: 'annoyance-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'tic-tac-toe', group: 'Side', week: 'Game', title: 'Tic-Tac-Toe', detail: 'Build a classic game board with turn-based logic and a simple AI opponent as a stretch goal for practicing decision-making and UI state flows.', tag: 'Logic game', accent: '#22c55e', status: 'Not started', checklist: [
+    { id: 'tictactoe-core', label: 'Core logic', done: false },
+    { id: 'tictactoe-tests', label: 'Tests', done: false },
+    { id: 'tictactoe-readme', label: 'README', done: false },
+    { id: 'tictactoe-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'snake-game', group: 'Side', week: 'Game', title: 'Snake Game', detail: 'Create a smooth arcade-style snake game with keyboard movement, score tracking, and increasing difficulty as the player survives longer.', tag: 'Arcade', accent: '#06b6d4', status: 'Not started', checklist: [
+    { id: 'snake-core', label: 'Core logic', done: false },
+    { id: 'snake-tests', label: 'Tests', done: false },
+    { id: 'snake-readme', label: 'README', done: false },
+    { id: 'snake-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'number-guessing', group: 'Side', week: 'Game', title: 'Number Guessing Game', detail: 'Design a browser-based guessing game where players narrow down a random number using hints like higher, lower, and attempts left.', tag: 'Logic puzzle', accent: '#f97316', status: 'Not started', checklist: [
+    { id: 'guess-core', label: 'Core logic', done: false },
+    { id: 'guess-tests', label: 'Tests', done: false },
+    { id: 'guess-readme', label: 'README', done: false },
+    { id: 'guess-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'hangman', group: 'Side', week: 'Game', title: 'Hangman', detail: 'Implement a word-guessing game with a drawing mechanic, letter validation, and a win/lose counter to practice state and event handling.', tag: 'Word game', accent: '#ec4899', status: 'Not started', checklist: [
+    { id: 'hangman-core', label: 'Core logic', done: false },
+    { id: 'hangman-tests', label: 'Tests', done: false },
+    { id: 'hangman-readme', label: 'README', done: false },
+    { id: 'hangman-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'quiz-app', group: 'Side', week: 'Game', title: 'Quiz App', detail: 'Build a scoring-based quiz app with multiple-choice questions, timer logic, and a final result screen for practicing interactive UI design.', tag: 'Trivia', accent: '#facc15', status: 'Not started', checklist: [
+    { id: 'quiz-core', label: 'Core logic', done: false },
+    { id: 'quiz-tests', label: 'Tests', done: false },
+    { id: 'quiz-readme', label: 'README', done: false },
+    { id: 'quiz-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'weather-app', group: 'Side', week: 'App', title: 'Weather App', detail: 'Pull live data from a free weather API and show the current forecast for a selected city with a clean, readable interface.', tag: 'API app', accent: '#38bdf8', status: 'Not started', checklist: [
+    { id: 'weather-core', label: 'Core logic', done: false },
+    { id: 'weather-tests', label: 'Tests', done: false },
+    { id: 'weather-readme', label: 'README', done: false },
+    { id: 'weather-demo', label: 'Demo', done: false },
+  ] },
+  { id: 'expense-tracker', group: 'Side', week: 'App', title: 'Expense Tracker', detail: 'Log income and expenses, track a running balance, and display a simple category breakdown to practice data handling and charts.', tag: 'Finance', accent: '#34d399', status: 'Not started', checklist: [
+    { id: 'expense-core', label: 'Core logic', done: false },
+    { id: 'expense-tests', label: 'Tests', done: false },
+    { id: 'expense-readme', label: 'README', done: false },
+    { id: 'expense-demo', label: 'Demo', done: false },
+  ] },
 ];
 
 const motivationQuotes = [
@@ -3575,14 +3670,110 @@ function Notes() {
   </div>;
 }
 
-function Projects() {
-  const [completedProjects, setCompletedProjects] = usePersisted<string[]>('java-semester-projects', []);
-  const toggleProject = (id: string) => setCompletedProjects((current) => current.includes(id) ? current.filter((project) => project !== id) : [...current, id]);
-  return <div className="rise"><SectionIntro kicker="Projects · four real builds" title="Turn the syllabus into evidence." detail="Each project is a checkpoint for the semester. Ship the smallest useful version, test it, and keep the build connected to the theory you studied." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><FolderKanban size={16} className="text-accent" /><span className="mono text-[12px]">{completedProjects.length}/{projects.length} shipped</span></div>} /><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{projects.map((project, index) => { const done = completedProjects.includes(project.id); return <article key={project.id} className={`group relative overflow-hidden rounded-[20px] border bg-card p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${done ? 'border-accent/60' : 'border-border'}`}><div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: project.accent }} /><div className="flex items-start justify-between gap-3"><div><span className="mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{project.week}</span><h2 className="mt-2 display text-[18px] font-bold leading-tight">{project.title}</h2></div><span className="rounded-full bg-secondary px-2 py-1 mono text-[8px] uppercase tracking-[0.08em] text-secondary-foreground">{project.tag}</span></div><p className="mt-3 min-h-[72px] text-[12px] leading-5 text-muted-foreground">{project.detail}</p><div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3"><span className={`mono text-[10px] uppercase tracking-[0.1em] ${done ? 'text-accent-foreground' : 'text-muted-foreground'}`}>{done ? 'Marked shipped' : `Build ${index + 1}`}</span><button type="button" onClick={() => toggleProject(project.id)} aria-pressed={done} data-testid={`button-project-${project.id}`} className={`inline-flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-[10px] font-boldd transition-colors ${done ? 'bg-accent text-accent-foreground' : 'border border-border bg-background hover:border-accent hover:bg-accent/10'}`}><Check size={14} />{done ? 'Shipped' : 'Mark shipped'}</button></div></article>; })}</div></div>;
+function ProjectTracker() {
+  const [projects, setProjects] = usePersisted<ProjectBuild[]>('java-semester-projects', projectBlueprints);
+  const safeProjects = projects.length > 0 ? projects : projectBlueprints;
+
+  const updateProject = (projectId: string, updater: (project: ProjectBuild) => ProjectBuild) => {
+    setProjects((current) => {
+      const source = current.length > 0 ? current : projectBlueprints;
+      return source.map((project) => project.id === projectId ? updater(project) : project);
+    });
+  };
+
+  const getProjectProgress = (project: ProjectBuild) => {
+    if (!project.checklist.length) return 0;
+    const doneCount = project.checklist.filter((item) => item.done).length;
+    return Math.round((doneCount / project.checklist.length) * 100);
+  };
+
+  const isProjectReadyToShip = (project: ProjectBuild) => project.checklist.length > 0 && project.checklist.every((item) => item.done);
+
+  const toggleChecklistItem = (projectId: string, itemId: string) => {
+    updateProject(projectId, (project) => ({
+      ...project,
+      checklist: project.checklist.map((item) => item.id === itemId ? { ...item, done: !item.done } : item),
+    }));
+  };
+
+  const selectStatus = (projectId: string, nextStatus: ProjectStatus) => {
+    updateProject(projectId, (project) => {
+      if (nextStatus === 'Shipped' && !isProjectReadyToShip(project)) {
+        return project;
+      }
+      return { ...project, status: nextStatus };
+    });
+  };
+
+  const markProjectShipped = (projectId: string) => {
+    updateProject(projectId, (project) => {
+      if (!isProjectReadyToShip(project)) {
+        return project;
+      }
+      return { ...project, status: 'Shipped' };
+    });
+  };
+
+  const coreProjects = safeProjects.filter((project) => project.group === 'Core');
+  const sideProjects = safeProjects.filter((project) => project.group === 'Side');
+  const shippedCoreCount = coreProjects.filter((project) => project.status === 'Shipped').length;
+
+  return <div className="rise">
+    <SectionIntro kicker="Projects · core vs side builds" title="Separate the sprint from the portfolio." detail="The core builds are your semester sprint target. Side projects still matter, but only the core group counts toward the real delivery goal." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><FolderKanban size={16} className="text-accent" /><span className="mono text-[12px]">{shippedCoreCount}/{coreProjects.length} core builds shipped</span></div>} />
+    <div className="space-y-6">
+      <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Sprint target</div>
+            <h2 className="mt-2 display text-[23px] font-bold">Core builds</h2>
+          </div>
+          <span className="rounded-full bg-accent/15 px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">4 real builds</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">{coreProjects.map((project) => {
+          const progress = getProjectProgress(project);
+          const readyToShip = isProjectReadyToShip(project);
+          const statusClass = project.status === 'Shipped' ? 'bg-accent text-accent-foreground' : project.status === 'Blocked' ? 'bg-[#f59e0b]/15 text-[#f59e0b]' : project.status === 'In progress' ? 'bg-secondary text-secondary-foreground' : 'bg-muted/20 text-muted-foreground';
+          return <article key={project.id} className="group relative overflow-hidden rounded-[20px] border border-border bg-background/40 p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"><div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: project.accent }} /><div className="flex items-start justify-between gap-3"><div><span className="mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{project.week}</span><h3 className="mt-2 display text-[18px] font-bold leading-tight">{project.title}</h3></div><span className="rounded-full bg-secondary px-2 py-1 mono text-[8px] uppercase tracking-[0.08em] text-secondary-foreground">{project.tag}</span></div><p className="mt-3 min-h-[72px] text-[12px] leading-5 text-muted-foreground">{project.detail}</p>
+            <div className="mt-4 flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-1 mono text-[8px] uppercase tracking-[0.1em] ${statusClass}`}>{project.status}</span><span className="display text-[15px] font-bold">{progress}%</span></div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: project.accent }} /></div>
+            <ul className="mt-4 space-y-2">{project.checklist.map((item) => <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5"><button type="button" onClick={() => toggleChecklistItem(project.id, item.id)} aria-pressed={item.done} className="flex flex-1 items-center gap-2 text-left"><span className={`grid size-4 place-items-center rounded-full border ${item.done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}><Check size={10} /></span><span className={`text-[11px] ${item.done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{item.label}</span></button></li>)}</ul>
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+              <select value={project.status} onChange={(event) => selectStatus(project.id, event.target.value as ProjectStatus)} className="rounded-xl border border-border bg-card px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-accent"><option value="Not started">Not started</option><option value="In progress">In progress</option><option value="Blocked">Blocked</option><option value="Shipped">Shipped</option></select>
+              <button type="button" onClick={() => markProjectShipped(project.id)} disabled={!readyToShip || project.status === 'Shipped'} data-testid={`button-project-${project.id}`} className={`inline-flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-[10px] font-bold transition-colors ${project.status === 'Shipped' ? 'bg-accent text-accent-foreground' : readyToShip ? 'bg-primary text-primary-foreground hover:-translate-y-0.5' : 'cursor-not-allowed border border-border bg-background text-muted-foreground'}`}><Check size={12} />{project.status === 'Shipped' ? 'Shipped' : 'Mark shipped'}</button>
+            </div>
+          </article>;
+        })}</div>
+      </section>
+
+      <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Portfolio</div>
+            <h2 className="mt-2 display text-[23px] font-bold">Side / portfolio</h2>
+          </div>
+          <span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">Not sprint counted</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{sideProjects.map((project) => {
+          const progress = getProjectProgress(project);
+          const readyToShip = isProjectReadyToShip(project);
+          const statusClass = project.status === 'Shipped' ? 'bg-accent text-accent-foreground' : project.status === 'Blocked' ? 'bg-[#f59e0b]/15 text-[#f59e0b]' : project.status === 'In progress' ? 'bg-secondary text-secondary-foreground' : 'bg-muted/20 text-muted-foreground';
+          return <article key={project.id} className="group relative overflow-hidden rounded-[20px] border border-border bg-background/40 p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"><div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: project.accent }} /><div className="flex items-start justify-between gap-3"><div><span className="mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{project.week}</span><h3 className="mt-2 display text-[18px] font-bold leading-tight">{project.title}</h3></div><span className="rounded-full bg-secondary px-2 py-1 mono text-[8px] uppercase tracking-[0.08em] text-secondary-foreground">{project.tag}</span></div><p className="mt-3 min-h-[72px] text-[12px] leading-5 text-muted-foreground">{project.detail}</p>
+            <div className="mt-4 flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-1 mono text-[8px] uppercase tracking-[0.1em] ${statusClass}`}>{project.status}</span><span className="display text-[15px] font-bold">{progress}%</span></div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: project.accent }} /></div>
+            <ul className="mt-4 space-y-2">{project.checklist.map((item) => <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5"><button type="button" onClick={() => toggleChecklistItem(project.id, item.id)} aria-pressed={item.done} className="flex flex-1 items-center gap-2 text-left"><span className={`grid size-4 place-items-center rounded-full border ${item.done ? 'border-accent bg-accent text-accent-foreground' : 'border-border text-muted-foreground'}`}><Check size={10} /></span><span className={`text-[11px] ${item.done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{item.label}</span></button></li>)}</ul>
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+              <select value={project.status} onChange={(event) => selectStatus(project.id, event.target.value as ProjectStatus)} className="rounded-xl border border-border bg-card px-2 py-1.5 text-[11px] text-foreground outline-none focus:border-accent"><option value="Not started">Not started</option><option value="In progress">In progress</option><option value="Blocked">Blocked</option><option value="Shipped">Shipped</option></select>
+              <button type="button" onClick={() => markProjectShipped(project.id)} disabled={!readyToShip || project.status === 'Shipped'} data-testid={`button-project-${project.id}`} className={`inline-flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-[10px] font-bold transition-colors ${project.status === 'Shipped' ? 'bg-accent text-accent-foreground' : readyToShip ? 'bg-primary text-primary-foreground hover:-translate-y-0.5' : 'cursor-not-allowed border border-border bg-background text-muted-foreground'}`}><Check size={12} />{project.status === 'Shipped' ? 'Shipped' : 'Mark shipped'}</button>
+            </div>
+          </article>;
+        })}</div>
+      </section>
+    </div>
+  </div>;
 }
 
 function Router() {
-  return <Switch><Route path="/" component={Dashboard} /><Route path="/learn" component={Learn} /><Route path="/learn/:topic" component={Learn} /><Route path="/gpa" component={Gpa} /><Route path="/projects" component={Projects} /><Route path="/practice" component={Practice} /><Route path="/lab" component={CodingLab} /><Route path="/focus" component={Focus} /><Route path="/notes" component={Notes} /><Route component={NotFound} /></Switch>;
+  return <Switch><Route path="/" component={Dashboard} /><Route path="/learn" component={Learn} /><Route path="/learn/:topic" component={Learn} /><Route path="/gpa" component={Gpa} /><Route path="/projects" component={ProjectTracker} /><Route path="/practice" component={Practice} /><Route path="/lab" component={CodingLab} /><Route path="/focus" component={Focus} /><Route path="/notes" component={Notes} /><Route component={NotFound} /></Switch>;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
