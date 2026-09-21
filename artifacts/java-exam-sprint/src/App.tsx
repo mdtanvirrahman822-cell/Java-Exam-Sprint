@@ -2722,7 +2722,7 @@ function Shell({ children }: { children: ReactNode }) {
         </nav>
         <div className="mt-auto rounded-2xl border border-sidebar-border bg-sidebar-accent/70 p-4">
           <div className="flex items-center gap-2 text-sidebar-foreground/70"><Target size={15} /><span className="mono text-[10px] uppercase tracking-[0.13em]">Exam window</span></div>
-          <div className="mt-3 display text-[25px] font-bold tracking-tight">{countdown.days}d {String(countdown.hours).padStart(2, '0')}h</div>
+          <div className="mt-3 display text-[25px] font-bold tracking-tight">{countdown.days}d</div>
           <p className="mt-1 text-[12px] leading-5 text-sidebar-foreground/55">Nov 2 · 00:00<br />You are still early enough.</p>
           <Link href="/focus" data-testid="link-sidebar-focus" className="mt-4 flex items-center justify-between rounded-lg bg-sidebar-primary px-3 py-2 text-[12px] font-bold text-sidebar-primary-foreground transition-transform hover:-translate-y-0.5">Start a focus block <ArrowRight size={14} /></Link>
         </div>
@@ -2736,7 +2736,7 @@ function Shell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-2 text-[12px] text-muted-foreground lg:flex"><span className="header-crumb mono uppercase tracking-[0.13em]">Sprintroom</span><ChevronRight size={13} className="text-accent" /><span className="header-current rounded-md px-2 py-1 font-semibold text-foreground">{currentLabel}</span></div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">{countdown.days}d {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m to exam</span></div>
+            <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 sm:flex"><span className="size-2 rounded-full bg-accent animate-[tick_2s_ease-in-out_infinite]" /><span className="mono text-[11px] text-muted-foreground">{countdown.days}d to exam</span></div>
             <div className="relative"><button type="button" onClick={() => setThemeMenuOpen((open) => !open)} aria-expanded={themeMenuOpen} aria-haspopup="menu" data-testid="button-theme-picker" className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-muted-foreground transition-colors hover:border-accent hover:text-foreground"><span className={`theme-swatch theme-${theme}`} /><span className="mono text-[9px] uppercase tracking-[0.1em]">{theme}</span><ChevronDown size={13} className={`transition-transform ${themeMenuOpen ? 'rotate-180' : ''}`} /></button>{themeMenuOpen && <div role="menu" aria-label="Background themes" className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur-xl"><div className="px-2 py-1.5 mono text-[9px] uppercase tracking-[0.13em] text-muted-foreground">Choose atmosphere</div>{(['aurora', 'grid', 'starlight', 'neon', 'forest'] as const).map((option) => <button key={option} type="button" role="menuitemradio" aria-checked={theme === option} onClick={() => { setTheme(option); setThemeMenuOpen(false); }} data-testid={`button-theme-${option}`} className={`flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors ${theme === option ? 'bg-accent/15 text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}><span className={`theme-swatch theme-${option}`} /><span className="flex-1"><span className="block text-[12px] font-bold capitalize">{option === 'forest' ? 'Forest beams' : option}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{option === 'aurora' ? 'Teal glow' : option === 'grid' ? 'Technical grid' : option === 'starlight' ? 'Deep starfield' : option === 'neon' ? 'Neon bloom' : 'Soft green light'}</span></span>{theme === option && <Check size={14} className="text-accent-foreground" />}</button>)}</div>}</div>
           </div>
         </header>
@@ -2898,6 +2898,24 @@ function ProgressRing({ value, onAccent = false }: { value: number; onAccent?: b
     </svg>
     <div className={`relative grid size-[94px] place-items-center rounded-full ${onAccent ? 'bg-accent-foreground/10' : 'bg-card'}`}><div className="text-center"><div className="display text-[27px] font-bold">{animatedValue}%</div><div className={`mono text-[9px] uppercase tracking-[0.12em] ${onAccent ? 'text-accent-foreground/60' : 'text-muted-foreground'}`}>ready</div></div></div>
   </div>;
+}
+
+function getWeakestTask(scheduleItems: ScheduleTask[], completedModules: string[]) {
+  const candidateTasks = scheduleItems.filter((task) => task.lectureSections && task.lectureSections.length > 0);
+  if (!candidateTasks.length) return null;
+
+  return candidateTasks
+    .map((task) => {
+      const total = task.lectureSections!.length;
+      const complete = task.lectureSections!.filter((section) => completedModules.includes(section.id)).length;
+      return {
+        task,
+        total,
+        complete,
+        ratio: total === 0 ? 1 : complete / total,
+      };
+    })
+    .sort((left, right) => left.ratio - right.ratio)[0];
 }
 
 function Dashboard() {
