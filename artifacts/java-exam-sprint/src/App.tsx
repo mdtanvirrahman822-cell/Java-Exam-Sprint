@@ -2510,7 +2510,7 @@ team.players().add("Eve");`,
 ];
 
 const navItems = [
-  { href: '/', label: 'Cockpit', icon: PanelsTopLeft },
+  { href: '/', label: 'Dashboard', icon: PanelsTopLeft },
   { href: '/learn', label: 'Learn', icon: BookOpenText },
   { href: '/gpa', label: 'GPA', icon: Calculator },
   { href: '/projects', label: 'Projects', icon: FolderKanban },
@@ -2814,11 +2814,28 @@ function Gpa() {
     { id: 1, name: 'Theory course', credits: 3, grade: 'B' },
     { id: 2, name: 'Lab course', credits: 1, grade: 'A+' },
   ]);
+  const [courseScores, setCourseScores] = usePersisted<Record<string, number>>('java-course-scores', Object.fromEntries(courseTrackers.map((course) => [course.id, course.defaultScore])));
   const totalCredits = courses.reduce((total, course) => total + Math.max(0, course.credits), 0);
   const qualityPoints = courses.reduce((total, course) => total + Math.max(0, course.credits) * (gpaGradeScale.find((item) => item.grade === course.grade)?.points ?? 0), 0);
   const gpa = totalCredits ? qualityPoints / totalCredits : 0;
   const updateCourse = (id: number, changes: Partial<GpaCourse>) => setCourses((current) => current.map((course) => course.id === id ? { ...course, ...changes } : course));
   const addCourse = () => setCourses((current) => [...current, { id: Date.now(), name: `Course ${current.length + 1}`, credits: 3, grade: 'B' }]);
+  const updateCourseScore = (courseId: string, delta: number) => {
+    setCourseScores((current) => {
+      const nextValue = (current[courseId] ?? courseTrackers.find((course) => course.id === courseId)?.defaultScore ?? 0) + delta;
+      return { ...current, [courseId]: Math.min(100, Math.max(0, nextValue)) };
+    });
+  };
+  const monthAverage = courseTrackers.reduce((sum, course) => sum + (courseScores[course.id] ?? course.defaultScore), 0) / courseTrackers.length;
+  const courseSummary = courseTrackers.map((course) => {
+    const score = Math.min(100, Math.max(0, courseScores[course.id] ?? course.defaultScore));
+    return {
+      ...course,
+      score,
+      gap: score - course.target,
+      status: score >= course.target ? 'Ahead' : score >= course.target - 8 ? 'Close' : 'Needs attention',
+    };
+  });
   return <div className="rise">
     <SectionIntro kicker="GPA · academic requirement" title="Know what each grade costs." detail="Build a credit-weighted estimate. A dip in a 3.0-credit theory course moves the result more than the same dip in a 1.0-credit lab." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Calculator size={16} className="text-[#d19a39]" /><span className="mono text-[12px]">Weighted average</span></div>} />
     <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
@@ -2829,6 +2846,37 @@ function Gpa() {
       </section>
       <section className="rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-7"><div className="flex items-center gap-2 text-primary-foreground/60"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Estimated GPA</span></div><div className="mt-5 display text-[64px] font-bold leading-none">{gpa.toFixed(2)}</div><p className="mt-3 text-[13px] text-primary-foreground/65">{qualityPoints.toFixed(2)} quality points across {totalCredits.toFixed(1)} credits.</p><div className="mt-7 border-t border-primary-foreground/15 pt-5"><div className="mono text-[10px] uppercase tracking-[0.15em] text-primary-foreground/55">Grade scale</div><div className="mt-3 space-y-2">{gpaGradeScale.map((item) => <div key={item.grade} className="flex items-center justify-between text-[12px]"><span className="font-bold">{item.grade}</span><span className="mono text-primary-foreground/70">{item.points.toFixed(2)} · {item.range}</span></div>)}</div></div></section>
     </div>
+    <section className="mt-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Grade tracking</span></div>
+        <span className="rounded-full bg-accent/15 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">{monthAverage.toFixed(1)} avg</span>
+      </div>
+      <h2 className="mt-3 display text-[23px] font-bold">Actual performance, not just the plan.</h2>
+      <div className="mt-5 space-y-3">
+        {courseSummary.map((course) => (
+          <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[13px] font-semibold">{course.name}</div>
+                <div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Target {course.target}%</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => updateCourseScore(course.id, -1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">−</button>
+                <div className="display text-[20px] font-bold text-foreground">{course.score.toFixed(0)}%</div>
+                <button type="button" onClick={() => updateCourseScore(course.id, 1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">+</button>
+              </div>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+              <span className="block h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, course.score))}%`, backgroundColor: course.accent }} />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>{course.status}</span>
+              <span className={course.gap >= 0 ? 'text-[#4f9c7a]' : 'text-[#e66b5d]'}>{course.gap >= 0 ? '+' : ''}{course.gap.toFixed(0)} pts</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   </div>;
 }
 
@@ -3059,6 +3107,7 @@ function Dashboard() {
       status: score >= course.target ? 'Ahead' : score >= course.target - 8 ? 'Close' : 'Needs attention',
     };
   });
+  const coursesBelowTarget = courseSummary.filter((course) => course.score < course.target).length;
   const weakTopics = getWeakTopics(questions, practiceResults).slice(0, 3);
   const streak = getCurrentStudyStreak(studyDays);
   const retrospective = `Planned ${Math.round((totalHours || 0) * 10) / 10}h this week. Logged ${Number(((sessions * 25) / 60).toFixed(1))}h with ${completedCount} blocks and ${completedModules.length} topic checks complete.`;
@@ -3089,43 +3138,11 @@ function Dashboard() {
       <DashboardPomodoro selectedTopic={pomodoroTopic} />
     </div>
     <section className="mt-5 overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-primary p-5 text-primary-foreground sm:p-7"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-primary-foreground/60"><GraduationCap size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Next semester · battle plan</span></div><h2 className="mt-3 display text-[27px] font-bold leading-tight sm:text-[32px]">GPA 4.0 Battle Plan</h2><p className="mt-2 max-w-2xl text-[13px] leading-6 text-primary-foreground/70">6 weeks. 6 heavy courses. 4 real projects. One clear goal — walk into Third Semester already ahead.</p></div><div className="rounded-xl bg-primary-foreground/10 px-3 py-2 text-right"><div className="display text-[22px] font-bold">23.50</div><div className="mono text-[9px] uppercase tracking-[0.12em] text-primary-foreground/60">total credits</div></div></div></div>
-      <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.2fr_.8fr]"><div><div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course load overview</div><h3 className="mt-2 display text-[21px] font-bold">18.00 theory · 5.50 lab · 10 courses</h3></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">Next sem</span></div><div className="mt-4 grid gap-2 sm:grid-cols-2">{nextSemesterCourses.map((course) => <div key={course.code} className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5"><div className="min-w-0"><div className="mono text-[10px] font-bold text-accent-foreground">{course.code}</div><div className="mt-1 text-[12px] leading-5 text-muted-foreground">{course.title}</div></div><span className="shrink-0 mono text-[11px] font-bold">{course.credits}</span></div>)}</div></div><aside className="rounded-2xl border border-accent/35 bg-accent/10 p-5"><div className="flex items-center gap-2 text-accent-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Protect the 4.0</span></div><h3 className="mt-3 display text-[20px] font-bold">Every course starts at 100%.</h3><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Quizzes & Assignments <strong className="text-foreground">20%</strong> · Mid Semester <strong className="text-foreground">40%</strong> · Semester Final <strong className="text-foreground">40%</strong></p><div className="mt-4 rounded-xl border border-accent/30 bg-background/45 p-3 text-[12px] font-semibold leading-5">A+ needs 80%+. Quizzes + mid are 60% of your grade before the final even happens — do not let small early assignments slip.</div></aside></div>
+      <div className="border-b border-border bg-primary p-5 text-primary-foreground sm:p-7"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-primary-foreground/60"><GraduationCap size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Next semester · semester plan</span></div><h2 className="mt-3 display text-[27px] font-bold leading-tight sm:text-[32px]">GPA 4.0 Semester Plan</h2><p className="mt-2 max-w-2xl text-[13px] leading-6 text-primary-foreground/70">6 weeks. 6 heavy courses. 4 real projects. One clear goal — walk into Third Semester already ahead.</p></div><div className="rounded-xl bg-primary-foreground/10 px-3 py-2 text-right"><div className="display text-[22px] font-bold">23.50</div><div className="mono text-[9px] uppercase tracking-[0.12em] text-primary-foreground/60">total credits</div></div></div></div>
+      <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1.2fr_.8fr]"><div><div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course load overview</div><h3 className="mt-2 display text-[21px] font-bold">18.00 theory · 5.50 lab · 10 courses</h3></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">Next sem</span></div><div className="mt-4 grid gap-2 sm:grid-cols-2">{nextSemesterCourses.map((course) => <div key={course.code} className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5"><div className="min-w-0"><div className="mono text-[10px] font-bold text-accent-foreground">{course.code}</div><div className="mt-1 text-[12px] leading-5 text-muted-foreground">{course.title}</div></div><span className="shrink-0 mono text-[11px] font-bold">{course.credits}</span></div>)}</div></div><aside className="rounded-2xl border border-accent/35 bg-accent/10 p-5"><div className="flex items-center gap-2 text-accent-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Protect the 4.0</span></div><h3 className="mt-3 display text-[20px] font-bold">Every course starts at 100%.</h3><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Quizzes & Assignments <strong className="text-foreground">20%</strong> · Mid Semester <strong className="text-foreground">40%</strong> · Semester Final <strong className="text-foreground">40%</strong></p><div className="mt-4 rounded-xl border border-accent/30 bg-background/45 p-3 text-[12px] font-semibold leading-5">{coursesBelowTarget === 0 ? 'All courses are on or above target right now.' : `Currently ${coursesBelowTarget} course${coursesBelowTarget === 1 ? '' : 's'} below target.`}</div><div className="mt-2 text-[11px] leading-5 text-muted-foreground">A+ needs 80%+. Keep the early assessments ahead of target so the final does not become a recovery sprint.</div></aside></div>
     </section>
     <section className="mt-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7"><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2 text-muted-foreground"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Daily rhythm</span></div><h2 className="mt-2 display text-[23px] font-bold">A repeatable day beats a heroic one.</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[9px] uppercase tracking-[0.1em] text-secondary-foreground">6–7h focused</span></div><div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Morning · 3h</div><h3 className="mt-2 text-[15px] font-bold">Theory / concept study</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Focus on that week’s course material and build the mental model before coding.</p></div><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Afternoon · 2–3h</div><h3 className="mt-2 text-[15px] font-bold">Project work</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Apply what you just studied to the week’s tagged project.</p></div><div className="rounded-2xl border border-border bg-background/40 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Evening · 1h</div><h3 className="mt-2 text-[15px] font-bold">Practice and recall</h3><p className="mt-1 text-[12px] leading-5 text-muted-foreground">Solve practice problems, write SQL queries, or review flashcards.</p></div></div><div className="mt-4 grid gap-3 md:grid-cols-[.8fr_1.2fr]"><div className="rounded-2xl border border-border bg-secondary/60 p-4"><div className="flex items-center gap-2 text-secondary-foreground"><Moon size={15} /><span className="mono text-[10px] font-bold uppercase tracking-[0.12em]">Weekly recovery</span></div><p className="mt-2 text-[13px] font-semibold leading-5">1 full rest day per week. No exceptions.</p><p className="mt-1 text-[12px] leading-5 text-muted-foreground">A six-week sprint needs recovery to stay sustainable.</p></div><div className="rounded-2xl border border-accent/35 bg-accent/10 p-4"><div className="mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent-foreground">Compression rule</div><p className="mt-2 text-[13px] font-semibold leading-5">Less than 6–7 focused hours a day? Compress the plan, but cut Week 6 integration time first — never the core study weeks.</p></div></div></section>
     <TimeAllocationPlanner />
-    <section className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
-      <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Grade tracking</span></div>
-          <span className="rounded-full bg-accent/15 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">{monthAverage.toFixed(1)} avg</span>
-        </div>
-        <h2 className="mt-3 display text-[23px] font-bold">Actual performance, not just the plan.</h2>
-        <div className="mt-5 space-y-3">
-          {courseSummary.map((course) => (
-            <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[13px] font-semibold">{course.name}</div>
-                  <div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Target {course.target}%</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => updateCourseScore(course.id, -1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">−</button>
-                  <div className="display text-[20px] font-bold text-foreground">{course.score.toFixed(0)}%</div>
-                  <button type="button" onClick={() => updateCourseScore(course.id, 1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">+</button>
-                </div>
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
-                <span className="block h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, course.score))}%`, backgroundColor: course.accent }} />
-              </div>
-              <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>{course.status}</span>
-                <span className={course.gap >= 0 ? 'text-[#4f9c7a]' : 'text-[#e66b5d]'}>{course.gap >= 0 ? '+' : ''}{course.gap.toFixed(0)} pts</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
       <div className="space-y-5">
         <div className="rounded-[24px] border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
@@ -3161,10 +3178,9 @@ function Dashboard() {
           </div>
         </div>
       </div>
-    </section>
         <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_.8fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
-        <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Finish line + exam rehearsal</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study plan</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
+        <div className="flex items-start justify-between"><div><div className="flex items-center gap-2 text-muted-foreground"><CalendarDays size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Finish line + exam rehearsal</span></div><h2 className="mt-2 display text-[23px] font-bold">Your study schedule</h2></div><span className="rounded-full bg-secondary px-3 py-1 mono text-[10px] text-secondary-foreground">{completedCount} checked</span></div>
         <div className="mt-5 space-y-2">{schedule.map((task) => {
           const done = isTaskComplete(task);
           const isExpanded = expandedLecture === task.id;
@@ -3212,7 +3228,7 @@ function Dashboard() {
       </section>
       <div className="space-y-5">
         <section className="flex flex-col justify-between rounded-[24px] border border-accent/70 bg-accent p-6 text-accent-foreground shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center xl:flex-col xl:items-start">
-          <div><div className="flex items-center gap-2 text-accent-foreground/70"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Sprint progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-accent-foreground/75">Complete the plan, then use practice to find the fuzzy edges.</p></div>
+          <div><div className="flex items-center gap-2 text-accent-foreground/70"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Progress</span></div><h2 className="mt-3 display text-[22px] font-bold">Your runway is visible.</h2><p className="mt-2 max-w-xs text-[13px] leading-5 text-accent-foreground/75">Complete the plan, then use practice to find the fuzzy edges.</p></div>
           <div className="mt-5 flex items-center gap-5 sm:mt-0 xl:mt-5"><ProgressRing value={progress} onAccent /><div><div className="display text-2xl font-bold">{completedCount}<span className="text-accent-foreground/65">/{schedule.length}</span></div><div className="mono text-[10px] uppercase tracking-[0.1em] text-accent-foreground/70">blocks done</div><div className="mt-2 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground/70">{completedSectionCount}/{totalSectionCount} topic checks</div></div></div>
         </section>
         <section className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
@@ -3221,7 +3237,7 @@ function Dashboard() {
           <button onClick={() => setLocation('/focus')} data-testid="button-quick-start" className="mt-5 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-[13px] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Start Week 1 focus <ArrowRight size={16} /></button>
         </section>
         <section className="rounded-[24px] border border-border bg-[#e3eee5] p-6 dark:bg-card">
-          <div className="flex items-center justify-between gap-4"><div className="flex items-center gap-2 text-[#3f7559] dark:text-accent"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Tutor note</span></div><span className="rounded-full bg-[#234b38]/10 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-[#234b38] dark:text-accent">Coach mode</span></div>
+          <div className="flex items-center justify-between gap-4"><div className="flex items-center gap-2 text-[#3f7559] dark:text-accent"><Sparkles size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Suggestions</span></div><span className="rounded-full bg-[#234b38]/10 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-[#234b38] dark:text-accent">Coach mode</span></div>
           {(() => {
             const weakTask = getWeakestTask(schedule, completedModules);
             const focusTip = weakTask
