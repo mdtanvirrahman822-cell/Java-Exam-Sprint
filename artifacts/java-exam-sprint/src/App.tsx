@@ -2626,6 +2626,7 @@ const courseTrackers: GradeCourse[] = [
 ];
 
 type WeeklyTrendPoint = { week: string; focus: number; topics: number; hours: number };
+type FocusSessionLog = { id: string; topic: string; minutes: number; completedAt: string; date: string };
 const defaultWeeklyTrend: WeeklyTrendPoint[] = [
   { week: 'W1', focus: 3.5, topics: 4, hours: 12 },
   { week: 'W2', focus: 4.4, topics: 5, hours: 13 },
@@ -2634,6 +2635,25 @@ const defaultWeeklyTrend: WeeklyTrendPoint[] = [
   { week: 'W5', focus: 6.5, topics: 11, hours: 20 },
   { week: 'W6', focus: 7.1, topics: 13, hours: 22 },
 ];
+
+function getLoggedHoursInCurrentWeek(logs: FocusSessionLog[], referenceDate = new Date()) {
+  const weekStart = new Date(referenceDate);
+  const dayOfWeek = (weekStart.getDay() + 6) % 7;
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - dayOfWeek);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  const totalMinutes = logs.reduce((sum, session) => {
+    const completedAt = new Date(session.completedAt);
+    if (completedAt >= weekStart && completedAt < weekEnd) {
+      return sum + Math.max(0, Number(session.minutes || 25));
+    }
+    return sum;
+  }, 0);
+
+  return Number((totalMinutes / 60).toFixed(1));
+}
 
 function usePersisted<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
@@ -2713,6 +2733,7 @@ function usePomodoroTimer() {
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = usePersisted('java-focus-sessions', 0);
   const [topic, setTopic] = usePersisted('java-pomodoro-topic', 'OOP focus');
+  const [focusSessionLogs, setFocusSessionLogs] = usePersisted<FocusSessionLog[]>('java-focus-session-logs', []);
   const duration = mode === 'focus' ? 25 * 60 : 5 * 60;
 
   useEffect(() => {
@@ -2720,13 +2741,26 @@ function usePomodoroTimer() {
     const timer = window.setInterval(() => setSeconds((value) => {
       if (value <= 1) {
         setRunning(false);
-        setSessions((count) => count + (mode === 'focus' ? 1 : 0));
+        if (mode === 'focus') {
+          const completedAt = new Date().toISOString();
+          setSessions((count) => count + 1);
+          setFocusSessionLogs((current) => [
+            ...current,
+            {
+              id: `${completedAt}-${Math.random().toString(16).slice(2, 10)}`,
+              topic: topic || 'General focus',
+              minutes: 25,
+              completedAt,
+              date: completedAt.slice(0, 10),
+            },
+          ]);
+        }
         return duration;
       }
       return value - 1;
     }), 1000);
     return () => window.clearInterval(timer);
-  }, [running, duration, mode, setSeconds, setSessions]);
+  }, [running, duration, mode, setSeconds, setSessions, setFocusSessionLogs, topic]);
 
   const changeMode = (next: 'focus' | 'break') => {
     setMode(next);
@@ -2738,7 +2772,7 @@ function usePomodoroTimer() {
     setSeconds(duration);
   };
 
-  return { mode, seconds, running, sessions, topic, setTopic, duration, progress: 1 - seconds / duration, changeMode, reset, toggle: () => setRunning((value) => !value) };
+  return { mode, seconds, running, sessions, topic, setTopic, duration, progress: 1 - seconds / duration, focusSessionLogs, changeMode, reset, toggle: () => setRunning((value) => !value) };
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -3052,7 +3086,7 @@ function Dashboard() {
   const [allocation] = usePersisted<Record<string, number>>('java-time-allocation', Object.fromEntries(suggestedTimeAllocation.map((item) => [item.id, item.hours])));
   const [scheduleNow, setScheduleNow] = useState(() => new Date());
   const [, setLocation] = useLocation();
-  const { sessions } = usePomodoroTimer();
+  const { sessions, focusSessionLogs } = usePomodoroTimer();
   const plannedHours = suggestedTimeAllocation.reduce((sum, item) => sum + (allocation[item.id] ?? item.hours), 0);
   const updateCourseScore = (courseId: string, delta: number) => {
     setCourseScores((current) => {
@@ -3088,15 +3122,27 @@ function Dashboard() {
     }
   }, [completedCount, completedModules.length, setStudyDays]);
   useEffect(() => {
+    const weekLoggedHours = getLoggedHoursInCurrentWeek(focusSessionLogs);
+    const sortedLogs = focusSessionLogs.filter((session) => {
+      const completedAt = new Date(session.completedAt);
+      const weekStart = new Date();
+      const dayOfWeek = (weekStart.getDay() + 6) % 7;
+      weekStart.setHours(0, 0, 0, 0);
+      weekStart.setDate(weekStart.getDate() - dayOfWeek);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      return completedAt >= weekStart && completedAt < weekEnd;
+    });
+    const uniqueTopics = new Set(sortedLogs.map((session) => session.topic).filter(Boolean)).size;
+    const nextPoint = { week: 'W6', focus: Math.max(weekLoggedHours, 1), topics: Math.max(uniqueTopics, 1), hours: Number((plannedHours || 0).toFixed(1)) };
+
     setWeeklyTrend((current) => {
       const base = current.length ? current : defaultWeeklyTrend;
       const next = [...base];
-      const actualFocus = Number(((sessions * 25) / 60).toFixed(1));
-      const nextPoint = { week: 'W6', focus: Math.max(actualFocus, 1), topics: completedModules.length, hours: Number((plannedHours || 0).toFixed(1)) };
       if (next.length >= 6) next[next.length - 1] = nextPoint;
       return JSON.stringify(current.length ? current[current.length - 1] : null) === JSON.stringify(nextPoint) ? current : next;
     });
-  }, [completedModules.length, plannedHours, sessions, setWeeklyTrend]);
+  }, [focusSessionLogs, plannedHours, setWeeklyTrend]);
   const monthAverage = courseTrackers.reduce((sum, course) => sum + (courseScores[course.id] ?? course.defaultScore), 0) / courseTrackers.length;
   const courseSummary = courseTrackers.map((course) => {
     const score = Math.min(100, Math.max(0, courseScores[course.id] ?? course.defaultScore));
@@ -3110,7 +3156,28 @@ function Dashboard() {
   const coursesBelowTarget = courseSummary.filter((course) => course.score < course.target).length;
   const weakTopics = getWeakTopics(questions, practiceResults).slice(0, 3);
   const streak = getCurrentStudyStreak(studyDays);
-  const retrospective = `Planned ${Math.round((totalHours || 0) * 10) / 10}h this week. Logged ${Number(((sessions * 25) / 60).toFixed(1))}h with ${completedCount} blocks and ${completedModules.length} topic checks complete.`;
+  const weekLoggedHours = getLoggedHoursInCurrentWeek(focusSessionLogs);
+  const weekTaggedTopics = new Set(focusSessionLogs.filter((session) => {
+    const completedAt = new Date(session.completedAt);
+    const weekStart = new Date();
+    const dayOfWeek = (weekStart.getDay() + 6) % 7;
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - dayOfWeek);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    return completedAt >= weekStart && completedAt < weekEnd;
+  }).map((session) => session.topic).filter(Boolean)).size;
+  const weekFocusBlocks = focusSessionLogs.filter((session) => {
+    const completedAt = new Date(session.completedAt);
+    const weekStart = new Date();
+    const dayOfWeek = (weekStart.getDay() + 6) % 7;
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - dayOfWeek);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    return completedAt >= weekStart && completedAt < weekEnd;
+  }).length;
+  const retrospective = `Planned ${Math.round((totalHours || 0) * 10) / 10}h this week. Logged ${weekLoggedHours.toFixed(1)}h across ${weekFocusBlocks} tagged focus blocks in ${weekTaggedTopics} topics, plus ${completedCount} study blocks checked.`;
   const trendSeries = weeklyTrend.length ? weeklyTrend : defaultWeeklyTrend;
   const trendMax = Math.max(1, ...trendSeries.flatMap((point) => [point.focus, point.topics]));
   const trendLine = trendSeries.map((point, index) => `${index * 48},${140 - (point.focus / trendMax) * 100}`).join(' ');
@@ -3152,7 +3219,7 @@ function Dashboard() {
           <p className="mt-4 text-[13px] leading-6 text-muted-foreground">{retrospective}</p>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{plannedHours.toFixed(1)}h</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">planned</div></div>
-            <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{Number(((sessions * 25) / 60).toFixed(1))}h</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">logged</div></div>
+            <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{weekLoggedHours.toFixed(1)}h</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">logged</div></div>
             <div className="rounded-xl border border-border bg-background/40 p-2"><div className="display text-[18px] font-bold">{completedModules.length}</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">topics</div></div>
           </div>
         </div>
@@ -3370,10 +3437,10 @@ function CodingLab() {
 }
 
 function Focus() {
-  const { mode, seconds, running, sessions, topic, progress, changeMode, reset, toggle } = usePomodoroTimer();
+  const { mode, seconds, running, sessions, topic, setTopic, progress, changeMode, reset, toggle } = usePomodoroTimer();
+  const quickTags = ['OOP focus', 'Linear Algebra', 'DBMS', 'Data Structures', 'Projects', 'Theory'];
   return <div className="rise"><SectionIntro kicker="Focus room · one block" title="Protect your attention." detail="A quiet timer for the work that moves the score. Put the phone face down; keep this room open." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Flame size={16} className="text-[#e66b5d]" /><span className="mono text-[12px]">{sessions} focus blocks logged</span></div>} />
-    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={toggle} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={reset} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><div className="space-y-5"><section className="rounded-[24px] border border-border bg-card p-6 shadow-sm"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Pomodoro topic</span></div><h2 className="mt-4 display text-[22px] font-bold">{topic}</h2><p className="mt-2 text-[13px] leading-6 text-muted-foreground">Selected from your study plan. Keep this subsection visible while you explain the rule, trace an example, and test yourself.</p><div className="mt-5 space-y-3">{['Explain the rule in your own words', 'Trace one example without notes', 'Finish with one practice question'].map((item) => <div key={item} className="flex items-center gap-2 text-[12px]"><CheckCircle2 size={15} className="text-[#4f9c7a]" />{item}</div>)}</div></section><section className="rounded-[24px] border border-border bg-[#f3e9d7] p-6 dark:bg-card"><div className="flex items-center gap-2 text-[#9b6e27] dark:text-accent"><Coffee size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Tiny ritual</span></div><p className="mt-3 text-[14px] leading-6 text-[#654b26] dark:text-muted-foreground">Before you start, write the one thing this block will make easier tomorrow.</p><Link href="/notes" data-testid="link-focus-notes" className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold text-[#9b6e27] dark:text-accent">Open scratchpad <ArrowRight size={14} /></Link></section></div></div>
-  </div>;
+    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={toggle} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={reset} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><aside className="space-y-5"><section className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Session topic</span></div><label className="mt-4 block"><span className="mono mb-2 block text-[9px] uppercase tracking-[0.12em] text-muted-foreground">Current tag</span><input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="Enter a course or topic" className="w-full rounded-xl border border-border bg-background/40 px-3 py-2.5 text-[13px] outline-none focus:border-accent" aria-label="Focus session tag" /></label><div className="mt-4 flex flex-wrap gap-2">{quickTags.map((item) => <button key={item} type="button" onClick={() => setTopic(item)} className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${topic === item ? 'bg-accent text-accent-foreground' : 'bg-secondary text-secondary-foreground'}`}>{item}</button>)}</div></section><section className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6"><div className="flex items-center gap-2 text-muted-foreground"><Flame size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Focus promise</span></div><p className="mt-4 text-[13px] leading-6 text-muted-foreground">Keep the next block honest. The selected topic is auto-attached to each completed 25-minute focus session, so the dashboard can update from real logs.</p></section></aside></div></div>;
 }
 
 function Notes() {
