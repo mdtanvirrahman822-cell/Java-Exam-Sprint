@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "set PORT=5173&& set BASE_PATH=/&& npm --prefix artifacts/java-exam-sprint run dev",
+    "dev": "set PORT=4173&& set BASE_PATH=/&& npm --prefix artifacts/java-exam-sprint run dev -- --host localhost --strictPort false",
     "preinstall": "node -e \"const fs = require('fs'); ['package-lock.json', 'yarn.lock'].forEach((file) => fs.rmSync(file, { force: true })); const userAgent = process.env.npm_config_user_agent || ''; if (!userAgent.startsWith('pnpm/')) { console.error('Use pnpm instead'); process.exit(1); }\"",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
