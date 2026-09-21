@@ -36,6 +36,7 @@ import {
   Sparkles,
   Target,
   TimerReset,
+  Trash2,
   TrendingUp,
   Trophy,
   X,
@@ -66,7 +67,64 @@ const gpaGradeScale = [
   { grade: 'B+', points: 3.25, range: '65% to below 70%' },
   { grade: 'B', points: 3, range: '60% to below 65%' },
 ];
-type GpaCourse = { id: number; name: string; credits: number; grade: string };
+type GpaCourse = { id: number; name: string; credits: number; quiz: number; mid: number; final: number };
+
+const GPA_WEIGHTS = { quiz: 0.2, mid: 0.4, final: 0.4 } as const;
+
+const clampCourseScore = (value: number | string | null | undefined) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(100, Math.max(0, parsed));
+};
+
+const formatCourseInput = (value: string) => value.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+
+const hasCourseInputs = (course: Partial<GpaCourse>) => [course.quiz, course.mid, course.final].some((value) => value !== undefined && value !== null && Number.isFinite(Number(value)) && Number(value) > 0);
+
+const getWeightedCourseGrade = (course: Partial<GpaCourse>) => {
+  const quiz = clampCourseScore(course.quiz);
+  const mid = clampCourseScore(course.mid);
+  const final = clampCourseScore(course.final);
+  return quiz * GPA_WEIGHTS.quiz + mid * GPA_WEIGHTS.mid + final * GPA_WEIGHTS.final;
+};
+
+const getLetterGrade = (value: number) => {
+  if (Number.isNaN(value)) return '—';
+  if (value >= 80) return 'A+';
+  if (value >= 75) return 'A';
+  if (value >= 70) return 'A-';
+  if (value >= 65) return 'B+';
+  if (value >= 60) return 'B';
+  if (value >= 55) return 'B-';
+  if (value >= 50) return 'C+';
+  if (value >= 45) return 'C';
+  return 'F';
+};
+
+const getGradePoints = (value: number) => {
+  if (Number.isNaN(value)) return 0;
+  if (value >= 80) return 4;
+  if (value >= 75) return 3.75;
+  if (value >= 70) return 3.5;
+  if (value >= 65) return 3.25;
+  if (value >= 60) return 3;
+  if (value >= 55) return 2.75;
+  if (value >= 50) return 2.5;
+  if (value >= 45) return 2.25;
+  if (value >= 40) return 2;
+  return 0;
+};
+
+const getFinalNeededForTarget = (course: Partial<GpaCourse>, target = 80) => {
+  const quiz = clampCourseScore(course.quiz);
+  const mid = clampCourseScore(course.mid);
+  const final = clampCourseScore(course.final);
+  const currentWeighted = quiz * GPA_WEIGHTS.quiz + mid * GPA_WEIGHTS.mid;
+  const needed = (target - currentWeighted) / GPA_WEIGHTS.final;
+  if (!Number.isFinite(needed) || needed <= 0) return 0;
+  if (needed >= 100) return 100;
+  return Math.min(100, Math.max(0, needed));
+};
 
 const legacyTopics: Topic[] = [
   {
@@ -2615,15 +2673,32 @@ const suggestedTimeAllocation = [
   { id: 'buffer', label: 'Buffer / Rest', hours: 4, color: '#8793a1' },
 ];
 
-type GradeCourse = { id: string; name: string; target: number; defaultScore: number; accent: string };
+type GradeCourse = {
+  id: string;
+  name: string;
+  credits: number;
+  target: number;
+  defaultScore: number;
+  accent: string;
+  weights: { quiz: number; mid: number; final: number };
+};
 const courseTrackers: GradeCourse[] = [
-  { id: 'linear-algebra', name: 'Linear Algebra', target: 82, defaultScore: 78, accent: '#5e8fcb' },
-  { id: 'data-structures', name: 'Data Structures', target: 80, defaultScore: 74, accent: '#4f9c7a' },
-  { id: 'computer-organization', name: 'Computer Organization', target: 85, defaultScore: 80, accent: '#d19a39' },
-  { id: 'dbms', name: 'DBMS', target: 84, defaultScore: 79, accent: '#3e93a8' },
-  { id: 'theory', name: 'Theory of Computing', target: 83, defaultScore: 76, accent: '#8472c8' },
-  { id: 'oop', name: 'OOP Concepts II', target: 88, defaultScore: 82, accent: '#d56e9a' },
+  { id: 'linear-algebra', name: 'Linear Algebra', credits: 3, target: 82, defaultScore: 78, accent: '#5e8fcb', weights: { quiz: 0.2, mid: 0.4, final: 0.4 } },
+  { id: 'data-structures', name: 'Data Structures', credits: 3, target: 80, defaultScore: 74, accent: '#4f9c7a', weights: { quiz: 0.2, mid: 0.4, final: 0.4 } },
+  { id: 'computer-organization', name: 'Computer Organization', credits: 3, target: 85, defaultScore: 80, accent: '#d19a39', weights: { quiz: 0.2, mid: 0.4, final: 0.4 } },
+  { id: 'dbms', name: 'DBMS', credits: 3, target: 84, defaultScore: 79, accent: '#3e93a8', weights: { quiz: 0.2, mid: 0.4, final: 0.4 } },
+  { id: 'theory', name: 'Theory of Computing', credits: 3, target: 83, defaultScore: 76, accent: '#8472c8', weights: { quiz: 0.2, mid: 0.4, final: 0.4 } },
+  { id: 'oop', name: 'OOP Concepts II', credits: 3, target: 88, defaultScore: 82, accent: '#d56e9a', weights: { quiz: 0.2, mid: 0.4, final: 0.4 } },
 ];
+
+const defaultGpaCourses: GpaCourse[] = courseTrackers.map((course, index) => ({
+  id: index + 1,
+  name: course.name,
+  credits: course.credits,
+  quiz: clampCourseScore(course.defaultScore * 0.9),
+  mid: clampCourseScore(course.defaultScore * 0.95),
+  final: 0,
+}));
 
 type WeeklyTrendPoint = { week: string; focus: number; topics: number; hours: number };
 type FocusSessionLog = { id: string; topic: string; minutes: number; completedAt: string; date: string };
@@ -2844,72 +2919,89 @@ function SectionIntro({ kicker, title, detail, action }: { kicker: string; title
 }
 
 function Gpa() {
-  const [courses, setCourses] = usePersisted<GpaCourse[]>('java-gpa-courses', [
-    { id: 1, name: 'Theory course', credits: 3, grade: 'B' },
-    { id: 2, name: 'Lab course', credits: 1, grade: 'A+' },
-  ]);
-  const [courseScores, setCourseScores] = usePersisted<Record<string, number>>('java-course-scores', Object.fromEntries(courseTrackers.map((course) => [course.id, course.defaultScore])));
-  const totalCredits = courses.reduce((total, course) => total + Math.max(0, course.credits), 0);
-  const qualityPoints = courses.reduce((total, course) => total + Math.max(0, course.credits) * (gpaGradeScale.find((item) => item.grade === course.grade)?.points ?? 0), 0);
-  const gpa = totalCredits ? qualityPoints / totalCredits : 0;
+  const [courses, setCourses] = usePersisted<GpaCourse[]>('java-gpa-courses', defaultGpaCourses);
+  const [newCourseName, setNewCourseName] = useState('');
+  const [courseToDelete, setCourseToDelete] = useState<GpaCourse | null>(null);
+
   const updateCourse = (id: number, changes: Partial<GpaCourse>) => setCourses((current) => current.map((course) => course.id === id ? { ...course, ...changes } : course));
-  const addCourse = () => setCourses((current) => [...current, { id: Date.now(), name: `Course ${current.length + 1}`, credits: 3, grade: 'B' }]);
-  const updateCourseScore = (courseId: string, delta: number) => {
-    setCourseScores((current) => {
-      const nextValue = (current[courseId] ?? courseTrackers.find((course) => course.id === courseId)?.defaultScore ?? 0) + delta;
-      return { ...current, [courseId]: Math.min(100, Math.max(0, nextValue)) };
-    });
+  const addCourse = () => {
+    const trimmedName = newCourseName.trim();
+    if (!trimmedName) return;
+    setCourses((current) => [...current, { id: Date.now(), name: trimmedName, credits: 3, quiz: 0, mid: 0, final: 0 }]);
+    setNewCourseName('');
   };
-  const monthAverage = courseTrackers.reduce((sum, course) => sum + (courseScores[course.id] ?? course.defaultScore), 0) / courseTrackers.length;
-  const courseSummary = courseTrackers.map((course) => {
-    const score = Math.min(100, Math.max(0, courseScores[course.id] ?? course.defaultScore));
+  const removeCourse = (id: number) => {
+    const course = courses.find((item) => item.id === id);
+    if (!course) return;
+    const hasEnteredScores = hasCourseInputs(course);
+    if (hasEnteredScores) {
+      setCourseToDelete(course);
+      return;
+    }
+    setCourses((current) => current.filter((item) => item.id !== id));
+  };
+  const confirmDeleteCourse = () => {
+    if (!courseToDelete) return;
+    setCourses((current) => current.filter((item) => item.id !== courseToDelete.id));
+    setCourseToDelete(null);
+  };
+
+  const courseSummary = courses.map((course) => {
+    const normalizedCourse = {
+      ...course,
+      quiz: clampCourseScore(course.quiz),
+      mid: clampCourseScore(course.mid),
+      final: clampCourseScore(course.final),
+    };
+    const score = clampCourseScore(getWeightedCourseGrade(normalizedCourse));
+    const letter = getLetterGrade(score);
+    const neededForAPlus = getFinalNeededForTarget(normalizedCourse, 80);
+    const hasValues = hasCourseInputs(normalizedCourse);
+    const gradeMessage = (() => {
+      if (!hasValues) return 'Enter scores to see your grade';
+      if (score >= 80) return 'You are already at or above A+.';
+      return `You need ${Math.ceil(neededForAPlus)}% on the final for A+.`;
+    })();
+
     return {
       ...course,
+      ...normalizedCourse,
       score,
-      gap: score - course.target,
-      status: score >= course.target ? 'Ahead' : score >= course.target - 8 ? 'Close' : 'Needs attention',
+      letter,
+      neededForAPlus,
+      gradeMessage,
+      points: getGradePoints(score),
+      gap: score - 80,
+      status: score >= 80 ? 'A+ target secured' : score >= 72 ? 'Close to A+' : 'Needs a stronger final',
+      hasValues,
     };
   });
+
+  const validCourseSummary = courseSummary.filter((course) => course.hasValues);
+  const totalCredits = validCourseSummary.reduce((total, course) => total + Math.max(0, course.credits), 0);
+  const qualityPoints = validCourseSummary.reduce((total, course) => total + Math.max(0, course.credits) * (course.points || 0), 0);
+  const gpa = totalCredits ? qualityPoints / totalCredits : 0;
+  const averageCurrentGrade = validCourseSummary.length ? validCourseSummary.reduce((sum, course) => sum + course.score, 0) / validCourseSummary.length : 0;
+
   return <div className="rise">
-    <SectionIntro kicker="GPA · academic requirement" title="Know what each grade costs." detail="Build a credit-weighted estimate. A dip in a 3.0-credit theory course moves the result more than the same dip in a 1.0-credit lab." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Calculator size={16} className="text-[#d19a39]" /><span className="mono text-[12px]">Weighted average</span></div>} />
+    <SectionIntro kicker="GPA · academic requirement" title="Know what each grade costs." detail="Enter quiz, midterm, and final marks using the actual 20/40/40 split. The live grade and the final needed for A+ update instantly." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Calculator size={16} className="text-[#d19a39]" /><span className="mono text-[12px]">Weighted average</span></div>} />
     <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
       <section className="rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-7">
-        <div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course inputs</div><h2 className="mt-2 display text-[23px] font-bold">Your current courses</h2></div><button type="button" onClick={addCourse} data-testid="button-add-gpa-course" className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-[12px] font-bold text-primary-foreground"><span className="text-base leading-none">+</span>Add course</button></div>
-        <div className="mt-5 space-y-3">{courses.map((course) => <div key={course.id} className="grid gap-2 rounded-2xl border border-border bg-background/40 p-3 sm:grid-cols-[1fr_100px_120px_auto] sm:items-center"><input value={course.name} onChange={(event) => updateCourse(course.id, { name: event.target.value })} aria-label={`${course.name} name`} className="min-w-0 rounded-lg border border-border bg-card px-3 py-2.5 text-[13px] outline-none focus:border-accent" /><label className="flex items-center gap-2 text-[11px] text-muted-foreground sm:block"><span className="sm:hidden">Credits</span><input type="number" min="0" step="0.5" value={course.credits} onChange={(event) => updateCourse(course.id, { credits: Number(event.target.value) || 0 })} aria-label={`${course.name} credits`} className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-[13px] text-foreground outline-none focus:border-accent" /></label><select value={course.grade} onChange={(event) => updateCourse(course.id, { grade: event.target.value })} aria-label={`${course.name} grade`} className="rounded-lg border border-border bg-card px-3 py-2.5 text-[13px] outline-none focus:border-accent">{gpaGradeScale.map((item) => <option key={item.grade} value={item.grade}>{item.grade} · {item.points.toFixed(2)} GP</option>)}</select><button type="button" onClick={() => setCourses((current) => current.filter((item) => item.id !== course.id))} aria-label={`Remove ${course.name}`} className="rounded-lg border border-border px-3 py-2 text-[12px] text-muted-foreground hover:border-destructive hover:text-destructive">Remove</button></div>)}</div>
-        <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-[12px] leading-5 text-muted-foreground"><strong className="text-foreground">Formula:</strong> GPA = (1 / ΣCᵢ) × Σ(Cᵢ × GPᵢ). Credits are the weighting, so equal grade changes do not have equal impact.</div>
+        <div className="flex items-center justify-between gap-3"><div><div className="mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Course inputs</div><h2 className="mt-2 display text-[23px] font-bold">Real course grade tracker</h2></div><button type="button" onClick={() => setNewCourseName('')} data-testid="button-add-gpa-course" className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-[12px] font-bold text-primary-foreground"><span className="text-base leading-none">+</span>Add course</button></div>
+        {courseToDelete && <div className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-3 text-[12px] text-muted-foreground"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div>Remove <span className="font-semibold text-foreground">{courseToDelete.name}</span> and its entered scores?</div><div className="flex items-center gap-2"><button type="button" onClick={confirmDeleteCourse} className="rounded-lg bg-destructive px-3 py-1.5 font-semibold text-destructive-foreground">Delete</button><button type="button" onClick={() => setCourseToDelete(null)} className="rounded-lg border border-border bg-card px-3 py-1.5 font-semibold text-foreground">Cancel</button></div></div></div>}
+        <div className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-background/40 p-2"><input aria-label="Course name" value={newCourseName} onChange={(event) => setNewCourseName(event.target.value)} placeholder="Enter course name" className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-[13px] text-foreground outline-none focus:border-accent" /><button type="button" onClick={addCourse} className="rounded-xl bg-primary px-3 py-2 text-[12px] font-bold text-primary-foreground">Add</button></div>
+        <div className="mt-5 space-y-3">{courseSummary.map((course) => <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="text-[13px] font-semibold">{course.name}</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{course.credits} credits</div></div><div className="flex items-center gap-2"><div className="display text-[22px] font-bold text-foreground">{course.score.toFixed(0)}%</div><button type="button" aria-label={`Remove ${course.name}`} onClick={() => removeCourse(course.id)} className="grid size-8 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-destructive hover:text-destructive" title="Remove course"><Trash2 size={14} /></button></div></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Quiz · 20%</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={course.quiz} onChange={(event) => updateCourse(course.id, { quiz: clampCourseScore(formatCourseInput(event.target.value)) })} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Mid · 40%</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={course.mid} onChange={(event) => updateCourse(course.id, { mid: clampCourseScore(formatCourseInput(event.target.value)) })} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label><label className="rounded-xl border border-border bg-card p-2 text-[11px] text-muted-foreground"><span className="mb-1 block mono uppercase tracking-[0.1em]">Final · 40%</span><input inputMode="decimal" pattern="[0-9]*" type="text" value={course.final} onChange={(event) => updateCourse(course.id, { final: clampCourseScore(formatCourseInput(event.target.value)) })} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[13px] text-foreground outline-none focus:border-accent" /></label></div><div className="mt-3 flex flex-col gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">Current grade</div><div className="mt-1 text-[13px] font-bold text-foreground">{course.letter} · {course.score.toFixed(0)}%</div></div><div className="text-[12px] text-muted-foreground">{course.gradeMessage}</div></div></div>)}</div>
+        <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/10 p-4 text-[12px] leading-5 text-muted-foreground"><strong className="text-foreground">Formula:</strong> Final course grade = Quiz × 20% + Midterm × 40% + Final × 40%. The final score needed for A+ is calculated from your current weighted subtotal.</div>
       </section>
       <section className="rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-7"><div className="flex items-center gap-2 text-primary-foreground/60"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.15em]">Estimated GPA</span></div><div className="mt-5 display text-[64px] font-bold leading-none">{gpa.toFixed(2)}</div><p className="mt-3 text-[13px] text-primary-foreground/65">{qualityPoints.toFixed(2)} quality points across {totalCredits.toFixed(1)} credits.</p><div className="mt-7 border-t border-primary-foreground/15 pt-5"><div className="mono text-[10px] uppercase tracking-[0.15em] text-primary-foreground/55">Grade scale</div><div className="mt-3 space-y-2">{gpaGradeScale.map((item) => <div key={item.grade} className="flex items-center justify-between text-[12px]"><span className="font-bold">{item.grade}</span><span className="mono text-primary-foreground/70">{item.points.toFixed(2)} · {item.range}</span></div>)}</div></div></section>
     </div>
     <section className="mt-5 rounded-[24px] border border-border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-muted-foreground"><Gauge size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Grade tracking</span></div>
-        <span className="rounded-full bg-accent/15 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">{monthAverage.toFixed(1)} avg</span>
+        <span className="rounded-full bg-accent/15 px-2.5 py-1 mono text-[9px] uppercase tracking-[0.1em] text-accent-foreground">{averageCurrentGrade.toFixed(0)}% avg</span>
       </div>
-      <h2 className="mt-3 display text-[23px] font-bold">Actual performance, not just the plan.</h2>
-      <div className="mt-5 space-y-3">
-        {courseSummary.map((course) => (
-          <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[13px] font-semibold">{course.name}</div>
-                <div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Target {course.target}%</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={() => updateCourseScore(course.id, -1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">−</button>
-                <div className="display text-[20px] font-bold text-foreground">{course.score.toFixed(0)}%</div>
-                <button type="button" onClick={() => updateCourseScore(course.id, 1)} className="grid size-7 place-items-center rounded-lg border border-border bg-card text-sm text-muted-foreground hover:border-accent">+</button>
-              </div>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
-              <span className="block h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, course.score))}%`, backgroundColor: course.accent }} />
-            </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>{course.status}</span>
-              <span className={course.gap >= 0 ? 'text-[#4f9c7a]' : 'text-[#e66b5d]'}>{course.gap >= 0 ? '+' : ''}{course.gap.toFixed(0)} pts</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <h2 className="mt-3 display text-[23px] font-bold">Live course performance.</h2>
+      <div className="mt-5 space-y-3">{courseSummary.map((course) => <div key={course.id} className="rounded-2xl border border-border bg-background/40 p-3"><div className="flex items-center justify-between gap-3"><div><div className="text-[13px] font-semibold">{course.name}</div><div className="mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">{course.letter}</div></div><div className="display text-[20px] font-bold text-foreground">{course.score.toFixed(0)}%</div></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary"><span className="block h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, course.score))}%`, backgroundColor: '#4f9c7a' }} /></div><div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground"><span>{course.status}</span><span className={course.gap >= 0 ? 'text-[#4f9c7a]' : 'text-[#e66b5d]'}>{course.gap >= 0 ? '+' : ''}{course.gap.toFixed(0)} pts</span></div></div>)}</div>
     </section>
   </div>;
 }
@@ -3143,6 +3235,7 @@ function Dashboard() {
       return JSON.stringify(current.length ? current[current.length - 1] : null) === JSON.stringify(nextPoint) ? current : next;
     });
   }, [focusSessionLogs, plannedHours, setWeeklyTrend]);
+  const [gpaCourses] = usePersisted<GpaCourse[]>('java-gpa-courses', defaultGpaCourses);
   const monthAverage = courseTrackers.reduce((sum, course) => sum + (courseScores[course.id] ?? course.defaultScore), 0) / courseTrackers.length;
   const courseSummary = courseTrackers.map((course) => {
     const score = Math.min(100, Math.max(0, courseScores[course.id] ?? course.defaultScore));
@@ -3153,7 +3246,29 @@ function Dashboard() {
       status: score >= course.target ? 'Ahead' : score >= course.target - 8 ? 'Close' : 'Needs attention',
     };
   });
-  const coursesBelowTarget = courseSummary.filter((course) => course.score < course.target).length;
+  const liveCourseSummary = gpaCourses.map((course) => {
+    const normalizedCourse = {
+      ...course,
+      quiz: clampCourseScore(course.quiz),
+      mid: clampCourseScore(course.mid),
+      final: clampCourseScore(course.final),
+    };
+    const score = clampCourseScore(getWeightedCourseGrade(normalizedCourse));
+    const neededForAPlus = getFinalNeededForTarget(normalizedCourse, 80);
+    return {
+      ...course,
+      ...normalizedCourse,
+      score,
+      letter: getLetterGrade(score),
+      neededForAPlus,
+      gradeMessage: Number.isNaN(score)
+        ? 'Enter scores to see your grade'
+        : score >= 80
+          ? 'You are already at or above A+.'
+          : `You need ${Math.ceil(neededForAPlus)}% on the final for A+.`,
+    };
+  });
+  const coursesBelowTarget = liveCourseSummary.filter((course) => course.score < 80).length;
   const weakTopics = getWeakTopics(questions, practiceResults).slice(0, 3);
   const streak = getCurrentStudyStreak(studyDays);
   const weekLoggedHours = getLoggedHoursInCurrentWeek(focusSessionLogs);
