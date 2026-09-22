@@ -22,6 +22,7 @@ import {
   FolderKanban,
   Gauge,
   GraduationCap,
+  History,
   Menu,
   MessageSquareText,
   Moon,
@@ -2871,6 +2872,10 @@ function formatTime(totalSeconds: number) {
   return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
 }
 
+function clampTimerMinutes(value: number) {
+  return Math.min(180, Math.max(1, Math.round(value)));
+}
+
 function getCurrentStudyStreak(studyDays: string[]) {
   if (!studyDays.length) return 0;
   const uniqueDays = [...new Set(studyDays)].sort().reverse();
@@ -2910,8 +2915,10 @@ function usePomodoroTimer() {
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = usePersisted('java-focus-sessions', 0);
   const [topic, setTopic] = usePersisted('java-pomodoro-topic', 'OOP focus');
+  const [focusMinutes, setFocusMinutes] = usePersisted('java-focus-minutes', 25);
+  const [breakMinutes, setBreakMinutes] = usePersisted('java-break-minutes', 5);
   const [focusSessionLogs, setFocusSessionLogs] = usePersisted<FocusSessionLog[]>('java-focus-session-logs', []);
-  const duration = mode === 'focus' ? 25 * 60 : 5 * 60;
+  const duration = (mode === 'focus' ? focusMinutes : breakMinutes) * 60;
 
   useEffect(() => {
     if (!running) return;
@@ -2926,7 +2933,7 @@ function usePomodoroTimer() {
             {
               id: `${completedAt}-${Math.random().toString(16).slice(2, 10)}`,
               topic: topic || 'General focus',
-              minutes: 25,
+              minutes: focusMinutes,
               completedAt,
               date: completedAt.slice(0, 10),
             },
@@ -2937,19 +2944,28 @@ function usePomodoroTimer() {
       return value - 1;
     }), 1000);
     return () => window.clearInterval(timer);
-  }, [running, duration, mode, setSeconds, setSessions, setFocusSessionLogs, topic]);
+  }, [running, duration, mode, focusMinutes, setSeconds, setSessions, setFocusSessionLogs, topic]);
 
   const changeMode = (next: 'focus' | 'break') => {
     setMode(next);
     setRunning(false);
-    setSeconds(next === 'focus' ? 25 * 60 : 5 * 60);
+    setSeconds((next === 'focus' ? focusMinutes : breakMinutes) * 60);
+  };
+  const updateDuration = (nextMode: 'focus' | 'break', value: number) => {
+    const minutes = clampTimerMinutes(value);
+    if (nextMode === 'focus') setFocusMinutes(minutes);
+    else setBreakMinutes(minutes);
+    if (mode === nextMode) {
+      setRunning(false);
+      setSeconds(minutes * 60);
+    }
   };
   const reset = () => {
     setRunning(false);
     setSeconds(duration);
   };
 
-  return { mode, seconds, running, sessions, topic, setTopic, duration, progress: 1 - seconds / duration, focusSessionLogs, changeMode, reset, toggle: () => setRunning((value) => !value) };
+  return { mode, seconds, running, sessions, topic, setTopic, focusMinutes, breakMinutes, duration, progress: 1 - seconds / duration, focusSessionLogs, changeMode, updateDuration, reset, toggle: () => setRunning((value) => !value) };
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -3150,7 +3166,7 @@ function CountdownCard() {
 }
 
 function DashboardPomodoro({ selectedTopic }: { selectedTopic: string }) {
-  const { mode, seconds, running, sessions, progress, changeMode, reset, toggle } = usePomodoroTimer();
+  const { mode, seconds, running, sessions, focusMinutes, breakMinutes, progress, changeMode, reset, toggle } = usePomodoroTimer();
   return <section className="relative overflow-hidden rounded-[24px] bg-primary p-6 text-primary-foreground shadow-md sm:p-8">
     <div className="absolute -right-20 -top-24 size-64 rounded-full border-[20px] border-accent/10" />
     <div className="relative flex min-h-[276px] flex-col justify-between">
@@ -3169,8 +3185,8 @@ function DashboardPomodoro({ selectedTopic }: { selectedTopic: string }) {
           <p className="mt-2 text-[12px] font-semibold leading-5 text-accent">{selectedTopic}</p>
           <p className="mt-1 text-[12px] leading-5 text-primary-foreground/65">Use the timer beside your plan, then take the break seriously.</p>
           <div className="mt-4 flex gap-2">
-            <button onClick={() => changeMode('focus')} data-testid="button-dashboard-timer-focus-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button>
-            <button onClick={() => changeMode('break')} data-testid="button-dashboard-timer-break-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button>
+            <button onClick={() => changeMode('focus')} data-testid="button-dashboard-timer-focus-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · {focusMinutes}</button>
+            <button onClick={() => changeMode('break')} data-testid="button-dashboard-timer-break-mode" className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · {breakMinutes}</button>
           </div>
         </div>
       </div>
@@ -3654,10 +3670,220 @@ function CodingLab() {
 }
 
 function Focus() {
-  const { mode, seconds, running, sessions, topic, setTopic, progress, changeMode, reset, toggle } = usePomodoroTimer();
-  const quickTags = ['OOP focus', 'Linear Algebra', 'DBMS', 'Data Structures', 'Projects', 'Theory'];
-  return <div className="rise"><SectionIntro kicker="Focus room · one block" title="Protect your attention." detail="A quiet timer for the work that moves the score. Put the phone face down; keep this room open." action={<div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"><Flame size={16} className="text-[#e66b5d]" /><span className="mono text-[12px]">{sessions} focus blocks logged</span></div>} />
-    <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]"><section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10"><div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" /><div className="relative"><div className="flex gap-2"><button onClick={() => changeMode('focus')} data-testid="button-timer-focus-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'focus' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Focus · 25</button><button onClick={() => changeMode('break')} data-testid="button-timer-break-mode" className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === 'break' ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/60'}`}>Break · 5</button></div><div className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]" style={{ background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)` }}><div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]"><div className="text-center"><div data-testid="text-timer" className="display text-[62px] font-bold tracking-tight sm:text-[76px]">{formatTime(seconds)}</div><div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">{running ? 'in the zone' : 'ready when you are'}</div></div></div></div><div className="mt-10 flex justify-center gap-3"><button onClick={toggle} data-testid="button-timer-toggle" className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground">{running ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}{running ? 'Pause timer' : 'Start timer'}</button><button onClick={reset} data-testid="button-timer-reset" className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10" aria-label="Reset timer"><RotateCcw size={16} /></button></div></div></section><aside className="space-y-5"><section className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6"><div className="flex items-center gap-2 text-muted-foreground"><Target size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Session topic</span></div><label className="mt-4 block"><span className="mono mb-2 block text-[9px] uppercase tracking-[0.12em] text-muted-foreground">Current tag</span><input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="Enter a course or topic" className="w-full rounded-xl border border-border bg-background/40 px-3 py-2.5 text-[13px] outline-none focus:border-accent" aria-label="Focus session tag" /></label><div className="mt-4 flex flex-wrap gap-2">{quickTags.map((item) => <button key={item} type="button" onClick={() => setTopic(item)} className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${topic === item ? 'bg-accent text-accent-foreground' : 'bg-secondary text-secondary-foreground'}`}>{item}</button>)}</div></section><section className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6"><div className="flex items-center gap-2 text-muted-foreground"><Flame size={16} /><span className="mono text-[10px] uppercase tracking-[0.16em]">Focus promise</span></div><p className="mt-4 text-[13px] leading-6 text-muted-foreground">Keep the next block honest. The selected topic is auto-attached to each completed 25-minute focus session, so the dashboard can update from real logs.</p></section></aside></div></div>;
+  const {
+    mode,
+    seconds,
+    running,
+    sessions,
+    topic,
+    setTopic,
+    focusMinutes,
+    breakMinutes,
+    progress,
+    changeMode,
+    updateDuration,
+    reset,
+    toggle,
+    focusSessionLogs,
+  } = usePomodoroTimer();
+  const quickTags = [
+    "OOP focus",
+    "Linear Algebra",
+    "DBMS",
+    "Data Structures",
+    "Projects",
+    "Theory",
+  ];
+  const sessionHistory = [...focusSessionLogs].sort((first, second) => (
+    new Date(second.completedAt).getTime() - new Date(first.completedAt).getTime()
+  ));
+  return (
+    <div className="rise">
+      <SectionIntro
+        kicker="Focus room · one block"
+        title="Protect your attention."
+        detail="A quiet timer for the work that moves the score. Put the phone face down; keep this room open."
+        action={
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+            <Flame size={16} className="text-[#e66b5d]" />
+            <span className="mono text-[12px]">
+              {sessions} focus blocks logged
+            </span>
+          </div>
+        }
+      />
+      <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]">
+        <section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10">
+          <div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" />
+          <div className="relative">
+            <div className="flex gap-2">
+              <button
+                onClick={() => changeMode("focus")}
+                data-testid="button-timer-focus-mode"
+                className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === "focus" ? "bg-accent text-accent-foreground" : "bg-primary-foreground/10 text-primary-foreground/60"}`}
+              >
+                Focus · {focusMinutes}
+              </button>
+              <button
+                onClick={() => changeMode("break")}
+                data-testid="button-timer-break-mode"
+                className={`rounded-full px-3 py-1.5 mono text-[10px] uppercase tracking-[0.12em] ${mode === "break" ? "bg-accent text-accent-foreground" : "bg-primary-foreground/10 text-primary-foreground/60"}`}
+              >
+                Break · {breakMinutes}
+              </button>
+            </div>
+            <div
+              className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]"
+              style={{
+                background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)`,
+              }}
+            >
+              <div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]">
+                <div className="text-center">
+                  <div
+                    data-testid="text-timer"
+                    className="display text-[62px] font-bold tracking-tight sm:text-[76px]"
+                  >
+                    {formatTime(seconds)}
+                  </div>
+                  <div className="mono mt-2 text-[10px] uppercase tracking-[0.18em] text-primary-foreground/50">
+                    {running ? "in the zone" : "ready when you are"}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-10 flex justify-center gap-3">
+              <button
+                onClick={toggle}
+                data-testid="button-timer-toggle"
+                className="press inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13px] font-bold text-accent-foreground"
+              >
+                {running ? (
+                  <Pause size={16} fill="currentColor" />
+                ) : (
+                  <Play size={16} fill="currentColor" />
+                )}
+                {running ? "Pause timer" : "Start timer"}
+              </button>
+              <button
+                onClick={reset}
+                data-testid="button-timer-reset"
+                className="grid size-11 place-items-center rounded-xl border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10"
+                aria-label="Reset timer"
+              >
+                <RotateCcw size={16} />
+              </button>
+            </div>
+          </div>
+        </section>
+        <aside className="space-y-5">
+          <section className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Target size={16} />
+              <span className="mono text-[10px] uppercase tracking-[0.16em]">
+                Session topic
+              </span>
+            </div>
+            <label className="mt-4 block">
+              <span className="mono mb-2 block text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                Current tag
+              </span>
+              <input
+                value={topic}
+                onChange={(event) => setTopic(event.target.value)}
+                placeholder="Enter a course or topic"
+                className="w-full rounded-xl border border-border bg-background/40 px-3 py-2.5 text-[13px] outline-none focus:border-accent"
+                aria-label="Focus session tag"
+              />
+            </label>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {quickTags.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setTopic(item)}
+                  className={`rounded-full px-2.5 py-1.5 mono text-[9px] uppercase tracking-[0.1em] ${topic === item ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 border-t border-border pt-4">
+              <div className="mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Timer lengths</div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="mono mb-2 block text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Focus · min</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="180"
+                    step="1"
+                    value={focusMinutes}
+                    onChange={(event) => updateDuration('focus', Number(event.target.value))}
+                    className="w-full rounded-xl border border-border bg-background/40 px-3 py-2.5 text-[13px] outline-none focus:border-accent"
+                    aria-label="Focus duration in minutes"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mono mb-2 block text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Break · min</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="180"
+                    step="1"
+                    value={breakMinutes}
+                    onChange={(event) => updateDuration('break', Number(event.target.value))}
+                    className="w-full rounded-xl border border-border bg-background/40 px-3 py-2.5 text-[13px] outline-none focus:border-accent"
+                    aria-label="Break duration in minutes"
+                  />
+                </label>
+              </div>
+              <p className="mt-2 text-[10px] leading-5 text-muted-foreground">Choose any whole number from 1 to 180 minutes. Editing the active mode resets its timer.</p>
+            </div>
+          </section>
+          <section className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Flame size={16} />
+              <span className="mono text-[10px] uppercase tracking-[0.16em]">
+                Focus promise
+              </span>
+            </div>
+            <p className="mt-4 text-[13px] leading-6 text-muted-foreground">
+              Keep the next block honest. The selected topic is auto-attached to
+              each completed focus session, so the dashboard can
+              update from real logs.
+            </p>
+          </section>
+        </aside>
+      </div>
+      <section className="mx-auto mt-5 max-w-4xl rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6" aria-labelledby="session-history-title">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <History size={16} />
+            <h2 id="session-history-title" className="mono text-[10px] uppercase tracking-[0.16em]">Session history</h2>
+          </div>
+          <span className="mono text-[10px] text-muted-foreground">{sessionHistory.length} logged</span>
+        </div>
+        {sessionHistory.length > 0 ? (
+          <ol className="mt-4 divide-y divide-border" aria-label="Completed focus sessions">
+            {sessionHistory.map((session) => (
+              <li key={session.id} className="flex flex-col gap-1 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="min-w-0">
+                  <div className="truncate text-[13px] font-semibold">{session.topic || 'General focus'}</div>
+                  <time dateTime={session.completedAt} className="mono text-[10px] text-muted-foreground">
+                    {new Date(session.completedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                  </time>
+                </div>
+                <span className="shrink-0 self-start rounded-full bg-secondary px-2.5 py-1 mono text-[10px] text-secondary-foreground sm:self-auto">{session.minutes} min</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-4 text-[13px] leading-6 text-muted-foreground">Completed focus blocks will appear here with their topic and finish time.</p>
+        )}
+      </section>
+    </div>
+  );
 }
 
 function Notes() {
