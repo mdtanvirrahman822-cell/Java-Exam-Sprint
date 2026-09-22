@@ -3935,6 +3935,7 @@ function Focus() {
     "Data Structures",
     "Projects",
     "Theory",
+    "CProgramming",
   ];
   const sessionHistory = [...focusSessionLogs].sort((first, second) => (
     new Date(second.completedAt).getTime() - new Date(first.completedAt).getTime()
