@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -25,6 +25,7 @@ import {
   History,
   Menu,
   MessageSquareText,
+  Music2,
   Moon,
   NotebookPen,
   PanelsTopLeft,
@@ -2805,6 +2806,88 @@ const defaultGpaCourses: GpaCourse[] = courseTrackers.map((course, index) => ({
 
 type WeeklyTrendPoint = { week: string; focus: number; topics: number; hours: number };
 type FocusSessionLog = { id: string; topic: string; minutes: number; completedAt: string; date: string };
+
+type SpotifyToken = {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+};
+
+type SpotifyTrack = {
+  name: string;
+  artists: { name: string }[];
+  album: { images?: { url: string }[] };
+};
+
+type SpotifyPlayback = {
+  is_playing: boolean;
+  item: (SpotifyTrack | { name: string }) | null;
+};
+
+const SPOTIFY_CLIENT_ID = 'PASTE_SPOTIFY_CLIENT_ID_HERE';
+const SPOTIFY_SCOPES = 'user-read-currently-playing user-read-playback-state';
+const SPOTIFY_TOKEN_STORAGE_KEY = 'java-spotify-token';
+const SPOTIFY_PKCE_VERIFIER_KEY = 'java-spotify-pkce-verifier';
+const SPOTIFY_STATE_KEY = 'java-spotify-oauth-state';
+
+function getSpotifyRedirectUri() {
+  return `${window.location.origin}/focus`;
+}
+
+function toBase64Url(bytes: Uint8Array) {
+  let binary = '';
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function createCodeVerifier() {
+  const bytes = new Uint8Array(64);
+  window.crypto.getRandomValues(bytes);
+  return toBase64Url(bytes);
+}
+
+async function createCodeChallenge(verifier: string) {
+  const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return toBase64Url(new Uint8Array(digest));
+}
+
+function readSpotifyToken() {
+  try {
+    const saved = window.localStorage.getItem(SPOTIFY_TOKEN_STORAGE_KEY);
+    return saved ? JSON.parse(saved) as SpotifyToken : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSpotifyToken(token: SpotifyToken) {
+  window.localStorage.setItem(SPOTIFY_TOKEN_STORAGE_KEY, JSON.stringify(token));
+}
+
+async function exchangeSpotifyCode(code: string, verifier: string) {
+  const body = new URLSearchParams({
+    client_id: SPOTIFY_CLIENT_ID,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: getSpotifyRedirectUri(),
+    code_verifier: verifier,
+  });
+  const response = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+  if (!response.ok) throw new Error('Spotify authorization could not be completed.');
+  const data = await response.json() as { access_token: string; expires_in: number; refresh_token?: string };
+  return { accessToken: data.access_token, refreshToken: data.refresh_token, expiresAt: Date.now() + data.expires_in * 1000 };
+}
+
+async function refreshSpotifyToken(token: SpotifyToken) {
+  if (!token.refreshToken) return null;
+  const body = new URLSearchParams({ client_id: SPOTIFY_CLIENT_ID, grant_type: 'refresh_token', refresh_token: token.refreshToken });
+  const response = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+  if (!response.ok) throw new Error('Spotify session expired. Please reconnect.');
+  const data = await response.json() as { access_token: string; expires_in: number; refresh_token?: string };
+  const refreshed = { accessToken: data.access_token, refreshToken: data.refresh_token ?? token.refreshToken, expiresAt: Date.now() + data.expires_in * 1000 };
+  saveSpotifyToken(refreshed);
+  return refreshed;
+}
 const defaultWeeklyTrend: WeeklyTrendPoint[] = [
   { week: 'W1', focus: 3.5, topics: 4, hours: 12 },
   { week: 'W2', focus: 4.4, topics: 5, hours: 13 },
@@ -3669,6 +3752,165 @@ function CodingLab() {
   </div>;
 }
 
+function SpotifyNowPlaying() {
+  const [token, setToken] = useState<SpotifyToken | null>(() => readSpotifyToken());
+  const [playback, setPlayback] = useState<SpotifyPlayback | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [error, setError] = useState('');
+  const callbackHandled = useRef(false);
+
+  useEffect(() => {
+    if (callbackHandled.current) return;
+    callbackHandled.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const oauthError = params.get('error');
+    if (!code && !oauthError) return;
+
+    const clearCallbackParams = () => window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+    if (oauthError) {
+      setError('Spotify connection was cancelled.');
+      clearCallbackParams();
+      return;
+    }
+    if (!code) return;
+
+    const verifier = window.sessionStorage.getItem(SPOTIFY_PKCE_VERIFIER_KEY);
+    const expectedState = window.sessionStorage.getItem(SPOTIFY_STATE_KEY);
+    const returnedState = params.get('state');
+    if (!verifier || !expectedState || returnedState !== expectedState) {
+      setError('Spotify security check failed. Please try connecting again.');
+      clearCallbackParams();
+      return;
+    }
+
+    const authorizationCode = code;
+    setAuthBusy(true);
+    exchangeSpotifyCode(authorizationCode, verifier)
+      .then((nextToken) => {
+        saveSpotifyToken(nextToken);
+        setToken(nextToken);
+        setError('');
+      })
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Spotify connection failed.'))
+      .finally(() => {
+        window.sessionStorage.removeItem(SPOTIFY_PKCE_VERIFIER_KEY);
+        window.sessionStorage.removeItem(SPOTIFY_STATE_KEY);
+        clearCallbackParams();
+        setAuthBusy(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (document.visibilityState !== 'visible') return;
+      let activeToken = token;
+      try {
+        if (activeToken.expiresAt <= Date.now() + 60_000) {
+          const refreshed = await refreshSpotifyToken(activeToken);
+          if (!refreshed) throw new Error('Spotify session expired. Please reconnect.');
+          activeToken = refreshed;
+          if (!cancelled) setToken(refreshed);
+        }
+        let response = await fetch('https://api.spotify.com/v1/me/player', { headers: { Authorization: `Bearer ${activeToken.accessToken}` } });
+        if (response.status === 401 && activeToken.refreshToken) {
+          const refreshed = await refreshSpotifyToken(activeToken);
+          if (!refreshed) throw new Error('Spotify session expired. Please reconnect.');
+          activeToken = refreshed;
+          if (!cancelled) setToken(refreshed);
+          response = await fetch('https://api.spotify.com/v1/me/player', { headers: { Authorization: `Bearer ${activeToken.accessToken}` } });
+        }
+        if (cancelled) return;
+        if (response.status === 204) {
+          setPlayback(null);
+          setError('');
+          return;
+        }
+        if (!response.ok) throw new Error('Spotify playback is unavailable right now.');
+        setPlayback(await response.json() as SpotifyPlayback);
+        setError('');
+      } catch (reason: unknown) {
+        if (!cancelled) setError(reason instanceof Error ? reason.message : 'Spotify playback is unavailable right now.');
+      }
+    };
+
+    const handleVisibilityChange = () => { if (document.visibilityState === 'visible') void poll(); };
+    void poll();
+    const interval = window.setInterval(() => void poll(), 7000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [token]);
+
+  const connect = async () => {
+    if (SPOTIFY_CLIENT_ID === 'PASTE_SPOTIFY_CLIENT_ID_HERE') {
+      setError('Add your Spotify Client ID in App.tsx before connecting.');
+      return;
+    }
+    setAuthBusy(true);
+    const verifier = createCodeVerifier();
+    const state = createCodeVerifier();
+    window.sessionStorage.setItem(SPOTIFY_PKCE_VERIFIER_KEY, verifier);
+    window.sessionStorage.setItem(SPOTIFY_STATE_KEY, state);
+    const challenge = await createCodeChallenge(verifier);
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: SPOTIFY_CLIENT_ID,
+      scope: SPOTIFY_SCOPES,
+      redirect_uri: getSpotifyRedirectUri(),
+      code_challenge_method: 'S256',
+      code_challenge: challenge,
+      state,
+    });
+    window.location.assign(`https://accounts.spotify.com/authorize?${params.toString()}`);
+  };
+
+  const disconnect = () => {
+    window.localStorage.removeItem(SPOTIFY_TOKEN_STORAGE_KEY);
+    setToken(null);
+    setPlayback(null);
+    setError('');
+  };
+  const track = playback?.item && 'artists' in playback.item && 'album' in playback.item ? playback.item : null;
+  const albumArt = track?.album.images?.[0]?.url;
+  const isPlaying = Boolean(playback?.is_playing && track);
+
+  return (
+    <section className="rounded-[28px] border border-[#24545a] bg-[#10363a] p-5 text-[#e2f3f0] shadow-sm sm:p-6" aria-labelledby="spotify-now-playing-title">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-[#a8d4cf]">
+          <Music2 size={16} />
+          <h2 id="spotify-now-playing-title" className="mono text-[10px] uppercase tracking-[0.16em]">Now playing</h2>
+        </div>
+        {token && <button type="button" onClick={disconnect} className="mono text-[9px] uppercase tracking-[0.1em] text-[#a8d4cf]/70 hover:text-[#e2f3f0]">Disconnect</button>}
+      </div>
+      {isPlaying && track ? (
+        <div className="mt-4 flex items-center gap-3">
+          {albumArt ? <img src={albumArt} alt={`${track.name} album art`} className="size-14 shrink-0 rounded-xl object-cover" /> : <div className="grid size-14 shrink-0 place-items-center rounded-xl bg-[#1e5358]"><Music2 size={20} /></div>}
+          <div className="min-w-0">
+            <div className="truncate text-[13px] font-semibold">{track.name}</div>
+            <div className="mt-1 truncate text-[11px] text-[#a8d4cf]">{track.artists.map((artist) => artist.name).join(', ')}</div>
+            <div className="mt-2 flex items-center gap-1.5 text-[9px] uppercase tracking-[0.12em] text-[#7fbbb4]"><Music2 size={10} /> Spotify</div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4">
+          <p className="text-[13px] leading-6 text-[#a8d4cf]">{token ? 'Paused · nothing is playing right now.' : 'Paused · connect Spotify to see your current track.'}</p>
+          {!token && <button type="button" onClick={() => void connect()} disabled={authBusy} data-testid="button-connect-spotify" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b7e6d9] px-4 py-2.5 text-[12px] font-bold text-[#10363a] transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-70">{authBusy ? 'Connecting…' : 'Connect Spotify'}</button>}
+        </div>
+      )}
+      {error && <p role="alert" className="mt-3 text-[10px] leading-5 text-[#f2b7a8]">{error}</p>}
+      {token && <p className="mt-3 text-[9px] text-[#7fbbb4]">Read-only status · updates every 7 seconds while this tab is visible.</p>}
+    </section>
+  );
+}
+
 function Focus() {
   const {
     mode,
@@ -3854,6 +4096,7 @@ function Focus() {
               update from real logs.
             </p>
           </section>
+          <SpotifyNowPlaying />
         </aside>
       </div>
       <section className="mx-auto mt-5 max-w-4xl rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6" aria-labelledby="session-history-title">
