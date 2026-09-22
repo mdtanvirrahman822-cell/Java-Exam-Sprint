@@ -3954,7 +3954,7 @@ function Focus() {
           </div>
         }
       />
-      <div className="mx-auto grid max-w-4xl gap-5 lg:grid-cols-[1.1fr_.9fr]">
+      <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[1.3fr_.85fr]">
         <section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-primary-foreground shadow-md sm:p-10">
           <div className="absolute -right-24 -top-28 size-80 rounded-full border-[24px] border-accent/10" />
           <div className="relative">
@@ -3975,16 +3975,16 @@ function Focus() {
               </button>
             </div>
             <div
-              className="mx-auto mt-12 grid size-[238px] place-items-center rounded-full sm:size-[290px]"
+              className="mx-auto mt-12 grid size-[250px] place-items-center rounded-full sm:size-[330px] xl:size-[370px]"
               style={{
                 background: `conic-gradient(hsl(var(--accent)) ${progress * 360}deg, rgba(255,255,255,.11) 0deg)`,
               }}
             >
-              <div className="grid size-[210px] place-items-center rounded-full bg-primary sm:size-[258px]">
+              <div className="grid size-[220px] place-items-center rounded-full bg-primary sm:size-[292px] xl:size-[330px]">
                 <div className="text-center">
                   <div
                     data-testid="text-timer"
-                    className="display text-[62px] font-bold tracking-tight sm:text-[76px]"
+                    className="display text-[64px] font-bold tracking-tight sm:text-[84px] xl:text-[94px]"
                   >
                     {formatTime(seconds)}
                   </div>
@@ -4099,7 +4099,7 @@ function Focus() {
           <SpotifyNowPlaying />
         </aside>
       </div>
-      <section className="mx-auto mt-5 max-w-4xl rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6" aria-labelledby="session-history-title">
+      <section className="mx-auto mt-5 max-w-5xl rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6" aria-labelledby="session-history-title">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-muted-foreground">
             <History size={16} />
